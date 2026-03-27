@@ -16,4 +16,10 @@ describe("markdown-toolbar-actions", () => {
     const result = applyMarkdownToolbarAction("", 0, 0, "table");
     expect(result.text).toContain("| Column | Value |");
   });
+
+  it("inserts a markdown image snippet using the selection as alt text", () => {
+    const result = applyMarkdownToolbarAction("diagram", 0, 7, "image");
+    expect(result.text).toBe("![diagram](path/to/image.png)");
+    expect(result.selectionStart).toBe("![diagram](".length);
+  });
 });

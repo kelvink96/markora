@@ -79,6 +79,12 @@ const slashCommands: SlashCommandDefinition[] = [
     aliases: ["link", "url"],
   },
   {
+    id: "image",
+    label: "Image",
+    description: "Insert a markdown image",
+    aliases: ["image", "img", "media"],
+  },
+  {
     id: "table",
     label: "Table",
     description: "Insert a markdown table",

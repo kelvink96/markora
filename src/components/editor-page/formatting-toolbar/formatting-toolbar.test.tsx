@@ -17,6 +17,7 @@ describe("FormattingToolbar", () => {
         onCodeBlock={() => {}}
         onLink={() => {}}
         onTable={() => {}}
+        onImage={() => {}}
       />,
     );
 
@@ -31,6 +32,7 @@ describe("FormattingToolbar", () => {
     expect(screen.getByRole("button", { name: "Code block" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Link" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Table" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Image" })).toBeInTheDocument();
   });
 
   it("exposes the controls as a formatting toolbar", () => {
@@ -47,6 +49,7 @@ describe("FormattingToolbar", () => {
         onCodeBlock={() => {}}
         onLink={() => {}}
         onTable={() => {}}
+        onImage={() => {}}
       />,
     );
 
@@ -69,6 +72,7 @@ describe("FormattingToolbar", () => {
         onCodeBlock={() => {}}
         onLink={() => {}}
         onTable={() => {}}
+        onImage={() => {}}
       />,
     );
 

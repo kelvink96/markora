@@ -13,6 +13,7 @@ interface FormattingToolbarProps {
   onCodeBlock: () => void;
   onLink: () => void;
   onTable: () => void;
+  onImage: () => void;
   disabled?: boolean;
 }
 
@@ -28,6 +29,7 @@ export function FormattingToolbar({
   onCodeBlock,
   onLink,
   onTable,
+  onImage,
   disabled = false,
 }: FormattingToolbarProps) {
   return (
@@ -75,6 +77,9 @@ export function FormattingToolbar({
         </IconButton>
         <IconButton label="Table" onClick={onTable} disabled={disabled}>
           Tbl
+        </IconButton>
+        <IconButton label="Image" onClick={onImage} disabled={disabled}>
+          Img
         </IconButton>
       </ToolbarGroup>
     </div>

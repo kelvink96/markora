@@ -35,6 +35,12 @@ describe("slash commands", () => {
     expect(commands.map((command) => command.id)).toContain("taskList");
   });
 
+  it("matches the image command by its alias", () => {
+    const commands = matchSlashCommands("img");
+
+    expect(commands.map((command) => command.id)).toContain("image");
+  });
+
   it("replaces the typed slash token with the selected markdown insertion", () => {
     const result = applySlashCommand("Start /table here", 6, 12, "table");
 

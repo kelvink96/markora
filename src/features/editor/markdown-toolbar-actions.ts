@@ -9,7 +9,8 @@ export type MarkdownToolbarAction =
   | "quote"
   | "codeBlock"
   | "link"
-  | "table";
+  | "table"
+  | "image";
 
 export interface MarkdownEditResult {
   text: string;
@@ -85,6 +86,18 @@ export function applyMarkdownToolbarAction(
       return wrapSelection(text, selectionStart, selectionEnd, "```md\n", "\n```", "code");
     case "link":
       return wrapSelection(text, selectionStart, selectionEnd, "[", "](https://)", "label");
+    case "image": {
+      const altText = text.slice(selectionStart, selectionEnd) || "alt text";
+      const snippet = `![${altText}](path/to/image.png)`;
+      const nextText = `${text.slice(0, selectionStart)}${snippet}${text.slice(selectionEnd)}`;
+      const pathStart = selectionStart + `![${altText}](`.length;
+
+      return {
+        text: nextText,
+        selectionStart: pathStart,
+        selectionEnd: pathStart + "path/to/image.png".length,
+      };
+    }
     case "table": {
       const snippet = "| Column | Value |\n| --- | --- |\n| Item | Detail |";
       const nextText = `${text.slice(0, selectionStart)}${snippet}${text.slice(selectionEnd)}`;

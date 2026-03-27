@@ -73,6 +73,7 @@ export function TopBar({
           onCodeBlock={() => runToolbarAction("codeBlock")}
           onLink={() => runToolbarAction("link")}
           onTable={() => runToolbarAction("table")}
+          onImage={() => runToolbarAction("image")}
         />
       </div>
       <div

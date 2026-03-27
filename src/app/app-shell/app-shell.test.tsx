@@ -33,4 +33,28 @@ describe("AppShell", () => {
 
     expect(screen.getByTestId("app-shell")).toHaveClass("theme-dark");
   });
+
+  it("syncs the document theme for portal-based UI", () => {
+    const { rerender } = render(
+      <AppShell
+        theme="light"
+        topBar={<div>Top Bar</div>}
+        workspace={<div>Workspace</div>}
+      />,
+    );
+
+    expect(document.documentElement).toHaveAttribute("data-theme", "light");
+    expect(document.body).not.toHaveClass("theme-dark");
+
+    rerender(
+      <AppShell
+        theme="dark"
+        topBar={<div>Top Bar</div>}
+        workspace={<div>Workspace</div>}
+      />,
+    );
+
+    expect(document.documentElement).toHaveAttribute("data-theme", "dark");
+    expect(document.body).toHaveClass("theme-dark");
+  });
 });

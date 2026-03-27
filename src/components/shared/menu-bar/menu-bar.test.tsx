@@ -18,8 +18,19 @@ describe("MenuBar", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "File" }));
+    const trigger = screen.getByRole("button", { name: "File" });
+    await user.click(trigger);
 
+    expect(trigger).toHaveClass(
+      "menu-bar__trigger",
+      "rounded-app-sm",
+      "bg-[color:var(--glass-panel)]",
+    );
     expect(screen.getByRole("menuitem", { name: "New" })).toBeInTheDocument();
+    expect(screen.getByRole("menu")).toHaveClass(
+      "menu-bar__content",
+      "rounded-app-lg",
+      "bg-[color:var(--glass-elevated)]",
+    );
   });
 });

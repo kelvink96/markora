@@ -22,7 +22,7 @@ export function MenuBar({ groups }: MenuBarProps) {
         <DropdownMenu.Root key={group.label}>
           <DropdownMenu.Trigger asChild>
             <button
-              className="rounded-app-md border border-transparent bg-transparent px-3 py-1.5 text-[0.95rem] font-medium text-app-text transition hover:border-[color:var(--glass-border)] hover:bg-[color:var(--glass-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-app-accent/40"
+              className="menu-bar__trigger rounded-app-sm border border-[color:var(--glass-border-strong)] bg-[color:var(--glass-panel)] px-3 py-1.5 text-[0.95rem] font-medium text-app-text backdrop-blur-[var(--glass-blur-soft)] transition hover:border-[color:var(--glass-border)] hover:bg-[color:var(--glass-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-app-accent/40"
               type="button"
             >
               {group.label}
@@ -30,7 +30,7 @@ export function MenuBar({ groups }: MenuBarProps) {
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>
             <DropdownMenu.Content
-              className="z-50 min-w-48 rounded-app-lg border border-[color:var(--glass-border)] bg-[color:var(--glass-elevated)] p-2 shadow-[0_18px_40px_rgba(30,43,52,0.12)] backdrop-blur-[var(--glass-blur-soft)]"
+              className="menu-bar__content z-50 min-w-48 rounded-app-lg border border-[color:var(--glass-border)] bg-[color:var(--glass-elevated)] p-2 shadow-[0_18px_40px_rgba(30,43,52,0.12)] backdrop-blur-[var(--glass-blur-soft)]"
               sideOffset={8}
             >
               {group.items.map((item) => (

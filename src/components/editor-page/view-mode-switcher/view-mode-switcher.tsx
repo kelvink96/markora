@@ -12,7 +12,7 @@ export function ViewModeSwitcher({ value, onValueChange }: ViewModeSwitcherProps
     <div
       role="tablist"
       aria-label="View mode"
-      className="inline-flex items-center rounded-app-lg border border-[color:var(--glass-border)] bg-[color:var(--glass-panel)] p-0.5 backdrop-blur-[var(--glass-blur-soft)] shadow-[var(--shadow-crisp)]"
+      className="inline-flex items-center rounded-app-sm border border-[color:var(--glass-border)] bg-[color:var(--glass-panel)] p-0.5 backdrop-blur-[var(--glass-blur-soft)] shadow-[var(--shadow-crisp)]"
     >
       {modes.map((mode) => {
         const selected = value === mode;

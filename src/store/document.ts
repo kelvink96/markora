@@ -11,6 +11,7 @@ interface DocumentStore {
 }
 
 export const useDocumentStore = create<DocumentStore>((set) => ({
+  // Seed the editor with some friendly starter content on first launch.
   content:
     "# Welcome to Markora\n\nStart writing your markdown here...\n\n## Features\n\n- **Live preview** as you type\n- Open and save `.md` files\n- Light and dark themes\n",
   filePath: null,

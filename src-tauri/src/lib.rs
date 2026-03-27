@@ -2,6 +2,7 @@ mod commands;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Builder is Tauri's app bootstrap pipeline: plugins first, then command registration, then launch.
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         // The dialog plugin gives the frontend access to native open/save pickers.

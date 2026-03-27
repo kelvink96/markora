@@ -3,12 +3,14 @@ use std::fs;
 // Reads UTF-8 text from disk and returns either the file contents or an error string.
 #[tauri::command]
 pub fn read_file(path: String) -> Result<String, String> {
+    // Convert Rust's io::Error into a plain String so it crosses the Tauri boundary cleanly.
     fs::read_to_string(&path).map_err(|error| error.to_string())
 }
 
 // Writes UTF-8 text to disk, creating or overwriting the target file.
 #[tauri::command]
 pub fn write_file(path: String, content: String) -> Result<(), String> {
+    // Result<(), String> means "either success with no payload, or an error message".
     fs::write(&path, content).map_err(|error| error.to_string())
 }
 

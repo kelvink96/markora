@@ -12,20 +12,24 @@ export default function App() {
   const { setContent, setFilePath, markClean, newDocument } = useDocumentStore();
 
   const handleOpen = useCallback(async () => {
+    // `open()` is a native dialog, not an HTML file input, so it feels like a desktop app.
     const selected = await open({
       multiple: false,
       filters: [{ name: "Markdown", extensions: ["md", "markdown", "txt"] }],
     });
 
     if (typeof selected === "string") {
+      // The frontend never reads the file directly; it asks Rust to do it through a command.
       const text = await invoke<string>("read_file", { path: selected });
       setContent(text);
       setFilePath(selected);
+      // Opening from disk should leave the document in a "clean" state until the next edit.
       markClean();
     }
   }, [markClean, setContent, setFilePath]);
 
   const handleSaveAs = useCallback(async () => {
+    // getState() gives the latest store snapshot without waiting for React to re-render.
     const { content } = useDocumentStore.getState();
     const savePath = await save({
       filters: [{ name: "Markdown", extensions: ["md"] }],
@@ -54,12 +58,14 @@ export default function App() {
   const handleNew = useCallback(() => {
     const { isDirty } = useDocumentStore.getState();
 
+    // Guard against discarding unsaved edits when starting a fresh document.
     if (isDirty && !window.confirm("Discard unsaved changes?")) return;
     newDocument();
   }, [newDocument]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      // Support both Windows/Linux Ctrl shortcuts and macOS Command shortcuts.
       const mod = event.ctrlKey || event.metaKey;
       if (!mod) return;
 
@@ -91,6 +97,7 @@ export default function App() {
   const { isDirty, filePath } = useDocumentStore();
 
   return (
+    // Theme is represented as a CSS class so the rest of the UI can switch tokens declaratively.
     <div className={`app ${theme}`}>
       <Toolbar
         onNew={handleNew}

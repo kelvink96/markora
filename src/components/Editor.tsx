@@ -12,6 +12,7 @@ interface EditorProps {
 
 export function Editor({ theme }: EditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  // Keep the imperative CodeMirror instance in a ref so React re-renders do not recreate it.
   const viewRef = useRef<EditorView | null>(null);
   const { content, setContent } = useDocumentStore();
 
@@ -38,6 +39,7 @@ export function Editor({ theme }: EditorProps) {
     });
 
     viewRef.current?.destroy();
+    // CodeMirror mounts itself into an existing DOM node instead of returning JSX.
     viewRef.current = new EditorView({ state, parent: containerRef.current });
 
     return () => {

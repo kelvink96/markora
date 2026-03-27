@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { useDocumentStore } from "../store/document";
 
 export function Preview() {
+  // Subscribe only to the content field so this component updates when markdown text changes.
   const content = useDocumentStore((state) => state.content);
   const [html, setHtml] = useState("");
 

@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig(() => {
   // Per Vite's config docs, only env vars already present in the current
@@ -9,7 +10,7 @@ export default defineConfig(() => {
   const minify: false | "esbuild" = tauriDebug ? false : "esbuild";
 
   return {
-    plugins: [react()],
+    plugins: [react(), tailwindcss()],
     clearScreen: false,
     // Tauri expects the frontend dev server on a fixed port.
     // Force IPv4 here because this Windows environment rejects binding to ::1.

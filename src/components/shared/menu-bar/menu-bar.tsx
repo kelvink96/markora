@@ -1,5 +1,4 @@
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import "./menu-bar.css";
 
 export interface MenuBarItem {
   label: string;
@@ -18,20 +17,26 @@ interface MenuBarProps {
 
 export function MenuBar({ groups }: MenuBarProps) {
   return (
-    <nav className="menu-bar" aria-label="Application menu">
+    <nav className="inline-flex items-center gap-1" aria-label="Application menu">
       {groups.map((group) => (
         <DropdownMenu.Root key={group.label}>
           <DropdownMenu.Trigger asChild>
-            <button className="menu-bar__trigger" type="button">
+            <button
+              className="rounded-[0.65rem] bg-transparent px-3 py-2 text-app-text transition hover:bg-app-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-app-accent/40"
+              type="button"
+            >
               {group.label}
             </button>
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>
-            <DropdownMenu.Content className="menu-bar__content" sideOffset={8}>
+            <DropdownMenu.Content
+              className="z-50 min-w-48 rounded-app-md border border-black/10 bg-app-panel-strong p-2 shadow-[0_18px_40px_rgba(30,43,52,0.07)]"
+              sideOffset={8}
+            >
               {group.items.map((item) => (
                 <DropdownMenu.Item key={item.label} asChild disabled={item.disabled}>
                   <button
-                    className="menu-bar__item"
+                    className="w-full rounded-app-sm px-3 py-2 text-left text-app-text transition hover:bg-app-subtle focus-visible:outline-none focus-visible:bg-app-subtle data-[disabled]:cursor-not-allowed data-[disabled]:text-app-text-muted data-[disabled]:hover:bg-transparent"
                     type="button"
                     onClick={item.onSelect}
                   >

@@ -1,15 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { ToolbarGroup } from "./toolbar-group";
 
 describe("ToolbarGroup", () => {
-  it("renders a toolbar grouping container", () => {
-    const { container } = render(
+  it("renders a semantic grouping container", () => {
+    render(
       <ToolbarGroup>
         <button type="button">One</button>
       </ToolbarGroup>,
     );
 
-    expect(container.querySelector(".toolbar-group")).toBeTruthy();
+    expect(screen.getByRole("group")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "One" })).toBeInTheDocument();
   });
 });

@@ -3,30 +3,28 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { Workspace } from "./workspace";
 
 describe("Workspace", () => {
-  it("renders both panes", () => {
+  it("applies the Tailwind split-pane layout and still renders both panes", () => {
     const { getByText } = render(
       <Workspace left={<div>Left</div>} right={<div>Right</div>} />,
     );
 
-    expect(getByText("Left")).toBeTruthy();
-    expect(getByText("Right")).toBeTruthy();
-  });
-
-  it("renders a divider", () => {
-    const { container } = render(<Workspace left={<div />} right={<div />} />);
-    expect(container.querySelector(".workspace__divider")).toBeTruthy();
-  });
-
-  it("renders editor and preview panes as named regions", () => {
-    render(<Workspace left={<div>Left</div>} right={<div>Right</div>} />);
+    const workspace = getByText("Left").closest(".workspace");
+    expect(workspace).toHaveClass("flex");
+    expect(workspace).toHaveClass("min-h-0");
+    expect(workspace).toHaveClass("overflow-hidden");
+    expect(workspace).toHaveClass("gap-4");
+    expect(workspace).toHaveClass("p-4");
 
     expect(screen.getByRole("region", { name: "Editor workspace" })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Preview workspace" })).toBeInTheDocument();
+
+    expect(screen.getByRole("separator", { name: "Resize editor and preview panes" })).toHaveClass(
+      "cursor-col-resize",
+    );
   });
 
   it("moves the split with keyboard arrows", () => {
     render(<Workspace left={<div>Left</div>} right={<div>Right</div>} />);
-
     const divider = screen.getByRole("separator", { name: "Resize editor and preview panes" });
     fireEvent.keyDown(divider, { key: "ArrowRight" });
 

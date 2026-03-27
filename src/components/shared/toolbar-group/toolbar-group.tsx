@@ -1,6 +1,9 @@
 import type { PropsWithChildren } from "react";
-import "./toolbar-group.css";
 
 export function ToolbarGroup({ children }: PropsWithChildren) {
-  return <div className="toolbar-group">{children}</div>;
+  return (
+    <div role="group" className="inline-flex items-center gap-1">
+      {children}
+    </div>
+  );
 }

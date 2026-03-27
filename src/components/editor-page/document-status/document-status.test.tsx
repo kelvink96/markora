@@ -3,10 +3,14 @@ import { render, screen } from "@testing-library/react";
 import { DocumentStatus } from "./document-status";
 
 describe("DocumentStatus", () => {
-  it("renders the file name and dirty label", () => {
-    render(<DocumentStatus fileName="notes.md" isDirty />);
+  it("renders a labeled status group with dirty and saved states", () => {
+    const { rerender } = render(<DocumentStatus fileName="notes.md" isDirty />);
 
+    expect(screen.getByRole("group", { name: "Document status" })).toBeInTheDocument();
     expect(screen.getByText("notes.md")).toBeInTheDocument();
     expect(screen.getByText("Unsaved changes")).toBeInTheDocument();
+
+    rerender(<DocumentStatus fileName="notes.md" isDirty={false} />);
+    expect(screen.getByText("Saved")).toBeInTheDocument();
   });
 });

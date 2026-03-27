@@ -5,7 +5,6 @@ import { LivePreviewIndicator } from "../../shared/live-preview-indicator";
 import { MenuBar } from "../../shared/menu-bar";
 import { ThemeToggle } from "../../shared/theme-toggle";
 import { WordCount } from "../../shared/word-count";
-import "./top-bar.css";
 
 interface TopBarProps {
   fileName: string;
@@ -60,14 +59,14 @@ export function TopBar({
   ];
 
   return (
-    <header className="top-bar">
-      <div className="top-bar__document" data-testid="top-bar-document">
+    <header className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-5 border-b border-[color:var(--ghost-border)] bg-app-panel px-5 py-4 shadow-[var(--shadow-ambient)] backdrop-blur-md">
+      <div className="flex min-w-0 items-center justify-start gap-3" data-testid="top-bar-document">
         <DocumentStatus fileName={getDisplayFileName(fileName)} isDirty={isDirty} />
       </div>
-      <div className="top-bar__menu" data-testid="top-bar-menu">
+      <div className="flex items-center justify-center gap-3" data-testid="top-bar-menu">
         <MenuBar groups={menuGroups} />
       </div>
-      <div className="top-bar__utilities" data-testid="top-bar-utilities">
+      <div className="flex flex-wrap items-center justify-end gap-3 rounded-full bg-app-panel-strong/70 p-1 shadow-[var(--shadow-crisp)]" data-testid="top-bar-utilities">
         <WordCount value={wordCount} />
         <LivePreviewIndicator />
         <ThemeToggle

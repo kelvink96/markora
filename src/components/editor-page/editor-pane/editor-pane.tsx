@@ -6,7 +6,6 @@ import { markdown } from "@codemirror/lang-markdown";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { useDocumentStore } from "../../../store/document";
 import { FormattingToolbar } from "../formatting-toolbar";
-import "./editor-pane.css";
 
 interface EditorPaneProps {
   theme: "light" | "dark";
@@ -63,9 +62,9 @@ export function EditorPane({ theme }: EditorPaneProps) {
   }, [content]);
 
   return (
-    <section className="editor-pane" aria-label="Editor">
-      <div className="editor-pane__panel">
-        <div className="editor-pane__header">
+    <section className="editor-pane h-full py-4 pl-4 pr-0" aria-label="Editor">
+      <div className="editor-pane__panel flex h-full flex-col overflow-hidden rounded-[var(--radius-xl)] border border-[var(--ghost-border)] bg-[linear-gradient(180deg,rgba(255,255,255,0.62),transparent_22%),var(--surface-editor)] shadow-[var(--shadow-ambient)]">
+        <div className="editor-pane__header flex items-center justify-start border-b border-[var(--ghost-border)] bg-[linear-gradient(180deg,rgba(255,255,255,0.78),rgba(255,255,255,0.36)),var(--surface-panel)] p-4">
           <FormattingToolbar
             onBold={() => {}}
             onItalic={() => {}}
@@ -73,7 +72,11 @@ export function EditorPane({ theme }: EditorPaneProps) {
             disabled
           />
         </div>
-        <div ref={containerRef} className="editor-pane__surface" />
+        <div
+          ref={containerRef}
+          className="editor-pane__surface min-h-0 flex-1 overflow-hidden"
+          data-testid="editor-surface"
+        />
       </div>
     </section>
   );

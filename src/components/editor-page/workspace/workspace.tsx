@@ -1,5 +1,4 @@
 import { type KeyboardEvent, type ReactNode, useCallback, useRef, useState } from "react";
-import "./workspace.css";
 
 interface WorkspaceProps {
   left: ReactNode;
@@ -48,7 +47,7 @@ export function Workspace({ left, right }: WorkspaceProps) {
   return (
     <div
       ref={containerRef}
-      className="workspace"
+      className="workspace flex min-h-0 flex-1 gap-4 overflow-hidden p-4"
       onMouseMove={onMouseMove}
       onMouseUp={() => {
         dragging.current = false;
@@ -58,7 +57,7 @@ export function Workspace({ left, right }: WorkspaceProps) {
       }}
     >
       <section
-        className="workspace__left"
+        className="min-h-0 overflow-hidden"
         style={{ width: `${splitPct}%` }}
         role="region"
         aria-label="Editor workspace"
@@ -66,7 +65,7 @@ export function Workspace({ left, right }: WorkspaceProps) {
         {left}
       </section>
       <div
-        className="workspace__divider"
+        className="workspace__divider h-auto w-3 shrink-0 cursor-col-resize rounded-full bg-[linear-gradient(to_right,transparent,rgba(91,100,120,0.08),var(--ghost-border),rgba(91,100,120,0.08),transparent)] outline-none transition-[background] duration-150 hover:bg-[linear-gradient(to_right,transparent,rgba(91,100,120,0.14),rgba(91,100,120,0.22),rgba(91,100,120,0.14),transparent)] focus-visible:bg-[linear-gradient(to_right,transparent,rgba(45,91,134,0.18),rgba(45,91,134,0.34),rgba(45,91,134,0.18),transparent)]"
         role="separator"
         aria-orientation="vertical"
         aria-label="Resize editor and preview panes"
@@ -77,7 +76,7 @@ export function Workspace({ left, right }: WorkspaceProps) {
         }}
       />
       <section
-        className="workspace__right"
+        className="min-h-0 overflow-hidden"
         style={{ width: `${100 - splitPct}%` }}
         role="region"
         aria-label="Preview workspace"

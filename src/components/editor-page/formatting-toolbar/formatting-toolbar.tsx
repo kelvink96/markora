@@ -1,6 +1,5 @@
 import { IconButton } from "../../shared/icon-button";
 import { ToolbarGroup } from "../../shared/toolbar-group";
-import "./formatting-toolbar.css";
 
 interface FormattingToolbarProps {
   onBold: () => void;
@@ -16,7 +15,11 @@ export function FormattingToolbar({
   disabled = false,
 }: FormattingToolbarProps) {
   return (
-    <div className="formatting-toolbar" role="toolbar" aria-label="Formatting">
+    <div
+      role="toolbar"
+      aria-label="Formatting"
+      className="inline-flex items-center gap-2 rounded-[calc(var(--radius-md)-2px)] border border-[color:var(--ghost-border)] bg-app-panel-strong p-1.5 shadow-[0_10px_24px_rgba(24,34,43,0.08)]"
+    >
       <ToolbarGroup>
         <IconButton label="Bold" onClick={onBold} disabled={disabled}>
           B

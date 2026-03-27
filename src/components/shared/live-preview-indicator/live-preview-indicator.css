@@ -1,0 +1,15 @@
+.live-preview-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.live-preview-indicator__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--success);
+  box-shadow: 0 0 0 4px rgba(47, 179, 111, 0.12);
+}

@@ -1,15 +1,18 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { EditorPane } from "./components/editor-page/editor-pane";
+import { TopBar } from "./components/editor-page/top-bar";
 import { PreviewPane } from "./components/editor-page/preview-pane";
 import { Workspace } from "./components/editor-page/workspace";
-import { Toolbar } from "./components/Toolbar";
+import { getDisplayFileName, getWordCount } from "./features/document/document-actions";
 import { useDocumentStore } from "./store/document";
+import { useThemeStore } from "./features/theme/theme-store";
 
 export default function App() {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
   const { setContent, setFilePath, markClean, newDocument } = useDocumentStore();
+  const theme = useThemeStore((state) => state.theme);
+  const toggleTheme = useThemeStore((state) => state.toggleTheme);
 
   const handleOpen = useCallback(async () => {
     // `open()` is a native dialog, not an HTML file input, so it feels like a desktop app.
@@ -95,19 +98,23 @@ export default function App() {
   }, [handleNew, handleOpen, handleSave, handleSaveAs]);
 
   const { isDirty, filePath } = useDocumentStore();
+  const content = useDocumentStore((state) => state.content);
+  const fileName = getDisplayFileName(filePath);
+  const wordCount = getWordCount(content);
 
   return (
     // Theme is represented as a CSS class so the rest of the UI can switch tokens declaratively.
     <div className={`app ${theme}`}>
-      <Toolbar
+      <TopBar
+        fileName={fileName}
+        isDirty={isDirty}
+        wordCount={wordCount}
+        theme={theme}
+        onThemeToggle={toggleTheme}
         onNew={handleNew}
         onOpen={handleOpen}
         onSave={handleSave}
         onSaveAs={handleSaveAs}
-        onToggleTheme={() => setTheme((current) => (current === "light" ? "dark" : "light"))}
-        theme={theme}
-        isDirty={isDirty}
-        filePath={filePath}
       />
       <Workspace left={<EditorPane theme={theme} />} right={<PreviewPane />} />
     </div>

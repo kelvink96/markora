@@ -1,0 +1,23 @@
+.top-bar {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: var(--surface-panel);
+  backdrop-filter: blur(16px);
+  box-shadow: var(--shadow-ambient);
+}
+
+.top-bar__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.top-bar__left,
+.top-bar__center,
+.top-bar__right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}

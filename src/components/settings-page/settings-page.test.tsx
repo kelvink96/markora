@@ -14,11 +14,10 @@ describe("SettingsPage", () => {
         templateDraft={settings.authoring.newDocumentTemplate}
         version="0.1.0"
         onClose={() => {}}
-        onUpdateAppearance={() => {}}
-        onUpdateEditor={() => {}}
-        onUpdatePreview={() => {}}
-        onUpdateFiles={() => {}}
-        onTemplateDraftChange={() => {}}
+        onSaveAppearance={() => {}}
+        onSaveEditor={() => {}}
+        onSavePreview={() => {}}
+        onSaveFiles={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
         onResetAll={() => {}}
@@ -26,9 +25,19 @@ describe("SettingsPage", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Application" })).toBeInTheDocument();
+    expect(screen.getByRole("complementary")).toHaveClass(
+      "bg-[color:var(--glass-panel)]",
+      "backdrop-blur-[var(--glass-blur-soft)]",
+      "rounded-app-sm",
+    );
     expect(screen.getByRole("button", { name: "Appearance" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Editor" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "About" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Back to editor" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Back to editor" }).parentElement).toHaveClass(
+      "mb-4",
+      "items-start",
+    );
     expect(screen.getByRole("heading", { name: "Authoring Defaults" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "New Document Template" })).toBeInTheDocument();
   });
@@ -43,11 +52,10 @@ describe("SettingsPage", () => {
         templateDraft={settings.authoring.newDocumentTemplate}
         version="0.1.0"
         onClose={() => {}}
-        onUpdateAppearance={() => {}}
-        onUpdateEditor={() => {}}
-        onUpdatePreview={() => {}}
-        onUpdateFiles={() => {}}
-        onTemplateDraftChange={() => {}}
+        onSaveAppearance={() => {}}
+        onSaveEditor={() => {}}
+        onSavePreview={() => {}}
+        onSaveFiles={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
         onResetAll={() => {}}
@@ -56,6 +64,10 @@ describe("SettingsPage", () => {
 
     await user.click(screen.getByRole("button", { name: "About" }));
 
+    expect(screen.getByRole("heading", { name: "About", level: 3 }).closest("section")).toHaveClass(
+      "bg-[color:var(--glass-panel)]",
+      "backdrop-blur-[var(--glass-blur-soft)]",
+    );
     expect(screen.getByText("Markora is a desktop-first markdown editor.")).toBeInTheDocument();
     expect(screen.getByText("Version 0.1.0")).toBeInTheDocument();
   });
@@ -63,7 +75,6 @@ describe("SettingsPage", () => {
   it("lets the user save the template draft explicitly", async () => {
     const user = userEvent.setup();
     const settings = createDefaultSettings();
-    const onTemplateDraftChange = vi.fn();
     const onSaveTemplate = vi.fn();
 
     render(
@@ -72,11 +83,10 @@ describe("SettingsPage", () => {
         templateDraft="# Draft"
         version="0.1.0"
         onClose={() => {}}
-        onUpdateAppearance={() => {}}
-        onUpdateEditor={() => {}}
-        onUpdatePreview={() => {}}
-        onUpdateFiles={() => {}}
-        onTemplateDraftChange={onTemplateDraftChange}
+        onSaveAppearance={() => {}}
+        onSaveEditor={() => {}}
+        onSavePreview={() => {}}
+        onSaveFiles={() => {}}
         onSaveTemplate={onSaveTemplate}
         onResetTemplate={() => {}}
         onResetAll={() => {}}
@@ -88,8 +98,7 @@ describe("SettingsPage", () => {
     await user.type(screen.getByLabelText("Template content"), "# New draft");
     await user.click(screen.getByRole("button", { name: "Save template" }));
 
-    expect(onTemplateDraftChange).toHaveBeenCalled();
-    expect(onSaveTemplate).toHaveBeenCalled();
+    expect(onSaveTemplate).toHaveBeenCalledWith("# New draft");
   });
 
   it("confirms before resetting all settings", async () => {
@@ -103,11 +112,10 @@ describe("SettingsPage", () => {
         templateDraft={settings.authoring.newDocumentTemplate}
         version="0.1.0"
         onClose={() => {}}
-        onUpdateAppearance={() => {}}
-        onUpdateEditor={() => {}}
-        onUpdatePreview={() => {}}
-        onUpdateFiles={() => {}}
-        onTemplateDraftChange={() => {}}
+        onSaveAppearance={() => {}}
+        onSaveEditor={() => {}}
+        onSavePreview={() => {}}
+        onSaveFiles={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
         onResetAll={onResetAll}
@@ -121,11 +129,11 @@ describe("SettingsPage", () => {
     expect(onResetAll).toHaveBeenCalled();
   });
 
-  it("lets the user toggle line numbers from the editor section", async () => {
+  it("saves editor settings explicitly from the section action", async () => {
     const user = userEvent.setup();
     const settings = createDefaultSettings();
     settings.editor.lineNumbers = true;
-    const onUpdateEditor = vi.fn();
+    const onSaveEditor = vi.fn();
 
     render(
       <SettingsPage
@@ -133,11 +141,10 @@ describe("SettingsPage", () => {
         templateDraft={settings.authoring.newDocumentTemplate}
         version="0.1.0"
         onClose={() => {}}
-        onUpdateAppearance={() => {}}
-        onUpdateEditor={onUpdateEditor}
-        onUpdatePreview={() => {}}
-        onUpdateFiles={() => {}}
-        onTemplateDraftChange={() => {}}
+        onSaveAppearance={() => {}}
+        onSaveEditor={onSaveEditor}
+        onSavePreview={() => {}}
+        onSaveFiles={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
         onResetAll={() => {}}
@@ -146,7 +153,37 @@ describe("SettingsPage", () => {
 
     await user.click(screen.getByRole("button", { name: "Editor" }));
     await user.click(screen.getByLabelText("Show line numbers"));
+    expect(onSaveEditor).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
 
-    expect(onUpdateEditor).toHaveBeenCalledWith({ lineNumbers: false });
+    expect(onSaveEditor).toHaveBeenCalledWith(
+      expect.objectContaining({ lineNumbers: false }),
+    );
+  });
+
+  it("returns to the workspace from the back action", async () => {
+    const user = userEvent.setup();
+    const settings = createDefaultSettings();
+    const onClose = vi.fn();
+
+    render(
+      <SettingsPage
+        settings={settings}
+        templateDraft={settings.authoring.newDocumentTemplate}
+        version="0.1.0"
+        onClose={onClose}
+        onSaveAppearance={() => {}}
+        onSaveEditor={() => {}}
+        onSavePreview={() => {}}
+        onSaveFiles={() => {}}
+        onSaveTemplate={() => {}}
+        onResetTemplate={() => {}}
+        onResetAll={() => {}}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Back to editor" }));
+
+    expect(onClose).toHaveBeenCalled();
   });
 });

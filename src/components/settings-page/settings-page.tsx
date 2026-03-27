@@ -3,10 +3,11 @@ import type {
   EditorSettings,
   FileSettings,
   MarkoraSettings,
+  PreviewSettings,
   ThemePreference,
 } from "../../features/settings/settings-schema";
 import type { ChangeEvent, ReactNode } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type SettingsSection =
   | "appearance"
@@ -22,12 +23,11 @@ interface SettingsPageProps {
   templateDraft: string;
   version: string;
   onClose: () => void;
-  onUpdateAppearance: (appearance: Partial<AppearanceSettings>) => void;
-  onUpdateEditor: (editor: Partial<EditorSettings>) => void;
-  onUpdatePreview: (preview: Partial<PreviewSettings>) => void;
-  onUpdateFiles: (files: Partial<FileSettings>) => void;
-  onTemplateDraftChange: (value: string) => void;
-  onSaveTemplate: () => void;
+  onSaveAppearance: (appearance: AppearanceSettings) => void;
+  onSaveEditor: (editor: EditorSettings) => void;
+  onSavePreview: (preview: PreviewSettings) => void;
+  onSaveFiles: (files: FileSettings) => void;
+  onSaveTemplate: (value: string) => void;
   onResetTemplate: () => void;
   onResetAll: () => void;
 }
@@ -45,8 +45,10 @@ function SidebarButton({
     <button
       type="button"
       onClick={onClick}
-      className={`w-full rounded-app-sm px-3 py-2 text-left text-sm transition ${
-        isActive ? "bg-app-panel-strong text-app-text" : "text-app-text/70 hover:bg-app-panel/70"
+      className={`w-full rounded-app-sm border border-transparent px-3 py-2 text-left text-sm transition ${
+        isActive
+          ? "bg-[color:var(--glass-elevated)] text-app-text shadow-[0_1px_0_rgba(255,255,255,0.18)_inset]"
+          : "text-app-text/70 hover:border-[color:var(--glass-border)] hover:bg-[color:var(--glass-hover)]"
       }`}
     >
       {label}
@@ -64,7 +66,7 @@ function SectionCard({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-app-sm border border-[color:var(--ghost-border)] bg-app-panel p-5 shadow-[0_1px_0_rgba(255,255,255,0.8)_inset]">
+    <section className="rounded-app-sm border border-[color:var(--glass-border)] bg-[color:var(--glass-panel)] p-5 backdrop-blur-[var(--glass-blur-soft)] shadow-[0_1px_0_rgba(255,255,255,0.14)_inset,0_14px_36px_rgba(0,0,0,0.08)]">
       <header className="mb-4 space-y-1">
         <h3 className="text-base font-semibold text-app-text">{title}</h3>
         <p className="text-sm text-app-text/70">{description}</p>
@@ -91,21 +93,61 @@ function FieldLabel({
   );
 }
 
+function SectionActions({
+  canSave,
+  onSave,
+}: {
+  canSave: boolean;
+  onSave: () => void;
+}) {
+  return (
+    <div className="flex justify-end pt-2">
+      <button
+        type="button"
+        className="rounded-app-sm border border-[color:var(--glass-border)] bg-[color:var(--glass-elevated)] px-3 py-2 text-sm text-app-text backdrop-blur-[var(--glass-blur-soft)] disabled:cursor-not-allowed disabled:opacity-50"
+        disabled={!canSave}
+        onClick={onSave}
+      >
+        Save changes
+      </button>
+    </div>
+  );
+}
+
+function hasChanges<T>(left: T, right: T) {
+  return JSON.stringify(left) !== JSON.stringify(right);
+}
+
 export function SettingsPage({
   settings,
   templateDraft,
   version,
   onClose,
-  onUpdateAppearance,
-  onUpdateEditor,
-  onUpdatePreview,
-  onUpdateFiles,
-  onTemplateDraftChange,
+  onSaveAppearance,
+  onSaveEditor,
+  onSavePreview,
+  onSaveFiles,
   onSaveTemplate,
   onResetTemplate,
   onResetAll,
 }: SettingsPageProps) {
   const [activeSection, setActiveSection] = useState<SettingsSection>("appearance");
+  const [appearanceDraft, setAppearanceDraft] = useState(settings.appearance);
+  const [editorDraft, setEditorDraft] = useState(settings.editor);
+  const [previewDraft, setPreviewDraft] = useState(settings.preview);
+  const [filesDraft, setFilesDraft] = useState(settings.files);
+  const [templateDraftValue, setTemplateDraftValue] = useState(templateDraft);
+
+  useEffect(() => {
+    setAppearanceDraft(settings.appearance);
+    setEditorDraft(settings.editor);
+    setPreviewDraft(settings.preview);
+    setFilesDraft(settings.files);
+  }, [settings]);
+
+  useEffect(() => {
+    setTemplateDraftValue(templateDraft);
+  }, [templateDraft]);
 
   const renderContent = () => {
     switch (activeSection) {
@@ -120,10 +162,13 @@ export function SettingsPage({
             </FieldLabel>
             <select
               id="theme-preference"
-              className="rounded-app-sm border border-[color:var(--ghost-border)] bg-app-panel-strong px-3 py-2"
-              value={settings.appearance.theme}
+              className="rounded-app-sm border border-[color:var(--glass-border)] bg-[color:var(--glass-elevated)] px-3 py-2 backdrop-blur-[var(--glass-blur-soft)]"
+              value={appearanceDraft.theme}
               onChange={(event) =>
-                onUpdateAppearance({ theme: event.target.value as ThemePreference })
+                setAppearanceDraft((current) => ({
+                  ...current,
+                  theme: event.target.value as ThemePreference,
+                }))
               }
             >
               <option value="system">System</option>
@@ -136,13 +181,20 @@ export function SettingsPage({
               <input
                 id="status-bar-toggle"
                 type="checkbox"
-                checked={settings.appearance.showStatusBar}
+                checked={appearanceDraft.showStatusBar}
                 onChange={(event) =>
-                  onUpdateAppearance({ showStatusBar: event.target.checked })
+                  setAppearanceDraft((current) => ({
+                    ...current,
+                    showStatusBar: event.target.checked,
+                  }))
                 }
               />
               Keep the footer metrics visible while writing
             </label>
+            <SectionActions
+              canSave={hasChanges(appearanceDraft, settings.appearance)}
+              onSave={() => onSaveAppearance(appearanceDraft)}
+            />
           </SectionCard>
         );
       case "preview":
@@ -154,6 +206,10 @@ export function SettingsPage({
             <p className="text-sm text-app-text/70">
               Preview content uses the full available width of the pane.
             </p>
+            <SectionActions
+              canSave={hasChanges(previewDraft, settings.preview)}
+              onSave={() => onSavePreview(previewDraft)}
+            />
           </SectionCard>
         );
       case "editor":
@@ -165,12 +221,21 @@ export function SettingsPage({
             <label className="inline-flex items-center gap-3 text-sm text-app-text">
               <input
                 type="checkbox"
-                checked={settings.editor.lineNumbers}
-                onChange={(event) => onUpdateEditor({ lineNumbers: event.target.checked })}
+                checked={editorDraft.lineNumbers}
+                onChange={(event) =>
+                  setEditorDraft((current) => ({
+                    ...current,
+                    lineNumbers: event.target.checked,
+                  }))
+                }
                 aria-label="Show line numbers"
               />
               Show line numbers
             </label>
+            <SectionActions
+              canSave={hasChanges(editorDraft, settings.editor)}
+              onSave={() => onSaveEditor(editorDraft)}
+            />
           </SectionCard>
         );
       case "files":
@@ -182,13 +247,20 @@ export function SettingsPage({
             <label className="inline-flex items-center gap-3 text-sm text-app-text">
               <input
                 type="checkbox"
-                checked={settings.files.confirmOnUnsavedClose}
+                checked={filesDraft.confirmOnUnsavedClose}
                 onChange={(event) =>
-                  onUpdateFiles({ confirmOnUnsavedClose: event.target.checked })
+                  setFilesDraft((current) => ({
+                    ...current,
+                    confirmOnUnsavedClose: event.target.checked,
+                  }))
                 }
               />
               Confirm before closing unsaved tabs
             </label>
+            <SectionActions
+              canSave={hasChanges(filesDraft, settings.files)}
+              onSave={() => onSaveFiles(filesDraft)}
+            />
           </SectionCard>
         );
       case "about":
@@ -213,23 +285,23 @@ export function SettingsPage({
             <FieldLabel htmlFor="template-content">Template content</FieldLabel>
             <textarea
               id="template-content"
-              className="min-h-64 w-full rounded-app-sm border border-[color:var(--ghost-border)] bg-app-editor px-4 py-3 font-mono text-sm text-app-text"
-              value={templateDraft}
+              className="min-h-64 w-full rounded-app-sm border border-[color:var(--glass-border)] bg-[color:var(--glass-elevated)] px-4 py-3 font-mono text-sm text-app-text backdrop-blur-[var(--glass-blur-soft)]"
+              value={templateDraftValue}
               onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
-                onTemplateDraftChange(event.target.value)
+                setTemplateDraftValue(event.target.value)
               }
             />
             <div className="flex flex-wrap gap-3">
               <button
                 type="button"
-                className="rounded-app-sm bg-app-text px-3 py-2 text-sm text-app-bg"
-                onClick={onSaveTemplate}
+                className="rounded-app-sm border border-[color:var(--glass-border)] bg-[color:var(--glass-elevated)] px-3 py-2 text-sm text-app-text backdrop-blur-[var(--glass-blur-soft)]"
+                onClick={() => onSaveTemplate(templateDraftValue)}
               >
                 Save template
               </button>
               <button
                 type="button"
-                className="rounded-app-sm border border-[color:var(--ghost-border)] px-3 py-2 text-sm text-app-text"
+                className="rounded-app-sm border border-[color:var(--glass-border)] bg-[color:var(--glass-panel)] px-3 py-2 text-sm text-app-text backdrop-blur-[var(--glass-blur-soft)]"
                 onClick={onResetTemplate}
               >
                 Reset template
@@ -245,7 +317,7 @@ export function SettingsPage({
           >
             <button
               type="button"
-              className="rounded-app-sm border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700"
+              className="rounded-app-sm border border-red-300/70 bg-red-50/85 px-3 py-2 text-sm text-red-700 backdrop-blur-[var(--glass-blur-soft)]"
               onClick={() => {
                 if (window.confirm("Reset all settings to their defaults?")) {
                   onResetAll();
@@ -264,19 +336,19 @@ export function SettingsPage({
   return (
     <section className="h-full min-h-0 p-4" aria-label="Settings">
       <div className="grid h-full min-h-0 grid-cols-[18rem_minmax(0,1fr)] gap-4">
-        <aside className="rounded-app-sm border border-[color:var(--ghost-border)] bg-app-panel p-4">
-          <div className="mb-5 flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-app-text">Settings</h2>
-              <p className="text-sm text-app-text/70">Tune Markora for your writing flow.</p>
-            </div>
+        <aside className="rounded-app-sm border border-[color:var(--glass-border)] bg-[color:var(--glass-panel)] p-4 backdrop-blur-[var(--glass-blur-soft)] shadow-[0_1px_0_rgba(255,255,255,0.14)_inset,0_14px_36px_rgba(0,0,0,0.08)]">
+          <div className="mb-4 flex items-start">
             <button
               type="button"
-              className="rounded-app-sm border border-[color:var(--ghost-border)] px-3 py-2 text-sm text-app-text"
+              className="rounded-app-sm border border-[color:var(--glass-border)] bg-[color:var(--glass-elevated)] px-3 py-2 text-sm text-app-text backdrop-blur-[var(--glass-blur-soft)]"
               onClick={onClose}
             >
-              Done
+              Back to editor
             </button>
+          </div>
+          <div className="mb-5">
+            <h2 className="text-lg font-semibold text-app-text">Settings</h2>
+            <p className="text-sm text-app-text/70">Tune Markora for your writing flow.</p>
           </div>
 
           <div className="space-y-5">

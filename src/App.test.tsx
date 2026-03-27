@@ -312,4 +312,31 @@ describe("App", () => {
     expect(screen.queryByText("Footer Status")).not.toBeInTheDocument();
     expect(screen.queryByText(/tabs$/)).not.toBeInTheDocument();
   });
+
+  it("persists editor settings only after the section save action", async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "open-settings" }));
+    await user.click(screen.getByRole("button", { name: "Editor" }));
+    await user.click(screen.getByLabelText("Show line numbers"));
+
+    expect(invokeMock).not.toHaveBeenCalledWith(
+      "save_settings",
+      expect.objectContaining({
+        settings: expect.anything(),
+      }),
+    );
+
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    expect(invokeMock).toHaveBeenCalledWith(
+      "save_settings",
+      expect.objectContaining({
+        settings: expect.objectContaining({
+          editor: expect.objectContaining({ lineNumbers: true }),
+        }),
+      }),
+    );
+  });
 });

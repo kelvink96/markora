@@ -230,24 +230,24 @@ export default function App() {
         templateDraft={templateDraft}
         version={packageJson.version}
         onClose={() => setActiveScreen("workspace")}
-        onUpdateAppearance={(appearance) => {
+        onSaveAppearance={(appearance) => {
           updateAppearance(appearance);
           void persistCurrentSettings();
         }}
-        onUpdateEditor={(editor) => {
+        onSaveEditor={(editor) => {
           updateEditor(editor);
           void persistCurrentSettings();
         }}
-        onUpdatePreview={(preview) => {
+        onSavePreview={(preview) => {
           updatePreview(preview);
           void persistCurrentSettings();
         }}
-        onUpdateFiles={(files) => {
+        onSaveFiles={(files) => {
           updateFiles(files);
           void persistCurrentSettings();
         }}
-        onTemplateDraftChange={setTemplateDraft}
-        onSaveTemplate={() => {
+        onSaveTemplate={(value) => {
+          setTemplateDraft(value);
           saveTemplateDraft();
           void persistCurrentSettings();
         }}

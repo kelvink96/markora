@@ -1,51 +1,108 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
+import { useCallback, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import "./App.css";
+import { open, save } from "@tauri-apps/plugin-dialog";
+import { Editor } from "./components/Editor";
+import { Preview } from "./components/Preview";
+import { SplitPane } from "./components/SplitPane";
+import { Toolbar } from "./components/Toolbar";
+import { useDocumentStore } from "./store/document";
 
-function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+export default function App() {
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const { setContent, setFilePath, markClean, newDocument } = useDocumentStore();
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
+  const handleOpen = useCallback(async () => {
+    const selected = await open({
+      multiple: false,
+      filters: [{ name: "Markdown", extensions: ["md", "markdown", "txt"] }],
+    });
+
+    if (typeof selected === "string") {
+      const text = await invoke<string>("read_file", { path: selected });
+      setContent(text);
+      setFilePath(selected);
+      markClean();
+    }
+  }, [markClean, setContent, setFilePath]);
+
+  const handleSaveAs = useCallback(async () => {
+    const { content } = useDocumentStore.getState();
+    const savePath = await save({
+      filters: [{ name: "Markdown", extensions: ["md"] }],
+      defaultPath: "untitled.md",
+    });
+
+    if (savePath) {
+      await invoke("write_file", { path: savePath, content });
+      setFilePath(savePath);
+      markClean();
+    }
+  }, [markClean, setFilePath]);
+
+  const handleSave = useCallback(async () => {
+    // Read from the store directly so save always uses the newest content and file path.
+    const { filePath, content } = useDocumentStore.getState();
+
+    if (filePath) {
+      await invoke("write_file", { path: filePath, content });
+      markClean();
+    } else {
+      await handleSaveAs();
+    }
+  }, [handleSaveAs, markClean]);
+
+  const handleNew = useCallback(() => {
+    const { isDirty } = useDocumentStore.getState();
+
+    if (isDirty && !window.confirm("Discard unsaved changes?")) return;
+    newDocument();
+  }, [newDocument]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const mod = event.ctrlKey || event.metaKey;
+      if (!mod) return;
+
+      if (event.key === "n") {
+        event.preventDefault();
+        void handleNew();
+      }
+
+      if (event.key === "o") {
+        event.preventDefault();
+        void handleOpen();
+      }
+
+      if (event.key === "s" && !event.shiftKey) {
+        event.preventDefault();
+        void handleSave();
+      }
+
+      if (event.key === "s" && event.shiftKey) {
+        event.preventDefault();
+        void handleSaveAs();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [handleNew, handleOpen, handleSave, handleSaveAs]);
+
+  const { isDirty, filePath } = useDocumentStore();
 
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
-
-      <div className="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
+    <div className={`app ${theme}`}>
+      <Toolbar
+        onNew={handleNew}
+        onOpen={handleOpen}
+        onSave={handleSave}
+        onSaveAs={handleSaveAs}
+        onToggleTheme={() => setTheme((current) => (current === "light" ? "dark" : "light"))}
+        theme={theme}
+        isDirty={isDirty}
+        filePath={filePath}
+      />
+      <SplitPane left={<Editor theme={theme} />} right={<Preview />} />
+    </div>
   );
 }
-
-export default App;

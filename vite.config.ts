@@ -5,7 +5,8 @@ export default defineConfig({
   plugins: [react()],
   clearScreen: false,
   // Tauri expects the frontend dev server on a fixed port.
-  server: { port: 1420, strictPort: true },
+  // Force IPv4 here because this Windows environment rejects binding to ::1.
+  server: { host: "127.0.0.1", port: 1420, strictPort: true },
   // Allow Vite to expose Tauri-provided environment variables to the frontend build.
   envPrefix: ["VITE_", "TAURI_ENV_*"],
   build: {

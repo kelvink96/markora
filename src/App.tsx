@@ -1,14 +1,17 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
+import packageJson from "../package.json";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { AppShell } from "./app/app-shell";
 import { EditorPane } from "./components/editor-page/editor-pane";
 import { TabStrip } from "./components/editor-page/tab-strip";
 import { TopBar } from "./components/editor-page/top-bar";
 import { PreviewPane } from "./components/editor-page/preview-pane";
+import { SettingsPage } from "./components/settings-page/settings-page";
 import { Workspace } from "./components/editor-page/workspace";
 import { FooterStatusBar } from "./components/editor-page/footer-status-bar";
 import { getWordCount } from "./features/document/document-actions";
-import { loadSettings, saveSettings } from "./features/settings/settings-api";
+import { loadSettings, resetSettings, saveSettings } from "./features/settings/settings-api";
+import { createDefaultSettings } from "./features/settings/settings-schema";
 import { useSettingsStore } from "./features/settings/settings-store";
 import { useEditorStatusState } from "./features/workspace/editor-status-state";
 import { useWorkspaceState } from "./features/workspace/workspace-state";
@@ -25,6 +28,7 @@ function getSystemThemePreference() {
 }
 
 export default function App() {
+  const [activeScreen, setActiveScreen] = useState<"workspace" | "settings">("workspace");
   const { openDocument, setFilePath, markClean, newDocument, selectDocument, closeDocument } =
     useDocumentStore();
   const theme = useThemeStore((state) => state.resolvedTheme);
@@ -36,8 +40,19 @@ export default function App() {
   const settings = useSettingsStore((state) => state.settings);
   const hydrateSettings = useSettingsStore((state) => state.hydrate);
   const updateAppearance = useSettingsStore((state) => state.updateAppearance);
+  const updatePreview = useSettingsStore((state) => state.updatePreview);
+  const updateFiles = useSettingsStore((state) => state.updateFiles);
+  const templateDraft = useSettingsStore((state) => state.templateDraft);
+  const setTemplateDraft = useSettingsStore((state) => state.setTemplateDraft);
+  const saveTemplateDraft = useSettingsStore((state) => state.saveTemplateDraft);
   const line = useEditorStatusState((state) => state.line);
   const column = useEditorStatusState((state) => state.column);
+
+  const persistCurrentSettings = useCallback(() => {
+    return saveSettings(useSettingsStore.getState().settings).catch((error) =>
+      console.error("save_settings failed:", error),
+    );
+  }, []);
 
   const handleOpen = useCallback(async () => {
     // `open()` is a native dialog, not an HTML file input, so it feels like a desktop app.
@@ -135,10 +150,8 @@ export default function App() {
     toggleTheme();
     const nextThemePreference = useThemeStore.getState().themePreference;
     updateAppearance({ theme: nextThemePreference });
-    void saveSettings(useSettingsStore.getState().settings).catch((error) =>
-      console.error("save_settings failed:", error),
-    );
-  }, [toggleTheme, updateAppearance]);
+    void persistCurrentSettings();
+  }, [persistCurrentSettings, toggleTheme, updateAppearance]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -198,6 +211,7 @@ export default function App() {
 
   const commandBar = (
     <TopBar
+      onOpenSettings={() => setActiveScreen("settings")}
       onThemeToggle={handleThemeToggle}
       onNew={handleNew}
       onOpen={handleOpen}
@@ -209,7 +223,46 @@ export default function App() {
   );
 
   const workspace = (
-    <Workspace left={<EditorPane theme={theme} />} right={<PreviewPane />} viewMode={viewMode} />
+    activeScreen === "settings" ? (
+      <SettingsPage
+        settings={settings}
+        templateDraft={templateDraft}
+        version={packageJson.version}
+        onClose={() => setActiveScreen("workspace")}
+        onUpdateAppearance={(appearance) => {
+          updateAppearance(appearance);
+          void persistCurrentSettings();
+        }}
+        onUpdatePreview={(preview) => {
+          updatePreview(preview);
+          void persistCurrentSettings();
+        }}
+        onUpdateFiles={(files) => {
+          updateFiles(files);
+          void persistCurrentSettings();
+        }}
+        onTemplateDraftChange={setTemplateDraft}
+        onSaveTemplate={() => {
+          saveTemplateDraft();
+          void persistCurrentSettings();
+        }}
+        onResetTemplate={() => {
+          const defaultTemplate = createDefaultSettings().authoring.newDocumentTemplate;
+          setTemplateDraft(defaultTemplate);
+          useSettingsStore.getState().saveTemplateDraft();
+          void persistCurrentSettings();
+        }}
+        onResetAll={() => {
+          void resetSettings()
+            .then((defaultSettings) => {
+              hydrateSettings(defaultSettings);
+            })
+            .catch((error) => console.error("reset_settings failed:", error));
+        }}
+      />
+    ) : (
+      <Workspace left={<EditorPane theme={theme} />} right={<PreviewPane />} viewMode={viewMode} />
+    )
   );
   const statusBar = (
     <FooterStatusBar wordCount={wordCount} viewMode={viewMode} line={line} column={column} />
@@ -221,7 +274,7 @@ export default function App() {
       tabStrip={tabStrip}
       commandBar={commandBar}
       workspace={workspace}
-      statusBar={statusBar}
+      statusBar={settings.appearance.showStatusBar && activeScreen === "workspace" ? statusBar : null}
     />
   );
 }

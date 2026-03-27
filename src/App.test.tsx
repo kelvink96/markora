@@ -62,7 +62,14 @@ vi.mock("./components/editor-page/workspace", () => ({
 }));
 
 vi.mock("./components/editor-page/top-bar", () => ({
-  TopBar: () => <div>Top Bar</div>,
+  TopBar: ({ onOpenSettings }: { onOpenSettings: () => void }) => (
+    <div>
+      <button type="button" onClick={onOpenSettings}>
+        open-settings
+      </button>
+      <div>Top Bar</div>
+    </div>
+  ),
 }));
 
 vi.mock("./components/editor-page/footer-status-bar", () => ({
@@ -292,5 +299,14 @@ describe("App", () => {
     fireEvent.keyDown(window, { key: "Tab", ctrlKey: true, shiftKey: true });
 
     expect(useDocumentStore.getState().activeDocumentId).toBe("document-1");
+  });
+
+  it("opens the settings screen from the top bar", async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "open-settings" }));
+
+    expect(screen.getByRole("heading", { name: "Application" })).toBeInTheDocument();
   });
 });

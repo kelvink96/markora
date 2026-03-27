@@ -26,6 +26,12 @@ describe("settings-store", () => {
     expect(useSettingsStore.getState().settings.appearance.showStatusBar).toBe(false);
   });
 
+  it("updates preview settings fields", () => {
+    useSettingsStore.getState().updatePreview({ contentWidth: "wide" });
+
+    expect(useSettingsStore.getState().settings.preview.contentWidth).toBe("wide");
+  });
+
   it("resets back to defaults", () => {
     useSettingsStore.getState().updateFiles({ autosave: true });
     useSettingsStore.getState().setTemplateDraft("# Changed");

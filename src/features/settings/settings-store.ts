@@ -1,5 +1,11 @@
 import { create } from "zustand";
-import { createDefaultSettings, type AppearanceSettings, type FileSettings, type MarkoraSettings } from "./settings-schema";
+import {
+  createDefaultSettings,
+  type AppearanceSettings,
+  type FileSettings,
+  type MarkoraSettings,
+  type PreviewSettings,
+} from "./settings-schema";
 
 interface SettingsStore {
   isHydrated: boolean;
@@ -7,6 +13,7 @@ interface SettingsStore {
   templateDraft: string;
   hydrate: (settings: MarkoraSettings) => void;
   updateAppearance: (appearance: Partial<AppearanceSettings>) => void;
+  updatePreview: (preview: Partial<PreviewSettings>) => void;
   updateFiles: (files: Partial<FileSettings>) => void;
   setTemplateDraft: (templateDraft: string) => void;
   saveTemplateDraft: () => void;
@@ -38,6 +45,16 @@ export const useSettingsStore = create<SettingsStore>()((set) => ({
         appearance: {
           ...state.settings.appearance,
           ...appearance,
+        },
+      },
+    })),
+  updatePreview: (preview) =>
+    set((state) => ({
+      settings: {
+        ...state.settings,
+        preview: {
+          ...state.settings.preview,
+          ...preview,
         },
       },
     })),

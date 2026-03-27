@@ -7,6 +7,7 @@ describe("TopBar", () => {
   it("renders document metadata and control groups", () => {
     render(
       <TopBar
+        onOpenSettings={() => {}}
         onThemeToggle={() => {}}
         onNew={() => {}}
         onOpen={() => {}}
@@ -24,6 +25,7 @@ describe("TopBar", () => {
   it("renders document, menu, and utility zones", () => {
     render(
       <TopBar
+        onOpenSettings={vi.fn()}
         onThemeToggle={vi.fn()}
         onNew={vi.fn()}
         onOpen={vi.fn()}
@@ -46,6 +48,7 @@ describe("TopBar", () => {
   it("uses a compact command bar layout", () => {
     render(
       <TopBar
+        onOpenSettings={vi.fn()}
         onThemeToggle={vi.fn()}
         onNew={vi.fn()}
         onOpen={vi.fn()}
@@ -65,6 +68,7 @@ describe("TopBar", () => {
   it("renders a settings icon button", () => {
     render(
       <TopBar
+        onOpenSettings={vi.fn()}
         onThemeToggle={vi.fn()}
         onNew={vi.fn()}
         onOpen={vi.fn()}
@@ -81,6 +85,7 @@ describe("TopBar", () => {
   it("keeps document identity separate from utility controls", () => {
     render(
       <TopBar
+        onOpenSettings={vi.fn()}
         onThemeToggle={vi.fn()}
         onNew={vi.fn()}
         onOpen={vi.fn()}
@@ -103,6 +108,7 @@ describe("TopBar", () => {
 
     render(
       <TopBar
+        onOpenSettings={vi.fn()}
         onThemeToggle={vi.fn()}
         onNew={vi.fn()}
         onOpen={onOpen}
@@ -125,6 +131,7 @@ describe("TopBar", () => {
 
     render(
       <TopBar
+        onOpenSettings={vi.fn()}
         onThemeToggle={vi.fn()}
         onNew={vi.fn()}
         onOpen={vi.fn()}
@@ -140,5 +147,27 @@ describe("TopBar", () => {
     expect(screen.getByRole("tab", { name: "Split" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Preview" })).toBeInTheDocument();
     expect(onViewModeChange).not.toHaveBeenCalled();
+  });
+
+  it("opens settings from the utility button", async () => {
+    const user = userEvent.setup();
+    const onOpenSettings = vi.fn();
+
+    render(
+      <TopBar
+        onOpenSettings={onOpenSettings}
+        onThemeToggle={vi.fn()}
+        onNew={vi.fn()}
+        onOpen={vi.fn()}
+        onSave={vi.fn()}
+        onSaveAs={vi.fn()}
+        viewMode="edit"
+        onViewModeChange={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Settings" }));
+
+    expect(onOpenSettings).toHaveBeenCalled();
   });
 });

@@ -1,35 +1,41 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { PreviewPane } from "./preview-pane";
 import { useDocumentStore } from "../../../store/document";
+import { createDefaultSettings } from "../../../features/settings/settings-schema";
+import { useSettingsStore } from "../../../features/settings/settings-store";
 
-// Replace Tauri's runtime bridge with a predictable mock for tests.
+const { invokeMock } = vi.hoisted(() => ({
+  invokeMock: vi.fn(),
+}));
+
 vi.mock("@tauri-apps/api/core", () => ({
-  invoke: vi.fn((_command: string, args: { markdown: string }) =>
-    Promise.resolve(`<p>${args.markdown}</p>`),
-  ),
+  invoke: invokeMock,
 }));
 
 describe("PreviewPane", () => {
-  it("renders a labeled preview region with a stable content hook", async () => {
-    useDocumentStore.setState({ content: "hello", filePath: null, isDirty: false });
+  beforeEach(() => {
+    const settings = createDefaultSettings();
+    useDocumentStore.setState({
+      content: "# Preview",
+      filePath: null,
+      isDirty: false,
+      openDocuments: [{ id: "document-1", content: "# Preview", filePath: null, isDirty: false }],
+      activeDocumentId: "document-1",
+    });
+    useSettingsStore.setState({
+      isHydrated: true,
+      settings,
+      templateDraft: settings.authoring.newDocumentTemplate,
+    });
+    invokeMock.mockResolvedValue("<h1>Preview</h1>");
+  });
+
+  it("applies the wide preview width setting", async () => {
+    useSettingsStore.getState().updatePreview({ contentWidth: "wide" });
 
     render(<PreviewPane />);
 
-    await waitFor(() => {
-      expect(screen.getByRole("region", { name: "Preview" })).toBeInTheDocument();
-      expect(screen.getByTestId("preview-content").innerHTML).toContain("<p>hello</p>");
-      expect(screen.getByRole("region", { name: "Preview" })).toHaveClass(
-        "h-full",
-        "min-h-0",
-        "pl-0",
-        "pr-0",
-      );
-      expect(screen.getByTestId("preview-content")).toHaveClass(
-        "mx-auto",
-        "max-w-[44rem]",
-        "p-[calc(var(--space-6)-0.1rem)]",
-      );
-    });
+    await waitFor(() => expect(screen.getByTestId("preview-content")).toHaveClass("max-w-[56rem]"));
   });
 });

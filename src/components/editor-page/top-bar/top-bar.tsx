@@ -6,6 +6,7 @@ import { useEditorCommandState } from "../../../features/editor/editor-command-s
 import type { WorkspaceViewMode } from "../../../features/workspace/workspace-state";
 
 interface TopBarProps {
+  onOpenSettings: () => void;
   onThemeToggle: () => void;
   onNew: () => void;
   onOpen: () => void;
@@ -16,6 +17,7 @@ interface TopBarProps {
 }
 
 export function TopBar({
+  onOpenSettings,
   onThemeToggle,
   onNew,
   onOpen,
@@ -81,7 +83,7 @@ export function TopBar({
         data-testid="top-bar-utilities"
       >
         <ViewModeSwitcher value={viewMode} onValueChange={onViewModeChange} />
-        <IconButton label="Settings" type="button">
+        <IconButton label="Settings" type="button" onClick={onOpenSettings}>
           <svg
             aria-hidden="true"
             viewBox="0 0 24 24"

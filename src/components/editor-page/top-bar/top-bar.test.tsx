@@ -41,7 +41,7 @@ describe("TopBar", () => {
     expect(screen.getByRole("switch")).toBeInTheDocument();
   });
 
-  it("marks formatting controls as unavailable until they are wired up", () => {
+  it("keeps document identity separate from utility controls", () => {
     render(
       <TopBar
         fileName="notes.md"
@@ -56,8 +56,9 @@ describe("TopBar", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: "Bold" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Italic" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "List" })).toBeDisabled();
+    expect(screen.getByRole("banner")).toBeInTheDocument();
+    expect(screen.getByTestId("top-bar-document")).toBeInTheDocument();
+    expect(screen.getByTestId("top-bar-utilities")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Bold" })).not.toBeInTheDocument();
   });
 });

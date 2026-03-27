@@ -14,4 +14,5 @@
 .app-shell__workspace {
   flex: 1 1 auto;
   min-height: 0;
+  padding-bottom: var(--space-2);
 }

@@ -16,16 +16,18 @@ export function FormattingToolbar({
   disabled = false,
 }: FormattingToolbarProps) {
   return (
-    <ToolbarGroup>
-      <IconButton label="Bold" onClick={onBold} disabled={disabled}>
-        B
-      </IconButton>
-      <IconButton label="Italic" onClick={onItalic} disabled={disabled}>
-        I
-      </IconButton>
-      <IconButton label="List" onClick={onList} disabled={disabled}>
-        •
-      </IconButton>
-    </ToolbarGroup>
+    <div className="formatting-toolbar" role="toolbar" aria-label="Formatting">
+      <ToolbarGroup>
+        <IconButton label="Bold" onClick={onBold} disabled={disabled}>
+          B
+        </IconButton>
+        <IconButton label="Italic" onClick={onItalic} disabled={disabled}>
+          I
+        </IconButton>
+        <IconButton label="List" onClick={onList} disabled={disabled}>
+          •
+        </IconButton>
+      </ToolbarGroup>
+    </div>
   );
 }

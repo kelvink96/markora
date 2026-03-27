@@ -57,9 +57,14 @@ export function Workspace({ left, right }: WorkspaceProps) {
         dragging.current = false;
       }}
     >
-      <div className="workspace__left" style={{ width: `${splitPct}%` }}>
+      <section
+        className="workspace__left"
+        style={{ width: `${splitPct}%` }}
+        role="region"
+        aria-label="Editor workspace"
+      >
         {left}
-      </div>
+      </section>
       <div
         className="workspace__divider"
         role="separator"
@@ -71,9 +76,14 @@ export function Workspace({ left, right }: WorkspaceProps) {
           dragging.current = true;
         }}
       />
-      <div className="workspace__right" style={{ width: `${100 - splitPct}%` }}>
+      <section
+        className="workspace__right"
+        style={{ width: `${100 - splitPct}%` }}
+        role="region"
+        aria-label="Preview workspace"
+      >
         {right}
-      </div>
+      </section>
     </div>
   );
 }

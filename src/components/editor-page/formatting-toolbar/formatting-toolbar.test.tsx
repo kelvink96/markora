@@ -17,6 +17,18 @@ describe("FormattingToolbar", () => {
     expect(screen.getByRole("button", { name: "List" })).toBeInTheDocument();
   });
 
+  it("exposes the controls as a formatting toolbar", () => {
+    render(
+      <FormattingToolbar
+        onBold={() => {}}
+        onItalic={() => {}}
+        onList={() => {}}
+      />,
+    );
+
+    expect(screen.getByLabelText("Formatting")).toBeInTheDocument();
+  });
+
   it("calls the bold handler", () => {
     const onBold = vi.fn();
 

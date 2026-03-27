@@ -16,7 +16,7 @@ export function PreviewPane() {
   }, [content]);
 
   return (
-    <div className="preview-pane">
+    <section className="preview-pane" aria-label="Preview">
       <div className="preview-pane__surface">
         <div
           className="preview-pane__content prose"
@@ -24,6 +24,6 @@ export function PreviewPane() {
           dangerouslySetInnerHTML={{ __html: html }}
         />
       </div>
-    </div>
+    </section>
   );
 }

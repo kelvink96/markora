@@ -17,6 +17,13 @@ describe("Workspace", () => {
     expect(container.querySelector(".workspace__divider")).toBeTruthy();
   });
 
+  it("renders editor and preview panes as named regions", () => {
+    render(<Workspace left={<div>Left</div>} right={<div>Right</div>} />);
+
+    expect(screen.getByRole("region", { name: "Editor workspace" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Preview workspace" })).toBeInTheDocument();
+  });
+
   it("moves the split with keyboard arrows", () => {
     render(<Workspace left={<div>Left</div>} right={<div>Right</div>} />);
 

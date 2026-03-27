@@ -5,6 +5,7 @@ import { EditorView as CMView } from "@codemirror/view";
 import { markdown } from "@codemirror/lang-markdown";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { useDocumentStore } from "../../../store/document";
+import { FormattingToolbar } from "../formatting-toolbar";
 import "./editor-pane.css";
 
 interface EditorPaneProps {
@@ -62,8 +63,18 @@ export function EditorPane({ theme }: EditorPaneProps) {
   }, [content]);
 
   return (
-    <div className="editor-pane">
-      <div ref={containerRef} className="editor-pane__surface" />
-    </div>
+    <section className="editor-pane" aria-label="Editor">
+      <div className="editor-pane__panel">
+        <div className="editor-pane__header">
+          <FormattingToolbar
+            onBold={() => {}}
+            onItalic={() => {}}
+            onList={() => {}}
+            disabled
+          />
+        </div>
+        <div ref={containerRef} className="editor-pane__surface" />
+      </div>
+    </section>
   );
 }

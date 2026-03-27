@@ -16,10 +16,11 @@ body,
 body {
   margin: 0;
   background:
-    radial-gradient(circle at top, rgba(91, 100, 120, 0.08), transparent 28%),
+    radial-gradient(circle at top, rgba(45, 91, 134, 0.08), transparent 24%),
+    radial-gradient(circle at 85% 18%, rgba(198, 176, 140, 0.1), transparent 22%),
     var(--surface-base);
   color: var(--text-primary);
-  font-family: Inter, system-ui, sans-serif;
+  font-family: "Manrope", "Segoe UI", sans-serif;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }

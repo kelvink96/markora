@@ -5,9 +5,9 @@
 
 .preview-pane__surface {
   height: 100%;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.66), transparent 18%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.8), transparent 18%),
     var(--surface-preview);
   box-shadow: var(--shadow-ambient);
   border: 1px solid var(--ghost-border);
@@ -15,7 +15,7 @@
 }
 
 .preview-pane__content {
-  padding: var(--space-6);
-  max-width: 52rem;
+  padding: calc(var(--space-6) + 0.35rem);
+  max-width: 48rem;
   margin: 0 auto;
 }

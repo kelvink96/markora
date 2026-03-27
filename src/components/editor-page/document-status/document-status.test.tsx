@@ -7,6 +7,6 @@ describe("DocumentStatus", () => {
     render(<DocumentStatus fileName="notes.md" isDirty />);
 
     expect(screen.getByText("notes.md")).toBeInTheDocument();
-    expect(screen.getByText("Unsaved")).toBeInTheDocument();
+    expect(screen.getByText("Unsaved changes")).toBeInTheDocument();
   });
 });

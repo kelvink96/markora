@@ -18,12 +18,31 @@ describe("TabStrip", () => {
       />,
     );
 
-    expect(container.firstChild).toHaveClass("border-b", "bg-app-panel/96");
+    expect(container.firstChild).toHaveClass(
+      "tab-strip",
+      "border-b",
+      "border-[color:var(--glass-border)]",
+      "bg-[color:var(--glass-panel-strong)]",
+    );
     const activeTab = screen.getByRole("tab", { name: "one.md" });
+    const inactiveTab = screen.getByRole("tab", { name: "Untitled *" });
     expect(activeTab).toHaveAttribute("aria-selected", "true");
-    expect(activeTab.parentElement).toHaveClass("bg-app-panel-strong", "shadow-[var(--shadow-ambient)]");
-    expect(screen.getByRole("tab", { name: "Untitled *" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "New tab" })).toBeInTheDocument();
+    expect(activeTab.parentElement).toHaveClass(
+      "tab-strip__tab",
+      "tab-strip__tab--active",
+      "rounded-app-sm",
+      "bg-[color:var(--glass-elevated)]",
+    );
+    expect(inactiveTab.parentElement).toHaveClass(
+      "tab-strip__tab",
+      "tab-strip__tab--inactive",
+      "rounded-app-sm",
+      "bg-[color:var(--glass-panel)]",
+    );
+    expect(screen.getByRole("button", { name: "New tab" })).toHaveClass(
+      "tab-strip__new-tab",
+      "rounded-app-md",
+    );
   });
 
   it("invokes tab actions", async () => {

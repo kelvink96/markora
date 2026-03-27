@@ -61,8 +61,14 @@ describe("TopBar", () => {
 
     expect(screen.getByRole("banner")).toHaveClass("px-3", "py-2");
     expect(screen.getByRole("banner")).toHaveClass("grid-cols-[auto_minmax(0,1fr)_auto]");
+    expect(screen.getByRole("banner")).toHaveClass(
+      "top-bar",
+      "border-[color:var(--glass-border)]",
+      "bg-[color:var(--glass-panel-strong)]",
+      "backdrop-blur-[var(--glass-blur-strong)]",
+    );
     expect(screen.getByTestId("top-bar-toolbar")).toHaveClass("justify-center");
-    expect(screen.getByTestId("top-bar-utilities")).toHaveClass("gap-2", "rounded-full", "p-0");
+    expect(screen.getByTestId("top-bar-utilities")).toHaveClass("gap-2", "rounded-app-lg", "p-0.5");
   });
 
   it("renders a settings icon button", () => {

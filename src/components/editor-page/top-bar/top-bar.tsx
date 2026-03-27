@@ -55,7 +55,7 @@ export function TopBar({
   ];
 
   return (
-    <header className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-[color:var(--ghost-border)] bg-app-panel/90 px-3 py-2 backdrop-blur-md">
+    <header className="top-bar grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-[color:var(--glass-border)] bg-[color:var(--glass-panel-strong)] px-3 py-2 backdrop-blur-[var(--glass-blur-strong)] supports-[backdrop-filter]:bg-[color:var(--glass-panel-strong)]">
       <div className="flex min-w-0 items-center justify-start gap-2" data-testid="top-bar-menu">
         <MenuBar groups={menuGroups} />
       </div>
@@ -79,7 +79,7 @@ export function TopBar({
         />
       </div>
       <div
-        className="flex items-center justify-end gap-2 rounded-full p-0"
+        className="flex items-center justify-end gap-2 rounded-app-lg p-0.5"
         data-testid="top-bar-utilities"
       >
         <ViewModeSwitcher value={viewMode} onValueChange={onViewModeChange} />

@@ -22,7 +22,7 @@ export function MenuBar({ groups }: MenuBarProps) {
         <DropdownMenu.Root key={group.label}>
           <DropdownMenu.Trigger asChild>
             <button
-              className="rounded-full bg-transparent px-3 py-1.5 text-[0.95rem] font-medium text-app-text transition hover:bg-app-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-app-accent/40"
+              className="rounded-app-md border border-transparent bg-transparent px-3 py-1.5 text-[0.95rem] font-medium text-app-text transition hover:border-[color:var(--glass-border)] hover:bg-[color:var(--glass-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-app-accent/40"
               type="button"
             >
               {group.label}
@@ -30,13 +30,13 @@ export function MenuBar({ groups }: MenuBarProps) {
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>
             <DropdownMenu.Content
-              className="z-50 min-w-48 rounded-app-md border border-black/10 bg-app-panel-strong p-2 shadow-[0_18px_40px_rgba(30,43,52,0.07)]"
+              className="z-50 min-w-48 rounded-app-lg border border-[color:var(--glass-border)] bg-[color:var(--glass-elevated)] p-2 shadow-[0_18px_40px_rgba(30,43,52,0.12)] backdrop-blur-[var(--glass-blur-soft)]"
               sideOffset={8}
             >
               {group.items.map((item) => (
                 <DropdownMenu.Item key={item.label} asChild disabled={item.disabled}>
                   <button
-                    className="w-full rounded-app-sm px-3 py-2 text-left text-app-text transition hover:bg-app-subtle focus-visible:outline-none focus-visible:bg-app-subtle data-[disabled]:cursor-not-allowed data-[disabled]:text-app-text-muted data-[disabled]:hover:bg-transparent"
+                    className="w-full rounded-app-sm px-3 py-2 text-left text-app-text transition hover:bg-[color:var(--glass-hover)] focus-visible:outline-none focus-visible:bg-[color:var(--glass-hover)] data-[disabled]:cursor-not-allowed data-[disabled]:text-app-text-muted data-[disabled]:hover:bg-transparent"
                     type="button"
                     onClick={item.onSelect}
                   >

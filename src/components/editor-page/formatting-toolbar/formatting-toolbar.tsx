@@ -36,7 +36,7 @@ export function FormattingToolbar({
     <div
       role="toolbar"
       aria-label="Formatting"
-      className="inline-flex max-w-full items-center gap-1.5 overflow-x-auto rounded-full border border-[color:var(--ghost-border)] bg-app-panel-strong/94 px-2 py-1 shadow-[0_1px_0_rgba(255,255,255,0.75)_inset]"
+      className="inline-flex max-w-full items-center gap-1.5 overflow-x-auto rounded-app-lg border border-[color:var(--glass-border)] bg-[color:var(--glass-panel)] px-2 py-1 backdrop-blur-[var(--glass-blur-soft)] shadow-[0_1px_0_rgba(255,255,255,0.55)_inset]"
     >
       <ToolbarGroup>
         <IconButton label="Heading" onClick={onHeading} disabled={disabled}>

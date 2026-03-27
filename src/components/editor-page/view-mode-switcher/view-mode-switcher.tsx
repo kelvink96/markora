@@ -12,7 +12,7 @@ export function ViewModeSwitcher({ value, onValueChange }: ViewModeSwitcherProps
     <div
       role="tablist"
       aria-label="View mode"
-      className="inline-flex items-center rounded-full border border-[color:var(--ghost-border)] bg-app-panel-strong/82 p-0.5 shadow-[var(--shadow-crisp)]"
+      className="inline-flex items-center rounded-app-lg border border-[color:var(--glass-border)] bg-[color:var(--glass-panel)] p-0.5 backdrop-blur-[var(--glass-blur-soft)] shadow-[var(--shadow-crisp)]"
     >
       {modes.map((mode) => {
         const selected = value === mode;
@@ -24,10 +24,10 @@ export function ViewModeSwitcher({ value, onValueChange }: ViewModeSwitcherProps
             role="tab"
             aria-selected={selected}
             aria-label={mode.charAt(0).toUpperCase() + mode.slice(1)}
-            className={`rounded-full px-3 py-1.5 text-[0.85rem] font-medium capitalize transition ${
+            className={`rounded-app-md px-3 py-1.5 text-[0.85rem] font-medium capitalize transition ${
               selected
-                ? "bg-app-panel text-app-text"
-                : "text-app-text-secondary hover:bg-app-subtle"
+                ? "bg-[color:var(--glass-elevated)] text-app-text"
+                : "text-app-text-secondary hover:bg-[color:var(--glass-hover)]"
             }`}
             onClick={() => onValueChange(mode)}
           >

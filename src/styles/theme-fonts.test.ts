@@ -22,4 +22,18 @@ describe("theme fonts", () => {
 
     expect(tailwindCss).toContain('--font-ui: "Geist"');
   });
+
+  it("defines an atmospheric background field for the acrylic surfaces", () => {
+    const tailwindCss = readFileSync(
+      path.join(rootDirectory, "src", "styles", "tailwind.css"),
+      "utf8",
+    );
+
+    expect(tailwindCss).toContain("--bg-atmosphere-base");
+    expect(tailwindCss).toContain("--bg-atmosphere-top");
+    expect(tailwindCss).toContain("--bg-atmosphere-bottom");
+    expect(tailwindCss).toContain("radial-gradient(at 18% 18%");
+    expect(tailwindCss).toContain("radial-gradient(at 82% 68%");
+    expect(tailwindCss).toContain("var(--bg-atmosphere-base)");
+  });
 });

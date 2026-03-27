@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open, save } from "@tauri-apps/plugin-dialog";
+import { AppShell } from "./app/app-shell";
 import { EditorPane } from "./components/editor-page/editor-pane";
 import { TopBar } from "./components/editor-page/top-bar";
 import { PreviewPane } from "./components/editor-page/preview-pane";
@@ -102,21 +103,21 @@ export default function App() {
   const fileName = getDisplayFileName(filePath);
   const wordCount = getWordCount(content);
 
-  return (
-    // Theme is represented as a CSS class so the rest of the UI can switch tokens declaratively.
-    <div className={`app ${theme}`}>
-      <TopBar
-        fileName={fileName}
-        isDirty={isDirty}
-        wordCount={wordCount}
-        theme={theme}
-        onThemeToggle={toggleTheme}
-        onNew={handleNew}
-        onOpen={handleOpen}
-        onSave={handleSave}
-        onSaveAs={handleSaveAs}
-      />
-      <Workspace left={<EditorPane theme={theme} />} right={<PreviewPane />} />
-    </div>
+  const topBar = (
+    <TopBar
+      fileName={fileName}
+      isDirty={isDirty}
+      wordCount={wordCount}
+      theme={theme}
+      onThemeToggle={toggleTheme}
+      onNew={handleNew}
+      onOpen={handleOpen}
+      onSave={handleSave}
+      onSaveAs={handleSaveAs}
+    />
   );
+
+  const workspace = <Workspace left={<EditorPane theme={theme} />} right={<PreviewPane />} />;
+
+  return <AppShell theme={theme} topBar={topBar} workspace={workspace} />;
 }

@@ -30,7 +30,7 @@ export function MenuBar({ groups }: MenuBarProps) {
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>
             <DropdownMenu.Content
-              className="menu-bar__content z-50 min-w-48 rounded-app-lg border border-[color:var(--glass-border)] bg-[color:var(--glass-elevated)] p-2 shadow-[0_18px_40px_rgba(30,43,52,0.12)] backdrop-blur-[var(--glass-blur-soft)]"
+              className="menu-bar__content z-50 min-w-48 rounded-app-sm border border-[color:var(--glass-border)] bg-[color:var(--glass-elevated)] p-2 shadow-[0_18px_40px_rgba(30,43,52,0.12)] backdrop-blur-[var(--glass-blur-soft)]"
               sideOffset={8}
             >
               {group.items.map((item) => (

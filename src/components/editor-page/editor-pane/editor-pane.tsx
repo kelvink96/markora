@@ -214,11 +214,11 @@ export function EditorPane({ theme }: EditorPaneProps) {
         }
       }}
     >
-      <div className="editor-pane__panel flex h-full flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[color:var(--glass-border)] bg-[color:var(--glass-panel)] backdrop-blur-[var(--glass-blur-soft)] shadow-[0_1px_0_rgba(255,255,255,0.22)_inset,0_14px_36px_rgba(0,0,0,0.16)]">
+      <div className="editor-pane__panel flex h-full flex-col overflow-hidden rounded-app-sm border border-[color:var(--glass-border)] bg-[color:var(--glass-panel)] backdrop-blur-[var(--glass-blur-soft)] shadow-[0_1px_0_rgba(255,255,255,0.22)_inset,0_14px_36px_rgba(0,0,0,0.16)]">
         <div className="relative min-h-0 flex-1">
           <div
             ref={containerRef}
-            className="editor-pane__surface min-h-0 h-full flex-1 overflow-hidden rounded-[calc(var(--radius-lg)-2px)] border border-[color:var(--glass-border-strong)] bg-[color:var(--glass-elevated)] shadow-[0_1px_0_rgba(255,255,255,0.16)_inset]"
+            className="editor-pane__surface min-h-0 h-full flex-1 overflow-hidden rounded-[calc(var(--radius-sm)-1px)] border border-[color:var(--glass-border-strong)] bg-[color:var(--glass-elevated)] shadow-[0_1px_0_rgba(255,255,255,0.16)_inset]"
             data-testid="editor-surface"
             data-line-numbers={lineNumbers ? "visible" : "hidden"}
           />

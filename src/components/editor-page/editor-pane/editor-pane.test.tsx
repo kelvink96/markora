@@ -149,10 +149,12 @@ describe("EditorPane", () => {
       "pr-0",
     );
     expect(screen.getByTestId("editor-surface").parentElement?.parentElement).toHaveClass(
+      "rounded-app-sm",
       "bg-[color:var(--glass-panel)]",
       "backdrop-blur-[var(--glass-blur-soft)]",
     );
     expect(screen.getByTestId("editor-surface")).toHaveClass(
+      "rounded-[calc(var(--radius-sm)-1px)]",
       "bg-[color:var(--glass-elevated)]",
       "border-[color:var(--glass-border-strong)]",
       "flex-1",

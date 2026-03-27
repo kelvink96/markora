@@ -79,7 +79,7 @@ export function TopBar({
         />
       </div>
       <div
-        className="flex items-center justify-end gap-2 rounded-app-lg p-0.5"
+        className="flex items-center justify-end gap-2 rounded-app-sm p-0.5"
         data-testid="top-bar-utilities"
       >
         <ViewModeSwitcher value={viewMode} onValueChange={onViewModeChange} />

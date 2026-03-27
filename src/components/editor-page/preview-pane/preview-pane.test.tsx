@@ -31,15 +31,18 @@ describe("PreviewPane", () => {
     invokeMock.mockResolvedValue("<h1>Preview</h1>");
   });
 
-  it("applies the wide preview width setting", async () => {
-    useSettingsStore.getState().updatePreview({ contentWidth: "wide" });
-
+  it("renders the preview as a full-width acrylic surface", async () => {
     render(<PreviewPane />);
 
-    await waitFor(() => expect(screen.getByTestId("preview-content")).toHaveClass("max-w-[56rem]"));
+    await waitFor(() => expect(screen.getByTestId("preview-content")).toBeInTheDocument());
     expect(screen.getByRole("region", { name: "Preview" }).firstElementChild).toHaveClass(
+      "rounded-app-sm",
       "bg-[color:var(--glass-panel)]",
       "backdrop-blur-[var(--glass-blur-soft)]",
+    );
+    expect(screen.getByTestId("preview-content")).toHaveClass(
+      "w-full",
+      "rounded-[calc(var(--radius-sm)-1px)]",
     );
   });
 });

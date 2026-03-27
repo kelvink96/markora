@@ -68,7 +68,7 @@ describe("TopBar", () => {
       "backdrop-blur-[var(--glass-blur-strong)]",
     );
     expect(screen.getByTestId("top-bar-toolbar")).toHaveClass("justify-center");
-    expect(screen.getByTestId("top-bar-utilities")).toHaveClass("gap-2", "rounded-app-lg", "p-0.5");
+    expect(screen.getByTestId("top-bar-utilities")).toHaveClass("gap-2", "rounded-app-sm", "p-0.5");
   });
 
   it("renders a settings icon button", () => {

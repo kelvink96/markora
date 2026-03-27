@@ -13,9 +13,7 @@ export function FileMenu({ onNew, onOpen, onSave, onSaveAs }: FileMenuProps) {
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
-        <span className="file-menu__trigger">
-          <IconButton label="File actions">File</IconButton>
-        </span>
+        <IconButton label="File actions">File</IconButton>
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content className="file-menu__content" sideOffset={8}>

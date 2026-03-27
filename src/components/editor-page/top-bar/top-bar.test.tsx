@@ -40,4 +40,24 @@ describe("TopBar", () => {
 
     expect(screen.getByRole("switch")).toBeInTheDocument();
   });
+
+  it("marks formatting controls as unavailable until they are wired up", () => {
+    render(
+      <TopBar
+        fileName="notes.md"
+        isDirty={false}
+        wordCount={1}
+        theme="light"
+        onThemeToggle={vi.fn()}
+        onNew={vi.fn()}
+        onOpen={vi.fn()}
+        onSave={vi.fn()}
+        onSaveAs={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Bold" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Italic" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "List" })).toBeDisabled();
+  });
 });

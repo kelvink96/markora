@@ -6,18 +6,24 @@ interface FormattingToolbarProps {
   onBold: () => void;
   onItalic: () => void;
   onList: () => void;
+  disabled?: boolean;
 }
 
-export function FormattingToolbar({ onBold, onItalic, onList }: FormattingToolbarProps) {
+export function FormattingToolbar({
+  onBold,
+  onItalic,
+  onList,
+  disabled = false,
+}: FormattingToolbarProps) {
   return (
     <ToolbarGroup>
-      <IconButton label="Bold" onClick={onBold}>
+      <IconButton label="Bold" onClick={onBold} disabled={disabled}>
         B
       </IconButton>
-      <IconButton label="Italic" onClick={onItalic}>
+      <IconButton label="Italic" onClick={onItalic} disabled={disabled}>
         I
       </IconButton>
-      <IconButton label="List" onClick={onList}>
+      <IconButton label="List" onClick={onList} disabled={disabled}>
         •
       </IconButton>
     </ToolbarGroup>

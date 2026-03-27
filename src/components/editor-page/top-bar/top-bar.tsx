@@ -41,7 +41,7 @@ export function TopBar({
           <DocumentStatus fileName={getDisplayFileName(fileName)} isDirty={isDirty} />
         </div>
         <div className="top-bar__center">
-          <FormattingToolbar onBold={() => {}} onItalic={() => {}} onList={() => {}} />
+          <FormattingToolbar onBold={() => {}} onItalic={() => {}} onList={() => {}} disabled />
         </div>
         <div className="top-bar__right">
           <WordCount value={wordCount} />

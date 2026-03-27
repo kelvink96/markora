@@ -1,4 +1,4 @@
-import { type ReactNode, useCallback, useRef, useState } from "react";
+import { type KeyboardEvent, type ReactNode, useCallback, useRef, useState } from "react";
 import "./workspace.css";
 
 interface WorkspaceProps {
@@ -21,6 +21,30 @@ export function Workspace({ left, right }: WorkspaceProps) {
     setSplitPct(Math.min(80, Math.max(20, nextPct)));
   }, []);
 
+  const onDividerKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
+    const step = event.shiftKey ? 10 : 5;
+
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      setSplitPct((value) => Math.max(20, value - step));
+    }
+
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      setSplitPct((value) => Math.min(80, value + step));
+    }
+
+    if (event.key === "Home") {
+      event.preventDefault();
+      setSplitPct(20);
+    }
+
+    if (event.key === "End") {
+      event.preventDefault();
+      setSplitPct(80);
+    }
+  }, []);
+
   return (
     <div
       ref={containerRef}
@@ -38,6 +62,11 @@ export function Workspace({ left, right }: WorkspaceProps) {
       </div>
       <div
         className="workspace__divider"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize editor and preview panes"
+        tabIndex={0}
+        onKeyDown={onDividerKeyDown}
         onMouseDown={() => {
           dragging.current = true;
         }}

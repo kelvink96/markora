@@ -19,7 +19,7 @@ export function PreviewPane() {
     <div className="preview-pane">
       <div className="preview-pane__surface">
         <div
-          className="preview-pane__content"
+          className="preview-pane__content prose"
           // This HTML comes from our own Rust markdown renderer, not an external source.
           dangerouslySetInnerHTML={{ __html: html }}
         />

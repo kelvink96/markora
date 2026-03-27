@@ -1,16 +1,21 @@
 .preview-pane {
   height: 100%;
-  padding: var(--space-4);
+  padding: var(--space-4) var(--space-4) var(--space-4) 0;
 }
 
 .preview-pane__surface {
   height: 100%;
   border-radius: var(--radius-lg);
-  background: var(--surface-preview);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.66), transparent 18%),
+    var(--surface-preview);
   box-shadow: var(--shadow-ambient);
+  border: 1px solid var(--ghost-border);
   overflow: auto;
 }
 
 .preview-pane__content {
   padding: var(--space-6);
+  max-width: 52rem;
+  margin: 0 auto;
 }

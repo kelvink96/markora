@@ -7,7 +7,8 @@ describe("AppShell", () => {
     const { rerender } = render(
       <AppShell
         theme="light"
-        topBar={<div>Top Bar</div>}
+        tabStrip={<div>Tab Strip</div>}
+        commandBar={<div>Command Bar</div>}
         workspace={<div>Workspace</div>}
         statusBar={<div>Status Bar</div>}
       />,
@@ -27,7 +28,8 @@ describe("AppShell", () => {
     rerender(
       <AppShell
         theme="dark"
-        topBar={<div>Top Bar</div>}
+        tabStrip={<div>Tab Strip</div>}
+        commandBar={<div>Command Bar</div>}
         workspace={<div>Workspace</div>}
         statusBar={<div>Status Bar</div>}
       />,
@@ -40,7 +42,8 @@ describe("AppShell", () => {
     const { rerender } = render(
       <AppShell
         theme="light"
-        topBar={<div>Top Bar</div>}
+        tabStrip={<div>Tab Strip</div>}
+        commandBar={<div>Command Bar</div>}
         workspace={<div>Workspace</div>}
         statusBar={<div>Status Bar</div>}
       />,
@@ -52,7 +55,8 @@ describe("AppShell", () => {
     rerender(
       <AppShell
         theme="dark"
-        topBar={<div>Top Bar</div>}
+        tabStrip={<div>Tab Strip</div>}
+        commandBar={<div>Command Bar</div>}
         workspace={<div>Workspace</div>}
         statusBar={<div>Status Bar</div>}
       />,
@@ -66,12 +70,15 @@ describe("AppShell", () => {
     render(
       <AppShell
         theme="light"
-        topBar={<div>Top Bar</div>}
+        tabStrip={<div>Tab Strip</div>}
+        commandBar={<div>Command Bar</div>}
         workspace={<div>Workspace</div>}
         statusBar={<div>Status Bar</div>}
       />,
     );
 
+    expect(screen.getByText("Tab Strip")).toBeInTheDocument();
+    expect(screen.getByText("Command Bar")).toBeInTheDocument();
     expect(screen.getByText("Status Bar")).toBeInTheDocument();
     expect(screen.getByText("Workspace").parentElement).toHaveClass(
       "min-h-0",

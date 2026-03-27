@@ -1,26 +1,27 @@
-import { getDisplayFileName } from "../../../features/document/document-actions";
-import { DocumentStatus } from "../document-status";
 import { MenuBar } from "../../shared/menu-bar";
 import { IconButton } from "../../shared/icon-button";
+import { FormattingToolbar } from "../formatting-toolbar";
+import { ViewModeSwitcher } from "../view-mode-switcher";
+import type { WorkspaceViewMode } from "../../../features/workspace/workspace-state";
 
 interface TopBarProps {
-  fileName: string;
-  isDirty: boolean;
   onThemeToggle: () => void;
   onNew: () => void;
   onOpen: () => void;
   onSave: () => void;
   onSaveAs: () => void;
+  viewMode: WorkspaceViewMode;
+  onViewModeChange: (mode: WorkspaceViewMode) => void;
 }
 
 export function TopBar({
-  fileName,
-  isDirty,
   onThemeToggle,
   onNew,
   onOpen,
   onSave,
   onSaveAs,
+  viewMode,
+  onViewModeChange,
 }: TopBarProps) {
   const menuGroups = [
     {
@@ -50,20 +51,21 @@ export function TopBar({
   ];
 
   return (
-    <header className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-b border-[color:var(--ghost-border)] bg-app-panel/90 px-3 py-2.5 backdrop-blur-md">
-      <div className="flex min-w-0 items-center justify-start gap-2" data-testid="top-bar-document">
-        <DocumentStatus fileName={getDisplayFileName(fileName)} isDirty={isDirty} />
-      </div>
-      <div
-        className="flex items-center justify-center rounded-[var(--radius-md)] border border-[color:var(--ghost-border)] bg-app-panel-strong/78 px-1 py-0.5 shadow-[var(--shadow-crisp)]"
-        data-testid="top-bar-menu"
-      >
+    <header className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-[color:var(--ghost-border)] bg-app-panel/90 px-3 py-2 backdrop-blur-md">
+      <div className="flex min-w-0 items-center justify-start gap-2" data-testid="top-bar-menu">
         <MenuBar groups={menuGroups} />
       </div>
       <div
-        className="flex items-center justify-end rounded-full p-0"
+        className="flex min-w-0 items-center justify-center"
+        data-testid="top-bar-toolbar"
+      >
+        <FormattingToolbar onBold={() => {}} onItalic={() => {}} onList={() => {}} />
+      </div>
+      <div
+        className="flex items-center justify-end gap-2 rounded-full p-0"
         data-testid="top-bar-utilities"
       >
+        <ViewModeSwitcher value={viewMode} onValueChange={onViewModeChange} />
         <IconButton label="Settings" type="button">
           <svg
             aria-hidden="true"

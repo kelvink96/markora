@@ -1,14 +1,26 @@
-import { type KeyboardEvent, type ReactNode, useCallback, useRef, useState } from "react";
+import { type KeyboardEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import type { WorkspaceViewMode } from "../../../features/workspace/workspace-state";
 
 interface WorkspaceProps {
   left: ReactNode;
   right: ReactNode;
+  viewMode: WorkspaceViewMode;
 }
 
-export function Workspace({ left, right }: WorkspaceProps) {
+export function Workspace({ left, right, viewMode }: WorkspaceProps) {
   const [splitPct, setSplitPct] = useState(50);
   const containerRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
+
+  useEffect(() => {
+    if (viewMode === "split") {
+      setSplitPct(50);
+    }
+
+    if (viewMode === "preview") {
+      setSplitPct(32);
+    }
+  }, [viewMode]);
 
   const onMouseMove = useCallback((event: React.MouseEvent) => {
     if (!dragging.current || !containerRef.current) return;
@@ -44,6 +56,25 @@ export function Workspace({ left, right }: WorkspaceProps) {
     }
   }, []);
 
+  if (viewMode === "edit") {
+    return (
+      <div className="workspace flex min-h-0 flex-1 overflow-hidden px-3 pb-3 pt-2.5">
+        <section className="min-h-0 flex-1 overflow-hidden" role="region" aria-label="Editor workspace">
+          {left}
+        </section>
+      </div>
+    );
+  }
+
+  const editorWidth = viewMode === "preview" ? splitPct : splitPct;
+  const previewWidth = 100 - splitPct;
+  const primaryPane = viewMode === "preview" ? right : left;
+  const secondaryPane = viewMode === "preview" ? left : right;
+  const primaryLabel = viewMode === "preview" ? "Preview workspace" : "Editor workspace";
+  const secondaryLabel = viewMode === "preview" ? "Editor workspace" : "Preview workspace";
+  const primaryStyle = viewMode === "preview" ? { width: `${previewWidth}%` } : { width: `${editorWidth}%` };
+  const secondaryStyle = viewMode === "preview" ? { width: `${editorWidth}%` } : { width: `${previewWidth}%` };
+
   return (
     <div
       ref={containerRef}
@@ -58,11 +89,11 @@ export function Workspace({ left, right }: WorkspaceProps) {
     >
       <section
         className="min-h-0 overflow-hidden"
-        style={{ width: `${splitPct}%` }}
+        style={primaryStyle}
         role="region"
-        aria-label="Editor workspace"
+        aria-label={primaryLabel}
       >
-        {left}
+        {primaryPane}
       </section>
       <div
         className="workspace__divider h-auto w-3 shrink-0 cursor-col-resize rounded-[999px] bg-[linear-gradient(to_right,transparent,rgba(91,100,120,0.03),rgba(24,43,60,0.14),rgba(91,100,120,0.03),transparent)] outline-none transition-[background,transform] duration-150 hover:scale-y-[1.01] hover:bg-[linear-gradient(to_right,transparent,rgba(91,100,120,0.08),rgba(24,43,60,0.22),rgba(91,100,120,0.08),transparent)] focus-visible:bg-[linear-gradient(to_right,transparent,rgba(45,91,134,0.16),rgba(45,91,134,0.34),rgba(45,91,134,0.16),transparent)]"
@@ -77,11 +108,11 @@ export function Workspace({ left, right }: WorkspaceProps) {
       />
       <section
         className="min-h-0 overflow-hidden"
-        style={{ width: `${100 - splitPct}%` }}
+        style={secondaryStyle}
         role="region"
-        aria-label="Preview workspace"
+        aria-label={secondaryLabel}
       >
-        {right}
+        {secondaryPane}
       </section>
     </div>
   );

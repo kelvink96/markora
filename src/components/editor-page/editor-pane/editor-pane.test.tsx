@@ -34,7 +34,6 @@ describe("EditorPane", () => {
     render(<EditorPane theme="light" />);
 
     expect(screen.getByRole("region", { name: "Editor" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Formatting")).toBeInTheDocument();
     expect(screen.getByTestId("editor-surface")).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Editor" })).toHaveClass(
       "h-full",

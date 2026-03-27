@@ -1,13 +1,19 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { useDocumentStore } from "./document";
-
-const untitledStarterContent =
-  "# Welcome to Markora\n\nStart writing your markdown here...\n\n## Features\n\n- **Live preview** as you type\n- Open and save `.md` files\n- Light and dark themes\n\n---\n\n## Quick Start\n\nUse this untitled document to sketch ideas, outlines, or notes before saving.\n\n### Writing Tips\n\n1. Start with a heading structure.\n2. Use lists to break down ideas.\n3. Add code blocks for snippets.\n4. Switch themes when reviewing contrast.\n\n### Sample Checklist\n\n- [ ] Draft the intro\n- [ ] Add key talking points\n- [ ] Review formatting\n- [ ] Save the file\n\n### Notes\n\n> Markora is built for focused writing with a live preview beside your editor.\n\n```ts\nfunction helloMarkora() {\n  return \"Write first, refine later.\";\n}\n```\n\n## Example Outline\n\n### Section One\n\nThis is a larger placeholder block so you can evaluate spacing, rhythm, scrolling, and preview rendering in a more realistic untitled state.\n\n### Section Two\n\nAdd paragraphs, lists, quotes, and code to see how the editor and preview feel with richer content before a document has been saved.\n";
+import { untitledStarterContent, useDocumentStore } from "./document";
 
 describe("DocumentStore", () => {
   beforeEach(() => {
     // Reset the store before each test so cases do not leak state into one another.
     useDocumentStore.setState({
+      openDocuments: [
+        {
+          id: "document-1",
+          content: untitledStarterContent,
+          filePath: null,
+          isDirty: false,
+        },
+      ],
+      activeDocumentId: "document-1",
       content: untitledStarterContent,
       filePath: null,
       isDirty: false,
@@ -33,12 +39,59 @@ describe("DocumentStore", () => {
   });
 
   it("newDocument resets all state", () => {
-    useDocumentStore.getState().setContent("old");
-    useDocumentStore.getState().setFilePath("/old.md");
+    const originalId = useDocumentStore.getState().activeDocumentId;
     useDocumentStore.getState().newDocument();
-    const { content, filePath, isDirty } = useDocumentStore.getState();
+    const { activeDocumentId, content, filePath, isDirty, openDocuments } = useDocumentStore.getState();
+    expect(activeDocumentId).not.toBe(originalId);
     expect(content).toBe(untitledStarterContent);
     expect(filePath).toBeNull();
     expect(isDirty).toBe(false);
+    expect(openDocuments).toHaveLength(2);
+  });
+
+  it("tracks multiple documents and switches the active tab", () => {
+    const firstId = useDocumentStore.getState().activeDocumentId;
+    const secondId = useDocumentStore.getState().addDocument({
+      content: "# Second",
+      filePath: "D:\\notes\\second.md",
+    });
+
+    expect(useDocumentStore.getState().activeDocumentId).toBe(secondId);
+    expect(useDocumentStore.getState().content).toBe("# Second");
+
+    useDocumentStore.getState().selectDocument(firstId);
+
+    expect(useDocumentStore.getState().activeDocumentId).toBe(firstId);
+    expect(useDocumentStore.getState().content).toBe(untitledStarterContent);
+  });
+
+  it("closes the active tab and falls back to a remaining document", () => {
+    const firstId = useDocumentStore.getState().activeDocumentId;
+    const secondId = useDocumentStore.getState().addDocument({
+      content: "# Second",
+      filePath: "D:\\notes\\second.md",
+    });
+
+    useDocumentStore.getState().closeDocument(secondId);
+
+    expect(useDocumentStore.getState().activeDocumentId).toBe(firstId);
+    expect(useDocumentStore.getState().openDocuments).toHaveLength(1);
+  });
+
+  it("keeps dirty state isolated per tab", () => {
+    const firstId = useDocumentStore.getState().activeDocumentId;
+    const secondId = useDocumentStore.getState().addDocument({
+      content: "# Second",
+      filePath: "D:\\notes\\second.md",
+    });
+
+    useDocumentStore.getState().setContent("# Updated second");
+    useDocumentStore.getState().selectDocument(firstId);
+
+    expect(useDocumentStore.getState().isDirty).toBe(false);
+
+    useDocumentStore.getState().selectDocument(secondId);
+    expect(useDocumentStore.getState().isDirty).toBe(true);
+    expect(useDocumentStore.getState().content).toBe("# Updated second");
   });
 });

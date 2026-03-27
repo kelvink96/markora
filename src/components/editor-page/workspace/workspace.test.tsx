@@ -5,7 +5,7 @@ import { Workspace } from "./workspace";
 describe("Workspace", () => {
   it("applies the Tailwind split-pane layout and still renders both panes", () => {
     const { getByText } = render(
-      <Workspace left={<div>Left</div>} right={<div>Right</div>} />,
+      <Workspace left={<div>Left</div>} right={<div>Right</div>} viewMode="split" />,
     );
 
     const workspace = getByText("Left").closest(".workspace");
@@ -27,10 +27,25 @@ describe("Workspace", () => {
   });
 
   it("moves the split with keyboard arrows", () => {
-    render(<Workspace left={<div>Left</div>} right={<div>Right</div>} />);
+    render(<Workspace left={<div>Left</div>} right={<div>Right</div>} viewMode="split" />);
     const divider = screen.getByRole("separator", { name: "Resize editor and preview panes" });
     fireEvent.keyDown(divider, { key: "ArrowRight" });
 
     expect(screen.getByText("Left").parentElement).toHaveStyle({ width: "55%" });
+  });
+
+  it("renders only the editor in edit mode", () => {
+    render(<Workspace left={<div>Left</div>} right={<div>Right</div>} viewMode="edit" />);
+
+    expect(screen.getByRole("region", { name: "Editor workspace" })).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Preview workspace" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("separator", { name: "Resize editor and preview panes" })).not.toBeInTheDocument();
+  });
+
+  it("renders a preview-dominant layout in preview mode", () => {
+    render(<Workspace left={<div>Left</div>} right={<div>Right</div>} viewMode="preview" />);
+
+    expect(screen.getByRole("region", { name: "Preview workspace" })).toHaveStyle({ width: "68%" });
+    expect(screen.getByRole("region", { name: "Editor workspace" })).toHaveStyle({ width: "32%" });
   });
 });

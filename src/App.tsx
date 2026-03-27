@@ -3,18 +3,23 @@ import { invoke } from "@tauri-apps/api/core";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { AppShell } from "./app/app-shell";
 import { EditorPane } from "./components/editor-page/editor-pane";
+import { TabStrip } from "./components/editor-page/tab-strip";
 import { TopBar } from "./components/editor-page/top-bar";
 import { PreviewPane } from "./components/editor-page/preview-pane";
 import { Workspace } from "./components/editor-page/workspace";
 import { FooterStatusBar } from "./components/editor-page/footer-status-bar";
-import { getDisplayFileName, getWordCount } from "./features/document/document-actions";
+import { getWordCount } from "./features/document/document-actions";
+import { useWorkspaceState } from "./features/workspace/workspace-state";
 import { useDocumentStore } from "./store/document";
 import { useThemeStore } from "./features/theme/theme-store";
 
 export default function App() {
-  const { setContent, setFilePath, markClean, newDocument } = useDocumentStore();
+  const { addDocument, setFilePath, markClean, newDocument, selectDocument, closeDocument } =
+    useDocumentStore();
   const theme = useThemeStore((state) => state.theme);
   const toggleTheme = useThemeStore((state) => state.toggleTheme);
+  const viewMode = useWorkspaceState((state) => state.viewMode);
+  const setViewMode = useWorkspaceState((state) => state.setViewMode);
 
   const handleOpen = useCallback(async () => {
     // `open()` is a native dialog, not an HTML file input, so it feels like a desktop app.
@@ -26,12 +31,9 @@ export default function App() {
     if (typeof selected === "string") {
       // The frontend never reads the file directly; it asks Rust to do it through a command.
       const text = await invoke<string>("read_file", { path: selected });
-      setContent(text);
-      setFilePath(selected);
-      // Opening from disk should leave the document in a "clean" state until the next edit.
-      markClean();
+      addDocument({ content: text, filePath: selected, isDirty: false });
     }
-  }, [markClean, setContent, setFilePath]);
+  }, [addDocument]);
 
   const handleSaveAs = useCallback(async () => {
     // getState() gives the latest store snapshot without waiting for React to re-render.
@@ -99,25 +101,44 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [handleNew, handleOpen, handleSave, handleSaveAs]);
 
-  const { isDirty, filePath } = useDocumentStore();
+  const { openDocuments, activeDocumentId } = useDocumentStore();
   const content = useDocumentStore((state) => state.content);
-  const fileName = getDisplayFileName(filePath);
   const wordCount = getWordCount(content);
 
-  const topBar = (
+  const tabStrip = (
+    <TabStrip
+      tabs={openDocuments}
+      activeTabId={activeDocumentId}
+      onSelectTab={selectDocument}
+      onCloseTab={closeDocument}
+      onNewTab={handleNew}
+    />
+  );
+
+  const commandBar = (
     <TopBar
-      fileName={fileName}
-      isDirty={isDirty}
       onThemeToggle={toggleTheme}
       onNew={handleNew}
       onOpen={handleOpen}
       onSave={handleSave}
       onSaveAs={handleSaveAs}
+      viewMode={viewMode}
+      onViewModeChange={setViewMode}
     />
   );
 
-  const workspace = <Workspace left={<EditorPane theme={theme} />} right={<PreviewPane />} />;
-  const statusBar = <FooterStatusBar wordCount={wordCount} />;
+  const workspace = (
+    <Workspace left={<EditorPane theme={theme} />} right={<PreviewPane />} viewMode={viewMode} />
+  );
+  const statusBar = <FooterStatusBar wordCount={wordCount} viewMode={viewMode} />;
 
-  return <AppShell theme={theme} topBar={topBar} workspace={workspace} statusBar={statusBar} />;
+  return (
+    <AppShell
+      theme={theme}
+      tabStrip={tabStrip}
+      commandBar={commandBar}
+      workspace={workspace}
+      statusBar={statusBar}
+    />
+  );
 }

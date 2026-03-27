@@ -48,4 +48,19 @@ describe("TabStrip", () => {
     expect(onCloseTab).toHaveBeenCalledWith("one");
     expect(onNewTab).toHaveBeenCalled();
   });
+
+  it("renders icon glyphs for the close and new tab actions", () => {
+    render(
+      <TabStrip
+        tabs={[{ id: "one", content: "", filePath: "D:\\notes\\one.md", isDirty: false }]}
+        activeTabId="one"
+        onSelectTab={vi.fn()}
+        onCloseTab={vi.fn()}
+        onNewTab={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Close one.md" }).querySelector("svg")).not.toBeNull();
+    expect(screen.getByRole("button", { name: "New tab" }).querySelector("svg")).not.toBeNull();
+  });
 });

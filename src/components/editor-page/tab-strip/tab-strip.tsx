@@ -1,3 +1,4 @@
+import { Plus, X } from "lucide-react";
 import { getDisplayFileName } from "../../../features/document/document-actions";
 import type { DocumentTab } from "../../../store/document";
 
@@ -52,7 +53,7 @@ export function TabStrip({
                 className="inline-flex size-5 items-center justify-center rounded-full text-app-text-muted opacity-0 transition hover:bg-app-subtle hover:text-app-text hover:opacity-100 focus-visible:outline-none group-hover:opacity-80"
                 onClick={() => onCloseTab(tab.id)}
               >
-                x
+                <X size={14} strokeWidth={2.1} aria-hidden="true" />
               </button>
             </div>
           );
@@ -64,7 +65,7 @@ export function TabStrip({
         className="inline-flex size-8 shrink-0 items-center justify-center rounded-[10px] border border-transparent bg-transparent text-app-text-secondary transition hover:bg-app-panel-strong hover:text-app-text focus-visible:outline-none"
         onClick={onNewTab}
       >
-        +
+        <Plus size={16} strokeWidth={2.1} aria-hidden="true" />
       </button>
     </div>
   );

@@ -144,7 +144,7 @@ export function EditorPane({ theme }: EditorPaneProps) {
       applyEditResult(result.text, result.selectionStart, result.selectionEnd);
     };
 
-    setRunToolbarAction(() => runAction);
+    setRunToolbarAction(runAction);
     return () => setRunToolbarAction(() => {});
   }, [setRunToolbarAction]);
 

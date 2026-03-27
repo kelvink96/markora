@@ -19,6 +19,7 @@ type MockUpdate = {
 
 import { act, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { useEditorCommandState } from "../../../features/editor/editor-command-state";
 
 const { mockState } = vi.hoisted(() => {
   class HoistedMockEditorView {
@@ -30,7 +31,9 @@ const { mockState } = vi.hoisted(() => {
 
     destroy() {}
 
-    dispatch() {}
+    dispatch(transaction: unknown) {
+      mockState.dispatchSpy(transaction);
+    }
 
     focus() {}
 
@@ -43,6 +46,7 @@ const { mockState } = vi.hoisted(() => {
     mockState: {
       updateListener: null as ((update: MockUpdate) => void) | null,
       EditorView: HoistedMockEditorView,
+      dispatchSpy: vi.fn(),
     },
   };
 });
@@ -91,6 +95,22 @@ vi.mock("@codemirror/theme-one-dark", () => ({ oneDark: {} }));
 import { EditorPane } from "./editor-pane";
 
 describe("EditorPane", () => {
+  it("applies toolbar actions to the editor document through the command bridge", () => {
+    render(<EditorPane theme="light" />);
+
+    act(() => {
+      useEditorCommandState.getState().runToolbarAction("bold");
+    });
+
+    expect(mockState.dispatchSpy).toHaveBeenCalled();
+    const lastCall = mockState.dispatchSpy.mock.calls[mockState.dispatchSpy.mock.calls.length - 1]?.[0];
+    expect(lastCall).toMatchObject({
+      changes: expect.objectContaining({
+        insert: expect.stringContaining("**"),
+      }),
+    });
+  });
+
   it("renders a labeled editor region with a stable editing surface hook", () => {
     render(<EditorPane theme="light" />);
 

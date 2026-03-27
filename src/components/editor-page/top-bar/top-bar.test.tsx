@@ -9,7 +9,6 @@ describe("TopBar", () => {
       <TopBar
         fileName="notes.md"
         isDirty
-        theme="light"
         onThemeToggle={() => {}}
         onNew={() => {}}
         onOpen={() => {}}
@@ -19,7 +18,7 @@ describe("TopBar", () => {
     );
 
     expect(screen.getByText("notes.md")).toBeInTheDocument();
-    expect(screen.getByText("Live Preview")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Settings" })).toBeInTheDocument();
   });
 
   it("renders document, menu, and utility zones", () => {
@@ -27,7 +26,6 @@ describe("TopBar", () => {
       <TopBar
         fileName="notes.md"
         isDirty
-        theme="light"
         onThemeToggle={vi.fn()}
         onNew={vi.fn()}
         onOpen={vi.fn()}
@@ -50,7 +48,6 @@ describe("TopBar", () => {
       <TopBar
         fileName="notes.md"
         isDirty
-        theme="light"
         onThemeToggle={vi.fn()}
         onNew={vi.fn()}
         onOpen={vi.fn()}
@@ -62,15 +59,14 @@ describe("TopBar", () => {
     expect(screen.getByRole("banner")).toHaveClass("px-3", "py-2.5");
     expect(screen.getByTestId("top-bar-menu")).toHaveClass("rounded-[var(--radius-md)]");
     expect(screen.getByTestId("top-bar-menu")).toHaveClass("px-1", "py-0.5");
-    expect(screen.getByTestId("top-bar-utilities")).toHaveClass("gap-1.5", "px-1.5", "py-0.5");
+    expect(screen.getByTestId("top-bar-utilities")).toHaveClass("rounded-full", "p-0");
   });
 
-  it("renders the theme toggle control", () => {
+  it("renders a settings icon button", () => {
     render(
       <TopBar
         fileName="notes.md"
         isDirty={false}
-        theme="light"
         onThemeToggle={vi.fn()}
         onNew={vi.fn()}
         onOpen={vi.fn()}
@@ -79,7 +75,7 @@ describe("TopBar", () => {
       />,
     );
 
-    expect(screen.getByRole("switch")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Settings" })).toBeInTheDocument();
   });
 
   it("keeps document identity separate from utility controls", () => {
@@ -87,7 +83,6 @@ describe("TopBar", () => {
       <TopBar
         fileName="notes.md"
         isDirty={false}
-        theme="light"
         onThemeToggle={vi.fn()}
         onNew={vi.fn()}
         onOpen={vi.fn()}
@@ -110,7 +105,6 @@ describe("TopBar", () => {
       <TopBar
         fileName="notes.md"
         isDirty={false}
-        theme="light"
         onThemeToggle={vi.fn()}
         onNew={vi.fn()}
         onOpen={onOpen}
@@ -126,12 +120,11 @@ describe("TopBar", () => {
     expect(screen.queryByRole("button", { name: "File actions" })).not.toBeInTheDocument();
   });
 
-  it("keeps the utility zone focused on preview and theme controls", () => {
+  it("keeps the utility zone focused on a single settings action", () => {
     render(
       <TopBar
         fileName="notes.md"
         isDirty={false}
-        theme="light"
         onThemeToggle={vi.fn()}
         onNew={vi.fn()}
         onOpen={vi.fn()}
@@ -140,7 +133,8 @@ describe("TopBar", () => {
       />,
     );
 
-    expect(screen.getByText("Live Preview")).toBeInTheDocument();
-    expect(screen.queryByText(/word/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Settings" })).toBeInTheDocument();
+    expect(screen.queryByText("Live Preview")).not.toBeInTheDocument();
+    expect(screen.queryByRole("switch")).not.toBeInTheDocument();
   });
 });

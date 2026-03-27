@@ -1,14 +1,11 @@
-import { useThemeStore } from "../../../features/theme/theme-store";
 import { getDisplayFileName } from "../../../features/document/document-actions";
 import { DocumentStatus } from "../document-status";
-import { LivePreviewIndicator } from "../../shared/live-preview-indicator";
 import { MenuBar } from "../../shared/menu-bar";
-import { ThemeToggle } from "../../shared/theme-toggle";
+import { IconButton } from "../../shared/icon-button";
 
 interface TopBarProps {
   fileName: string;
   isDirty: boolean;
-  theme: "light" | "dark";
   onThemeToggle: () => void;
   onNew: () => void;
   onOpen: () => void;
@@ -19,15 +16,12 @@ interface TopBarProps {
 export function TopBar({
   fileName,
   isDirty,
-  theme,
   onThemeToggle,
   onNew,
   onOpen,
   onSave,
   onSaveAs,
 }: TopBarProps) {
-  const currentTheme = useThemeStore((state) => state.theme);
-  const effectiveTheme = currentTheme === "light" || currentTheme === "dark" ? currentTheme : theme;
   const menuGroups = [
     {
       label: "File",
@@ -67,14 +61,24 @@ export function TopBar({
         <MenuBar groups={menuGroups} />
       </div>
       <div
-        className="flex flex-wrap items-center justify-end gap-1.5 rounded-full border border-[color:var(--ghost-border)] bg-app-panel-strong/90 px-1.5 py-0.5 shadow-[var(--shadow-crisp)]"
+        className="flex items-center justify-end rounded-full p-0"
         data-testid="top-bar-utilities"
       >
-        <LivePreviewIndicator />
-        <ThemeToggle
-          checked={effectiveTheme === "dark"}
-          onCheckedChange={onThemeToggle}
-        />
+        <IconButton label="Settings" type="button">
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            className="size-4.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="12" r="3.25" />
+            <path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a2 2 0 0 1-2.8 2.8l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a2 2 0 0 1-4 0v-.2a1 1 0 0 0-.7-.9 1 1 0 0 0-1.1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a2 2 0 0 1 0-4h.2a1 1 0 0 0 .9-.7 1 1 0 0 0-.2-1.1l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1 1 0 0 0 1.1.2h.1a1 1 0 0 0 .6-.9V4a2 2 0 0 1 4 0v.2a1 1 0 0 0 .7.9 1 1 0 0 0 1.1-.2l.1-.1a2 2 0 0 1 2.8 2.8l-.1.1a1 1 0 0 0-.2 1.1v.1a1 1 0 0 0 .9.6H20a2 2 0 0 1 0 4h-.2a1 1 0 0 0-.9.7Z" />
+          </svg>
+        </IconButton>
       </div>
     </header>
   );

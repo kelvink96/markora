@@ -108,7 +108,6 @@ export default function App() {
     <TopBar
       fileName={fileName}
       isDirty={isDirty}
-      theme={theme}
       onThemeToggle={toggleTheme}
       onNew={handleNew}
       onOpen={handleOpen}

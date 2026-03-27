@@ -43,7 +43,7 @@
 
 @layer theme {
   :root {
-    --font-ui: "Manrope", "Aptos", "Segoe UI", sans-serif;
+    --font-ui: "Geist", "Aptos", "Segoe UI", sans-serif;
     --font-editor: "IBM Plex Mono", "Cascadia Code", "Consolas", monospace;
     --font-prose: "Source Serif 4", "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
     --surface-base: #edf1f3;

@@ -19,7 +19,9 @@ describe("TabStrip", () => {
     );
 
     expect(container.firstChild).toHaveClass("border-b", "bg-app-panel/96");
-    expect(screen.getByRole("tab", { name: "one.md" })).toHaveAttribute("aria-selected", "true");
+    const activeTab = screen.getByRole("tab", { name: "one.md" });
+    expect(activeTab).toHaveAttribute("aria-selected", "true");
+    expect(activeTab.parentElement).toHaveClass("bg-app-panel-strong", "shadow-[var(--shadow-ambient)]");
     expect(screen.getByRole("tab", { name: "Untitled *" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "New tab" })).toBeInTheDocument();
   });

@@ -31,9 +31,9 @@ export function TabStrip({
           return (
             <div
               key={tab.id}
-              className={`group inline-flex min-w-0 items-center gap-1.5 rounded-t-[12px] border px-3 py-1.5 text-[0.82rem] ${
+              className={`group inline-flex min-w-0 items-center gap-1.5 rounded-t-[12px border px-3 py-1.5 text-[0.82rem] ${
                 isActive
-                  ? "border-[color:var(--ghost-border)] border-b-app-panel bg-app-panel-strong text-app-text shadow-[var(--shadow-crisp)]"
+                  ? "border-[color:var(--ghost-border)] border-b-app-panel bg-app-panel-strong text-app-text shadow-[var(--shadow-ambient)]"
                   : "border-transparent bg-transparent text-app-text-secondary hover:bg-app-panel-strong/55"
               }`}
             >

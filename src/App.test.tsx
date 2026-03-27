@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
 import { untitledStarterContent, useDocumentStore } from "./store/document";
@@ -185,5 +185,43 @@ describe("App", () => {
     expect(useDocumentStore.getState().openDocuments).toHaveLength(3);
     expect(useDocumentStore.getState().activeDocumentId).not.toBe("document-2");
     expect(confirmSpy).not.toHaveBeenCalled();
+  });
+
+  it("cycles to the next tab with ctrl+tab", () => {
+    useDocumentStore.setState({
+      openDocuments: [
+        { id: "document-1", content: untitledStarterContent, filePath: null, isDirty: false },
+        { id: "document-2", content: "# Second", filePath: "D:\\notes\\second.md", isDirty: false },
+        { id: "document-3", content: "# Third", filePath: "D:\\notes\\third.md", isDirty: false },
+      ],
+      activeDocumentId: "document-1",
+      content: untitledStarterContent,
+      filePath: null,
+      isDirty: false,
+    });
+
+    render(<App />);
+    fireEvent.keyDown(window, { key: "Tab", ctrlKey: true });
+
+    expect(useDocumentStore.getState().activeDocumentId).toBe("document-2");
+  });
+
+  it("cycles to the previous tab with ctrl+shift+tab", () => {
+    useDocumentStore.setState({
+      openDocuments: [
+        { id: "document-1", content: untitledStarterContent, filePath: null, isDirty: false },
+        { id: "document-2", content: "# Second", filePath: "D:\\notes\\second.md", isDirty: false },
+        { id: "document-3", content: "# Third", filePath: "D:\\notes\\third.md", isDirty: false },
+      ],
+      activeDocumentId: "document-2",
+      content: "# Second",
+      filePath: "D:\\notes\\second.md",
+      isDirty: false,
+    });
+
+    render(<App />);
+    fireEvent.keyDown(window, { key: "Tab", ctrlKey: true, shiftKey: true });
+
+    expect(useDocumentStore.getState().activeDocumentId).toBe("document-1");
   });
 });

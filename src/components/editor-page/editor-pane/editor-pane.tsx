@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { EditorView, basicSetup } from "codemirror";
 import { EditorState } from "@codemirror/state";
 import { EditorView as CMView } from "@codemirror/view";
@@ -7,10 +7,28 @@ import { oneDark } from "@codemirror/theme-one-dark";
 import { useDocumentStore } from "../../../store/document";
 import { useEditorCommandState } from "../../../features/editor/editor-command-state";
 import { applyMarkdownToolbarAction, type MarkdownToolbarAction } from "../../../features/editor/markdown-toolbar-actions";
+import {
+  applySlashCommand,
+  getSlashCommandContext,
+  matchSlashCommands,
+  type SlashCommandDefinition,
+} from "../../../features/editor/slash-commands";
 import { useEditorStatusState } from "../../../features/workspace/editor-status-state";
+import { SlashCommandMenu } from "../slash-command-menu/slash-command-menu";
 
 interface EditorPaneProps {
   theme: "light" | "dark";
+}
+
+interface SlashMenuState {
+  commands: SlashCommandDefinition[];
+  selectedIndex: number;
+  from: number;
+  to: number;
+  position: {
+    top: number;
+    left: number;
+  };
 }
 
 export function EditorPane({ theme }: EditorPaneProps) {
@@ -20,6 +38,33 @@ export function EditorPane({ theme }: EditorPaneProps) {
   const { content, setContent } = useDocumentStore();
   const setCursorPosition = useEditorStatusState((state) => state.setCursorPosition);
   const setRunToolbarAction = useEditorCommandState((state) => state.setRunToolbarAction);
+  const [slashMenu, setSlashMenu] = useState<SlashMenuState | null>(null);
+
+  const applyEditResult = (text: string, selectionStart: number, selectionEnd: number) => {
+    const view = viewRef.current;
+    if (!view) return;
+
+    view.dispatch({
+      changes: { from: 0, to: view.state.doc.length, insert: text },
+      selection: { anchor: selectionStart, head: selectionEnd },
+    });
+    view.focus();
+  };
+
+  const applySelectedSlashCommand = (commandId: SlashCommandDefinition["id"]) => {
+    const view = viewRef.current;
+    if (!view || !slashMenu) return;
+
+    const result = applySlashCommand(
+      view.state.doc.toString(),
+      slashMenu.from,
+      slashMenu.to,
+      commandId,
+    );
+
+    applyEditResult(result.text, result.selectionStart, result.selectionEnd);
+    setSlashMenu(null);
+  };
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -34,6 +79,31 @@ export function EditorPane({ theme }: EditorPaneProps) {
         const cursor = update.state.selection.main.head;
         const line = update.state.doc.lineAt(cursor);
         setCursorPosition(line.number, cursor - line.from + 1);
+
+        const context = getSlashCommandContext(update.state.doc.toString(), cursor);
+        if (!context) {
+          setSlashMenu(null);
+          return;
+        }
+
+        const commands = matchSlashCommands(context.query);
+        if (commands.length === 0) {
+          setSlashMenu(null);
+          return;
+        }
+
+        const coords = viewRef.current?.coordsAtPos(cursor);
+        const containerBounds = containerRef.current?.getBoundingClientRect();
+        setSlashMenu({
+          commands,
+          selectedIndex: 0,
+          from: context.from,
+          to: context.to,
+          position: {
+            top: (coords?.bottom ?? 0) - (containerBounds?.top ?? 0) + 10,
+            left: (coords?.left ?? 0) - (containerBounds?.left ?? 0),
+          },
+        });
       }
     });
 
@@ -71,15 +141,11 @@ export function EditorPane({ theme }: EditorPaneProps) {
         action,
       );
 
-      view.dispatch({
-        changes: { from: 0, to: view.state.doc.length, insert: result.text },
-        selection: { anchor: result.selectionStart, head: result.selectionEnd },
-      });
-      view.focus();
+      applyEditResult(result.text, result.selectionStart, result.selectionEnd);
     };
 
     setRunToolbarAction(() => runAction);
-    return () => setRunToolbarAction(() => () => {});
+    return () => setRunToolbarAction(() => {});
   }, [setRunToolbarAction]);
 
   useEffect(() => {
@@ -96,13 +162,67 @@ export function EditorPane({ theme }: EditorPaneProps) {
   }, [content]);
 
   return (
-    <section className="editor-pane h-full min-h-0 pb-0 pr-0" aria-label="Editor">
+    <section
+      className="editor-pane h-full min-h-0 pb-0 pr-0"
+      aria-label="Editor"
+      onKeyDownCapture={(event) => {
+        if (!slashMenu) return;
+
+        if (event.key === "ArrowDown") {
+          event.preventDefault();
+          setSlashMenu((current) =>
+            current
+              ? {
+                  ...current,
+                  selectedIndex: (current.selectedIndex + 1) % current.commands.length,
+                }
+              : current,
+          );
+        }
+
+        if (event.key === "ArrowUp") {
+          event.preventDefault();
+          setSlashMenu((current) =>
+            current
+              ? {
+                  ...current,
+                  selectedIndex:
+                    (current.selectedIndex - 1 + current.commands.length) % current.commands.length,
+                }
+              : current,
+          );
+        }
+
+        if (event.key === "Enter") {
+          event.preventDefault();
+          const selectedCommand = slashMenu.commands[slashMenu.selectedIndex];
+          if (selectedCommand) {
+            applySelectedSlashCommand(selectedCommand.id);
+          }
+        }
+
+        if (event.key === "Escape") {
+          event.preventDefault();
+          setSlashMenu(null);
+        }
+      }}
+    >
       <div className="editor-pane__panel flex h-full flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[var(--ghost-border)] bg-app-editor shadow-[0_1px_0_rgba(255,255,255,0.8)_inset]">
-        <div
-          ref={containerRef}
-          className="editor-pane__surface min-h-0 flex-1 overflow-hidden bg-app-editor"
-          data-testid="editor-surface"
-        />
+        <div className="relative min-h-0 flex-1">
+          <div
+            ref={containerRef}
+            className="editor-pane__surface min-h-0 h-full flex-1 overflow-hidden bg-app-editor"
+            data-testid="editor-surface"
+          />
+          {slashMenu ? (
+            <SlashCommandMenu
+              commands={slashMenu.commands}
+              selectedIndex={slashMenu.selectedIndex}
+              position={slashMenu.position}
+              onSelect={applySelectedSlashCommand}
+            />
+          ) : null}
+        </div>
       </div>
     </section>
   );

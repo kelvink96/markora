@@ -94,6 +94,17 @@ export default function App() {
         void handleNew();
       }
 
+      if (event.key === "Tab") {
+        const { openDocuments, activeDocumentId } = useDocumentStore.getState();
+        if (openDocuments.length > 1) {
+          event.preventDefault();
+          const activeIndex = openDocuments.findIndex((document) => document.id === activeDocumentId);
+          const offset = event.shiftKey ? -1 : 1;
+          const nextIndex = (activeIndex + offset + openDocuments.length) % openDocuments.length;
+          selectDocument(openDocuments[nextIndex].id);
+        }
+      }
+
       if (event.key === "o") {
         event.preventDefault();
         void handleOpen();
@@ -112,7 +123,7 @@ export default function App() {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [handleNew, handleOpen, handleSave, handleSaveAs]);
+  }, [handleNew, handleOpen, handleSave, handleSaveAs, selectDocument]);
 
   const { openDocuments, activeDocumentId } = useDocumentStore();
   const content = useDocumentStore((state) => state.content);

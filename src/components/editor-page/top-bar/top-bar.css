@@ -1,7 +1,7 @@
 .top-bar {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-5);
   padding: var(--space-4) var(--space-5);
   background: var(--surface-panel);
@@ -11,6 +11,7 @@
 }
 
 .top-bar__document,
+.top-bar__menu,
 .top-bar__utilities {
   display: flex;
   align-items: center;
@@ -19,6 +20,11 @@
 
 .top-bar__document {
   min-width: 0;
+  justify-content: flex-start;
+}
+
+.top-bar__menu {
+  justify-content: center;
 }
 
 .top-bar__utilities {

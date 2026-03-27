@@ -271,8 +271,8 @@ export default function App() {
   return (
     <AppShell
       theme={theme}
-      tabStrip={tabStrip}
-      commandBar={commandBar}
+      tabStrip={activeScreen === "workspace" ? tabStrip : null}
+      commandBar={activeScreen === "workspace" ? commandBar : null}
       workspace={workspace}
       statusBar={settings.appearance.showStatusBar && activeScreen === "workspace" ? statusBar : null}
     />

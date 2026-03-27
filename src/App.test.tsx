@@ -308,5 +308,8 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "open-settings" }));
 
     expect(screen.getByRole("heading", { name: "Application" })).toBeInTheDocument();
+    expect(screen.queryByText("Top Bar")).not.toBeInTheDocument();
+    expect(screen.queryByText("Footer Status")).not.toBeInTheDocument();
+    expect(screen.queryByText(/tabs$/)).not.toBeInTheDocument();
   });
 });

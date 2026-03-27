@@ -38,4 +38,16 @@ describe("theme fonts", () => {
     expect(tailwindCss).toContain("radial-gradient(at 50% 50%");
     expect(tailwindCss).toContain("var(--bg-atmosphere-base)");
   });
+
+  it("uses soft grayscale tokens for the dark theme surfaces", () => {
+    const tailwindCss = readFileSync(
+      path.join(rootDirectory, "src", "styles", "tailwind.css"),
+      "utf8",
+    );
+
+    expect(tailwindCss).toContain("--surface-base: #151515");
+    expect(tailwindCss).toContain("--surface-subtle: #252525");
+    expect(tailwindCss).toContain("--text-secondary: #c7c7c7");
+    expect(tailwindCss).toContain("--accent: #b9b9b9");
+  });
 });

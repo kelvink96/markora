@@ -16,7 +16,7 @@ function resolveTheme(themePreference: ThemePreference, systemTheme: Theme): The
   return themePreference === "system" ? systemTheme : themePreference;
 }
 
-export const useThemeStore = create<ThemeStore>()((set, get) => ({
+export const useThemeStore = create<ThemeStore>()((set) => ({
   themePreference: "system",
   resolvedTheme: "light",
   systemTheme: "light",

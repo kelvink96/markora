@@ -47,7 +47,7 @@ export function Workspace({ left, right }: WorkspaceProps) {
   return (
     <div
       ref={containerRef}
-      className="workspace flex min-h-0 flex-1 gap-4 overflow-hidden p-4"
+      className="workspace flex min-h-0 flex-1 gap-2 overflow-hidden px-3 pb-3 pt-2.5"
       onMouseMove={onMouseMove}
       onMouseUp={() => {
         dragging.current = false;
@@ -65,7 +65,7 @@ export function Workspace({ left, right }: WorkspaceProps) {
         {left}
       </section>
       <div
-        className="workspace__divider h-auto w-3 shrink-0 cursor-col-resize rounded-full bg-[linear-gradient(to_right,transparent,rgba(91,100,120,0.08),var(--ghost-border),rgba(91,100,120,0.08),transparent)] outline-none transition-[background] duration-150 hover:bg-[linear-gradient(to_right,transparent,rgba(91,100,120,0.14),rgba(91,100,120,0.22),rgba(91,100,120,0.14),transparent)] focus-visible:bg-[linear-gradient(to_right,transparent,rgba(45,91,134,0.18),rgba(45,91,134,0.34),rgba(45,91,134,0.18),transparent)]"
+        className="workspace__divider h-auto w-3 shrink-0 cursor-col-resize rounded-[999px] bg-[linear-gradient(to_right,transparent,rgba(91,100,120,0.03),rgba(24,43,60,0.14),rgba(91,100,120,0.03),transparent)] outline-none transition-[background,transform] duration-150 hover:scale-y-[1.01] hover:bg-[linear-gradient(to_right,transparent,rgba(91,100,120,0.08),rgba(24,43,60,0.22),rgba(91,100,120,0.08),transparent)] focus-visible:bg-[linear-gradient(to_right,transparent,rgba(45,91,134,0.16),rgba(45,91,134,0.34),rgba(45,91,134,0.16),transparent)]"
         role="separator"
         aria-orientation="vertical"
         aria-label="Resize editor and preview panes"

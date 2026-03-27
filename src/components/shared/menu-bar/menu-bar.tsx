@@ -17,12 +17,12 @@ interface MenuBarProps {
 
 export function MenuBar({ groups }: MenuBarProps) {
   return (
-    <nav className="inline-flex items-center gap-1" aria-label="Application menu">
+    <nav className="inline-flex items-center gap-0.5" aria-label="Application menu">
       {groups.map((group) => (
         <DropdownMenu.Root key={group.label}>
           <DropdownMenu.Trigger asChild>
             <button
-              className="rounded-[0.65rem] bg-transparent px-3 py-2 text-app-text transition hover:bg-app-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-app-accent/40"
+              className="rounded-full bg-transparent px-3 py-1.5 text-[0.95rem] font-medium text-app-text transition hover:bg-app-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-app-accent/40"
               type="button"
             >
               {group.label}

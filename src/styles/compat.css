@@ -4,13 +4,13 @@
   height: 100%;
   background: transparent;
   font-size: 16px;
-  line-height: 1.7;
+  line-height: 1.72;
   font-family: var(--font-editor);
   color: var(--text-primary);
 }
 
 .editor-pane .cm-content {
-  padding: var(--space-5) var(--space-6) var(--space-8);
+  padding: calc(var(--space-5) - 0.1rem) var(--space-6) var(--space-8);
 }
 
 .editor-pane .cm-scroller {
@@ -19,7 +19,7 @@
 
 .editor-pane .cm-gutters {
   background: transparent;
-  border-right: 1px solid rgba(24, 43, 60, 0.06);
+  border-right: 1px solid rgba(24, 43, 60, 0.08);
   color: var(--text-muted);
 }
 

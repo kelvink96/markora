@@ -62,9 +62,9 @@ export function EditorPane({ theme }: EditorPaneProps) {
   }, [content]);
 
   return (
-    <section className="editor-pane h-full py-4 pl-4 pr-0" aria-label="Editor">
-      <div className="editor-pane__panel flex h-full flex-col overflow-hidden rounded-[var(--radius-xl)] border border-[var(--ghost-border)] bg-[linear-gradient(180deg,rgba(255,255,255,0.62),transparent_22%),var(--surface-editor)] shadow-[var(--shadow-ambient)]">
-        <div className="editor-pane__header flex items-center justify-start border-b border-[var(--ghost-border)] bg-[linear-gradient(180deg,rgba(255,255,255,0.78),rgba(255,255,255,0.36)),var(--surface-panel)] p-4">
+    <section className="editor-pane h-full min-h-0 pb-0 pr-0" aria-label="Editor">
+      <div className="editor-pane__panel flex h-full flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[var(--ghost-border)] bg-app-editor shadow-[0_1px_0_rgba(255,255,255,0.8)_inset]">
+        <div className="editor-pane__header flex items-center justify-start border-b border-[var(--ghost-border)] bg-app-panel px-3 py-2.5">
           <FormattingToolbar
             onBold={() => {}}
             onItalic={() => {}}
@@ -74,7 +74,7 @@ export function EditorPane({ theme }: EditorPaneProps) {
         </div>
         <div
           ref={containerRef}
-          className="editor-pane__surface min-h-0 flex-1 overflow-hidden"
+          className="editor-pane__surface min-h-0 flex-1 overflow-hidden bg-app-editor"
           data-testid="editor-surface"
         />
       </div>

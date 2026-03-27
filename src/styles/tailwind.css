@@ -18,8 +18,9 @@
     margin: 0;
     overflow: hidden;
     background:
-      radial-gradient(circle at top, rgba(45, 91, 134, 0.08), transparent 24%),
-      radial-gradient(circle at 85% 18%, rgba(198, 176, 140, 0.1), transparent 22%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0)),
+      radial-gradient(circle at top, rgba(45, 91, 134, 0.05), transparent 24%),
+      radial-gradient(circle at 85% 18%, rgba(198, 176, 140, 0.07), transparent 22%),
       var(--surface-base);
     color: var(--text-primary);
     font-family: var(--font-ui);
@@ -46,11 +47,11 @@
     --font-editor: "IBM Plex Mono", "Cascadia Code", "Consolas", monospace;
     --font-prose: "Source Serif 4", "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
     --surface-base: #edf1f3;
-    --surface-panel: rgba(255, 255, 255, 0.8);
-    --surface-panel-strong: rgba(255, 255, 255, 0.94);
+    --surface-panel: rgba(255, 255, 255, 0.82);
+    --surface-panel-strong: rgba(255, 255, 255, 0.95);
     --surface-subtle: #dde5ea;
-    --surface-editor: #f8fbfc;
-    --surface-preview: #fffdf8;
+    --surface-editor: #f6fafc;
+    --surface-preview: #fffdf9;
     --text-primary: #16202a;
     --text-secondary: #55616d;
     --text-muted: #7a8692;
@@ -58,12 +59,12 @@
     --accent-strong: #183b5a;
     --success: #2aa36b;
     --ghost-border: rgba(24, 43, 60, 0.11);
-    --shadow-ambient: 0 18px 40px rgba(30, 43, 52, 0.07);
+    --shadow-ambient: 0 14px 30px rgba(30, 43, 52, 0.05);
     --shadow-crisp: 0 1px 0 rgba(255, 255, 255, 0.75) inset;
     --radius-sm: 10px;
     --radius-md: 14px;
-    --radius-lg: 18px;
-    --radius-xl: 24px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
     --space-2: 0.5rem;
     --space-3: 0.75rem;
     --space-4: 1rem;
@@ -74,10 +75,10 @@
 
   .theme-dark {
     --surface-base: #0f151b;
-    --surface-panel: rgba(21, 30, 38, 0.86);
-    --surface-panel-strong: rgba(26, 36, 46, 0.96);
+    --surface-panel: rgba(21, 30, 38, 0.9);
+    --surface-panel-strong: rgba(26, 36, 46, 0.97);
     --surface-subtle: #1a2630;
-    --surface-editor: #141d25;
+    --surface-editor: #141c24;
     --surface-preview: #17212a;
     --text-primary: #edf3f6;
     --text-secondary: #bfccd6;
@@ -86,7 +87,7 @@
     --accent-strong: #c8d9e8;
     --success: #53ca89;
     --ghost-border: rgba(189, 206, 220, 0.12);
-    --shadow-ambient: 0 18px 42px rgba(0, 0, 0, 0.34);
+    --shadow-ambient: 0 14px 30px rgba(0, 0, 0, 0.3);
     --shadow-crisp: 0 1px 0 rgba(255, 255, 255, 0.03) inset;
   }
 }

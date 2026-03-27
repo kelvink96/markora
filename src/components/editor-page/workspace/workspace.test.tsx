@@ -12,14 +12,17 @@ describe("Workspace", () => {
     expect(workspace).toHaveClass("flex");
     expect(workspace).toHaveClass("min-h-0");
     expect(workspace).toHaveClass("overflow-hidden");
-    expect(workspace).toHaveClass("gap-4");
-    expect(workspace).toHaveClass("p-4");
+    expect(workspace).toHaveClass("gap-2");
+    expect(workspace).toHaveClass("px-3");
+    expect(workspace).toHaveClass("pb-3");
+    expect(workspace).toHaveClass("pt-2.5");
 
     expect(screen.getByRole("region", { name: "Editor workspace" })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Preview workspace" })).toBeInTheDocument();
 
     expect(screen.getByRole("separator", { name: "Resize editor and preview panes" })).toHaveClass(
       "cursor-col-resize",
+      "rounded-[999px]",
     );
   });
 

@@ -15,10 +15,10 @@ export function PreviewPane() {
   }, [content]);
 
   return (
-    <section className="preview-pane h-full py-4 pl-0 pr-4" aria-label="Preview">
-      <div className="preview-pane__surface h-full overflow-auto rounded-[var(--radius-xl)] border border-[var(--ghost-border)] bg-[linear-gradient(180deg,rgba(255,255,255,0.8),transparent_18%),var(--surface-preview)] shadow-[var(--shadow-ambient)]">
+    <section className="preview-pane h-full min-h-0 pl-0 pr-0" aria-label="Preview">
+      <div className="preview-pane__surface h-full overflow-auto rounded-[var(--radius-lg)] border border-[var(--ghost-border)] bg-app-preview shadow-[0_1px_0_rgba(255,255,255,0.8)_inset]">
         <div
-          className="preview-pane__content prose mx-auto max-w-[48rem] p-[calc(var(--space-6)+0.35rem)]"
+          className="preview-pane__content prose mx-auto max-w-[44rem] p-[calc(var(--space-6)-0.1rem)]"
           data-testid="preview-content"
           // This HTML comes from our own Rust markdown renderer, not an external source.
           dangerouslySetInnerHTML={{ __html: html }}

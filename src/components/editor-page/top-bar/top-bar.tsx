@@ -59,14 +59,20 @@ export function TopBar({
   ];
 
   return (
-    <header className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-5 border-b border-[color:var(--ghost-border)] bg-app-panel px-5 py-4 shadow-[var(--shadow-ambient)] backdrop-blur-md">
-      <div className="flex min-w-0 items-center justify-start gap-3" data-testid="top-bar-document">
+    <header className="grid grid-cols-[minmax(0,1.25fr)_auto_minmax(0,1fr)] items-center gap-3 border-b border-[color:var(--ghost-border)] bg-app-panel/90 px-3 py-2.5 backdrop-blur-md">
+      <div className="flex min-w-0 items-center justify-start gap-2" data-testid="top-bar-document">
         <DocumentStatus fileName={getDisplayFileName(fileName)} isDirty={isDirty} />
       </div>
-      <div className="flex items-center justify-center gap-3" data-testid="top-bar-menu">
+      <div
+        className="flex items-center justify-center rounded-[var(--radius-md)] border border-[color:var(--ghost-border)] bg-app-panel-strong/78 px-1 py-0.5 shadow-[var(--shadow-crisp)]"
+        data-testid="top-bar-menu"
+      >
         <MenuBar groups={menuGroups} />
       </div>
-      <div className="flex flex-wrap items-center justify-end gap-3 rounded-full bg-app-panel-strong/70 p-1 shadow-[var(--shadow-crisp)]" data-testid="top-bar-utilities">
+      <div
+        className="flex flex-wrap items-center justify-end gap-1.5 rounded-full border border-[color:var(--ghost-border)] bg-app-panel-strong/90 px-1.5 py-0.5 shadow-[var(--shadow-crisp)]"
+        data-testid="top-bar-utilities"
+      >
         <WordCount value={wordCount} />
         <LivePreviewIndicator />
         <ThemeToggle

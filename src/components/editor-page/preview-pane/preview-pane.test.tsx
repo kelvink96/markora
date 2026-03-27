@@ -21,13 +21,14 @@ describe("PreviewPane", () => {
       expect(screen.getByTestId("preview-content").innerHTML).toContain("<p>hello</p>");
       expect(screen.getByRole("region", { name: "Preview" })).toHaveClass(
         "h-full",
-        "py-4",
+        "min-h-0",
         "pl-0",
-        "pr-4",
+        "pr-0",
       );
       expect(screen.getByTestId("preview-content")).toHaveClass(
         "mx-auto",
-        "max-w-[48rem]",
+        "max-w-[44rem]",
+        "p-[calc(var(--space-6)-0.1rem)]",
       );
     });
   });

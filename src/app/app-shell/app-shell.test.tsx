@@ -14,9 +14,13 @@ describe("AppShell", () => {
 
     const shell = screen.getByTestId("app-shell");
     expect(shell).toHaveClass("min-h-screen");
+    expect(shell).toHaveClass("min-h-dvh");
     expect(shell).toHaveClass("flex");
     expect(shell).toHaveClass("flex-col");
     expect(shell).toHaveClass("overflow-hidden");
+    expect(shell).toHaveClass("bg-app-bg");
+    expect(shell).toHaveClass("text-app-text");
+    expect(shell).toHaveClass("antialiased");
     expect(shell).not.toHaveClass("theme-dark");
 
     rerender(

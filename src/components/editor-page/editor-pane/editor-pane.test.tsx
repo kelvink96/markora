@@ -38,11 +38,12 @@ describe("EditorPane", () => {
     expect(screen.getByTestId("editor-surface")).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Editor" })).toHaveClass(
       "h-full",
-      "py-4",
-      "pl-4",
+      "min-h-0",
+      "pb-0",
       "pr-0",
     );
     expect(screen.getByTestId("editor-surface")).toHaveClass(
+      "bg-app-editor",
       "flex-1",
       "min-h-0",
       "overflow-hidden",

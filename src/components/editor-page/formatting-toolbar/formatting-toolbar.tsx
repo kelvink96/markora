@@ -18,7 +18,7 @@ export function FormattingToolbar({
     <div
       role="toolbar"
       aria-label="Formatting"
-      className="inline-flex items-center gap-2 rounded-[calc(var(--radius-md)-2px)] border border-[color:var(--ghost-border)] bg-app-panel-strong p-1.5 shadow-[0_10px_24px_rgba(24,34,43,0.08)]"
+      className="inline-flex items-center gap-2 rounded-full border border-[color:var(--ghost-border)] bg-app-panel-strong px-2 py-1 shadow-[0_1px_0_rgba(255,255,255,0.75)_inset]"
     >
       <ToolbarGroup>
         <IconButton label="Bold" onClick={onBold} disabled={disabled}>

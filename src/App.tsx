@@ -70,6 +70,20 @@ export default function App() {
     newDocument();
   }, [newDocument]);
 
+  const handleCloseTab = useCallback(
+    (documentId: string) => {
+      const { activeDocumentId, isDirty, openDocuments } = useDocumentStore.getState();
+      const targetDocument = openDocuments.find((document) => document.id === documentId);
+      if (!targetDocument) return;
+
+      const shouldConfirm = documentId === activeDocumentId ? isDirty : targetDocument.isDirty;
+      if (shouldConfirm && !window.confirm("Discard unsaved changes?")) return;
+
+      closeDocument(documentId);
+    },
+    [closeDocument],
+  );
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       // Support both Windows/Linux Ctrl shortcuts and macOS Command shortcuts.
@@ -110,7 +124,7 @@ export default function App() {
       tabs={openDocuments}
       activeTabId={activeDocumentId}
       onSelectTab={selectDocument}
-      onCloseTab={closeDocument}
+      onCloseTab={handleCloseTab}
       onNewTab={handleNew}
     />
   );

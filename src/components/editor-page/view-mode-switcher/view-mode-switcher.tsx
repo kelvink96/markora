@@ -24,7 +24,7 @@ export function ViewModeSwitcher({ value, onValueChange }: ViewModeSwitcherProps
             role="tab"
             aria-selected={selected}
             aria-label={mode.charAt(0).toUpperCase() + mode.slice(1)}
-            className={`rounded-app-md px-3 py-1.5 text-[0.85rem] font-medium capitalize transition ${
+            className={`rounded-app-sm px-3 py-1.5 text-[0.85rem] font-medium capitalize transition ${
               selected
                 ? "bg-[color:var(--glass-elevated)] text-app-text"
                 : "text-app-text-secondary hover:bg-[color:var(--glass-hover)]"

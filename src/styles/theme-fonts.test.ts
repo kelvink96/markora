@@ -32,8 +32,10 @@ describe("theme fonts", () => {
     expect(tailwindCss).toContain("--bg-atmosphere-base");
     expect(tailwindCss).toContain("--bg-atmosphere-top");
     expect(tailwindCss).toContain("--bg-atmosphere-bottom");
+    expect(tailwindCss).toContain("--bg-atmosphere-glow");
     expect(tailwindCss).toContain("radial-gradient(at 18% 18%");
     expect(tailwindCss).toContain("radial-gradient(at 82% 68%");
+    expect(tailwindCss).toContain("radial-gradient(at 50% 50%");
     expect(tailwindCss).toContain("var(--bg-atmosphere-base)");
   });
 });

@@ -2,7 +2,8 @@
 
 .editor-pane .cm-editor {
   height: 100%;
-  background: transparent;
+  background: var(--surface-editor);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
   font-size: 16px;
   line-height: 1.72;
   font-family: var(--font-editor);
@@ -15,11 +16,12 @@
 
 .editor-pane .cm-scroller {
   overflow: auto;
+  backdrop-filter: blur(calc(var(--glass-blur-soft) * 0.35));
 }
 
 .editor-pane .cm-gutters {
-  background: transparent;
-  border-right: 1px solid rgba(24, 43, 60, 0.08);
+  background: color-mix(in srgb, var(--surface-editor) 82%, transparent);
+  border-right: 1px solid color-mix(in srgb, var(--glass-border) 82%, transparent);
   color: var(--text-muted);
 }
 

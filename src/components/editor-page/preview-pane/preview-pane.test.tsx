@@ -37,5 +37,9 @@ describe("PreviewPane", () => {
     render(<PreviewPane />);
 
     await waitFor(() => expect(screen.getByTestId("preview-content")).toHaveClass("max-w-[56rem]"));
+    expect(screen.getByRole("region", { name: "Preview" }).firstElementChild).toHaveClass(
+      "bg-[color:var(--glass-panel)]",
+      "backdrop-blur-[var(--glass-blur-soft)]",
+    );
   });
 });

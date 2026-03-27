@@ -8,6 +8,7 @@ describe("ViewModeSwitcher", () => {
     render(<ViewModeSwitcher value="edit" onValueChange={vi.fn()} />);
 
     expect(screen.getByRole("tablist", { name: "View mode" })).toHaveClass("rounded-app-sm");
+    expect(screen.getByRole("tab", { name: "Edit" })).toHaveClass("rounded-app-sm");
     expect(screen.getByRole("tab", { name: "Edit" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("tab", { name: "Split" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Preview" })).toBeInTheDocument();

@@ -24,9 +24,9 @@ export function PreviewPane() {
 
   return (
     <section className="preview-pane h-full min-h-0 pl-0 pr-0" aria-label="Preview">
-      <div className="preview-pane__surface h-full overflow-auto rounded-[var(--radius-lg)] border border-[var(--ghost-border)] bg-app-preview shadow-[0_1px_0_rgba(255,255,255,0.8)_inset]">
+      <div className="preview-pane__surface h-full overflow-auto rounded-[var(--radius-lg)] border border-[color:var(--glass-border)] bg-[color:var(--glass-panel)] backdrop-blur-[var(--glass-blur-soft)] shadow-[0_1px_0_rgba(255,255,255,0.22)_inset,0_14px_36px_rgba(0,0,0,0.14)]">
         <div
-          className={`preview-pane__content prose mx-auto ${previewWidthClasses[previewWidth]} p-[calc(var(--space-6)-0.1rem)]`}
+          className={`preview-pane__content prose mx-auto ${previewWidthClasses[previewWidth]} rounded-[calc(var(--radius-lg)-2px)] bg-app-preview p-[calc(var(--space-6)-0.1rem)]`}
           data-testid="preview-content"
           // This HTML comes from our own Rust markdown renderer, not an external source.
           dangerouslySetInnerHTML={{ __html: html }}

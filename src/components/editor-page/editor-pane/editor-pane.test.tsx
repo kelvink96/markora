@@ -148,8 +148,13 @@ describe("EditorPane", () => {
       "pb-0",
       "pr-0",
     );
+    expect(screen.getByTestId("editor-surface").parentElement?.parentElement).toHaveClass(
+      "bg-[color:var(--glass-panel)]",
+      "backdrop-blur-[var(--glass-blur-soft)]",
+    );
     expect(screen.getByTestId("editor-surface")).toHaveClass(
-      "bg-app-editor",
+      "bg-[color:var(--glass-elevated)]",
+      "border-[color:var(--glass-border-strong)]",
       "flex-1",
       "min-h-0",
       "overflow-hidden",

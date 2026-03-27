@@ -2,6 +2,7 @@ import { MenuBar } from "../../shared/menu-bar";
 import { IconButton } from "../../shared/icon-button";
 import { FormattingToolbar } from "../formatting-toolbar";
 import { ViewModeSwitcher } from "../view-mode-switcher";
+import { useEditorCommandState } from "../../../features/editor/editor-command-state";
 import type { WorkspaceViewMode } from "../../../features/workspace/workspace-state";
 
 interface TopBarProps {
@@ -23,6 +24,7 @@ export function TopBar({
   viewMode,
   onViewModeChange,
 }: TopBarProps) {
+  const runToolbarAction = useEditorCommandState((state) => state.runToolbarAction);
   const menuGroups = [
     {
       label: "File",
@@ -60,17 +62,17 @@ export function TopBar({
         data-testid="top-bar-toolbar"
       >
         <FormattingToolbar
-          onHeading={() => {}}
-          onBold={() => {}}
-          onItalic={() => {}}
-          onStrike={() => {}}
-          onBulletList={() => {}}
-          onOrderedList={() => {}}
-          onTaskList={() => {}}
-          onQuote={() => {}}
-          onCodeBlock={() => {}}
-          onLink={() => {}}
-          onTable={() => {}}
+          onHeading={() => runToolbarAction("heading")}
+          onBold={() => runToolbarAction("bold")}
+          onItalic={() => runToolbarAction("italic")}
+          onStrike={() => runToolbarAction("strike")}
+          onBulletList={() => runToolbarAction("bulletList")}
+          onOrderedList={() => runToolbarAction("orderedList")}
+          onTaskList={() => runToolbarAction("taskList")}
+          onQuote={() => runToolbarAction("quote")}
+          onCodeBlock={() => runToolbarAction("codeBlock")}
+          onLink={() => runToolbarAction("link")}
+          onTable={() => runToolbarAction("table")}
         />
       </div>
       <div

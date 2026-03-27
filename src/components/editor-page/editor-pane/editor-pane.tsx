@@ -5,6 +5,8 @@ import { EditorView as CMView } from "@codemirror/view";
 import { markdown } from "@codemirror/lang-markdown";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { useDocumentStore } from "../../../store/document";
+import { useEditorCommandState } from "../../../features/editor/editor-command-state";
+import { applyMarkdownToolbarAction, type MarkdownToolbarAction } from "../../../features/editor/markdown-toolbar-actions";
 import { useEditorStatusState } from "../../../features/workspace/editor-status-state";
 
 interface EditorPaneProps {
@@ -17,6 +19,7 @@ export function EditorPane({ theme }: EditorPaneProps) {
   const viewRef = useRef<EditorView | null>(null);
   const { content, setContent } = useDocumentStore();
   const setCursorPosition = useEditorStatusState((state) => state.setCursorPosition);
+  const setRunToolbarAction = useEditorCommandState((state) => state.setRunToolbarAction);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -54,6 +57,30 @@ export function EditorPane({ theme }: EditorPaneProps) {
       viewRef.current?.destroy();
     };
   }, [setContent, setCursorPosition, theme]);
+
+  useEffect(() => {
+    const runAction = (action: MarkdownToolbarAction) => {
+      const view = viewRef.current;
+      if (!view) return;
+
+      const selection = view.state.selection.main;
+      const result = applyMarkdownToolbarAction(
+        view.state.doc.toString(),
+        selection.from,
+        selection.to,
+        action,
+      );
+
+      view.dispatch({
+        changes: { from: 0, to: view.state.doc.length, insert: result.text },
+        selection: { anchor: result.selectionStart, head: result.selectionEnd },
+      });
+      view.focus();
+    };
+
+    setRunToolbarAction(() => runAction);
+    return () => setRunToolbarAction(() => () => {});
+  }, [setRunToolbarAction]);
 
   useEffect(() => {
     const view = viewRef.current;

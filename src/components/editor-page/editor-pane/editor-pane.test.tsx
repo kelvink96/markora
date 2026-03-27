@@ -18,8 +18,10 @@ type MockUpdate = {
 };
 
 import { act, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useEditorCommandState } from "../../../features/editor/editor-command-state";
+import { createDefaultSettings } from "../../../features/settings/settings-schema";
+import { useSettingsStore } from "../../../features/settings/settings-store";
 
 const { mockState } = vi.hoisted(() => {
   class HoistedMockEditorView {
@@ -80,6 +82,7 @@ vi.mock("@codemirror/state", () => ({
 
 vi.mock("@codemirror/view", () => ({
   EditorView: {
+    theme: vi.fn((config: unknown) => config),
     updateListener: {
       of: vi.fn((listener: (update: MockUpdate) => void) => {
         mockState.updateListener = listener;
@@ -95,6 +98,29 @@ vi.mock("@codemirror/theme-one-dark", () => ({ oneDark: {} }));
 import { EditorPane } from "./editor-pane";
 
 describe("EditorPane", () => {
+  beforeEach(() => {
+    const settings = createDefaultSettings();
+    useSettingsStore.setState({
+      isHydrated: true,
+      settings,
+      templateDraft: settings.authoring.newDocumentTemplate,
+    });
+  });
+
+  it("marks the editor surface when line numbers are hidden", () => {
+    const settings = createDefaultSettings();
+    settings.editor.lineNumbers = false;
+    useSettingsStore.setState({
+      isHydrated: true,
+      settings,
+      templateDraft: settings.authoring.newDocumentTemplate,
+    });
+
+    render(<EditorPane theme="light" />);
+
+    expect(screen.getByTestId("editor-surface")).toHaveAttribute("data-line-numbers", "hidden");
+  });
+
   it("applies toolbar actions to the editor document through the command bridge", () => {
     render(<EditorPane theme="light" />);
 

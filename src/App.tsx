@@ -40,6 +40,7 @@ export default function App() {
   const settings = useSettingsStore((state) => state.settings);
   const hydrateSettings = useSettingsStore((state) => state.hydrate);
   const updateAppearance = useSettingsStore((state) => state.updateAppearance);
+  const updateEditor = useSettingsStore((state) => state.updateEditor);
   const updatePreview = useSettingsStore((state) => state.updatePreview);
   const updateFiles = useSettingsStore((state) => state.updateFiles);
   const templateDraft = useSettingsStore((state) => state.templateDraft);
@@ -231,6 +232,10 @@ export default function App() {
         onClose={() => setActiveScreen("workspace")}
         onUpdateAppearance={(appearance) => {
           updateAppearance(appearance);
+          void persistCurrentSettings();
+        }}
+        onUpdateEditor={(editor) => {
+          updateEditor(editor);
           void persistCurrentSettings();
         }}
         onUpdatePreview={(preview) => {

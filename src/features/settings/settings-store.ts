@@ -2,6 +2,7 @@ import { create } from "zustand";
 import {
   createDefaultSettings,
   type AppearanceSettings,
+  type EditorSettings,
   type FileSettings,
   type MarkoraSettings,
   type PreviewSettings,
@@ -13,6 +14,7 @@ interface SettingsStore {
   templateDraft: string;
   hydrate: (settings: MarkoraSettings) => void;
   updateAppearance: (appearance: Partial<AppearanceSettings>) => void;
+  updateEditor: (editor: Partial<EditorSettings>) => void;
   updatePreview: (preview: Partial<PreviewSettings>) => void;
   updateFiles: (files: Partial<FileSettings>) => void;
   setTemplateDraft: (templateDraft: string) => void;
@@ -45,6 +47,16 @@ export const useSettingsStore = create<SettingsStore>()((set) => ({
         appearance: {
           ...state.settings.appearance,
           ...appearance,
+        },
+      },
+    })),
+  updateEditor: (editor) =>
+    set((state) => ({
+      settings: {
+        ...state.settings,
+        editor: {
+          ...state.settings.editor,
+          ...editor,
         },
       },
     })),

@@ -88,7 +88,7 @@ pub fn default_settings() -> MarkoraSettings {
         },
         editor: EditorSettings {
             word_wrap: true,
-            line_numbers: true,
+            line_numbers: false,
             highlight_active_line: true,
             tab_size: 2,
             soft_tabs: true,

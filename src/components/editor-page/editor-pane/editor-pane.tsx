@@ -14,6 +14,7 @@ import {
   type SlashCommandDefinition,
 } from "../../../features/editor/slash-commands";
 import { useEditorStatusState } from "../../../features/workspace/editor-status-state";
+import { useSettingsStore } from "../../../features/settings/settings-store";
 import { SlashCommandMenu } from "../slash-command-menu/slash-command-menu";
 
 interface EditorPaneProps {
@@ -36,6 +37,7 @@ export function EditorPane({ theme }: EditorPaneProps) {
   // Keep the imperative CodeMirror instance in a ref so React re-renders do not recreate it.
   const viewRef = useRef<EditorView | null>(null);
   const { content, setContent } = useDocumentStore();
+  const lineNumbers = useSettingsStore((state) => state.settings.editor.lineNumbers);
   const setCursorPosition = useEditorStatusState((state) => state.setCursorPosition);
   const setRunToolbarAction = useEditorCommandState((state) => state.setRunToolbarAction);
   const [slashMenu, setSlashMenu] = useState<SlashMenuState | null>(null);
@@ -115,6 +117,11 @@ export function EditorPane({ theme }: EditorPaneProps) {
         markdown(),
         updateListener,
         CMView.lineWrapping,
+        CMView.theme({
+          ".cm-gutters": {
+            display: lineNumbers ? "flex" : "none",
+          },
+        }),
         ...(theme === "dark" ? [oneDark] : []),
       ],
     });
@@ -126,7 +133,7 @@ export function EditorPane({ theme }: EditorPaneProps) {
     return () => {
       viewRef.current?.destroy();
     };
-  }, [setContent, setCursorPosition, theme]);
+  }, [lineNumbers, setContent, setCursorPosition, theme]);
 
   useEffect(() => {
     const runAction = (action: MarkdownToolbarAction) => {
@@ -213,6 +220,7 @@ export function EditorPane({ theme }: EditorPaneProps) {
             ref={containerRef}
             className="editor-pane__surface min-h-0 h-full flex-1 overflow-hidden bg-app-editor"
             data-testid="editor-surface"
+            data-line-numbers={lineNumbers ? "visible" : "hidden"}
           />
           {slashMenu ? (
             <SlashCommandMenu

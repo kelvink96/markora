@@ -1,5 +1,6 @@
 import type {
   AppearanceSettings,
+  EditorSettings,
   FileSettings,
   MarkoraSettings,
   PreviewSettings,
@@ -8,7 +9,14 @@ import type {
 import type { ChangeEvent, ReactNode } from "react";
 import { useState } from "react";
 
-type SettingsSection = "appearance" | "preview" | "files" | "about" | "template" | "advanced";
+type SettingsSection =
+  | "appearance"
+  | "editor"
+  | "preview"
+  | "files"
+  | "about"
+  | "template"
+  | "advanced";
 
 interface SettingsPageProps {
   settings: MarkoraSettings;
@@ -16,6 +24,7 @@ interface SettingsPageProps {
   version: string;
   onClose: () => void;
   onUpdateAppearance: (appearance: Partial<AppearanceSettings>) => void;
+  onUpdateEditor: (editor: Partial<EditorSettings>) => void;
   onUpdatePreview: (preview: Partial<PreviewSettings>) => void;
   onUpdateFiles: (files: Partial<FileSettings>) => void;
   onTemplateDraftChange: (value: string) => void;
@@ -89,6 +98,7 @@ export function SettingsPage({
   version,
   onClose,
   onUpdateAppearance,
+  onUpdateEditor,
   onUpdatePreview,
   onUpdateFiles,
   onTemplateDraftChange,
@@ -157,6 +167,23 @@ export function SettingsPage({
               <option value="normal">Normal</option>
               <option value="wide">Wide</option>
             </select>
+          </SectionCard>
+        );
+      case "editor":
+        return (
+          <SectionCard
+            title="Editor"
+            description="Tune the writing surface and keep technical chrome optional."
+          >
+            <label className="inline-flex items-center gap-3 text-sm text-app-text">
+              <input
+                type="checkbox"
+                checked={settings.editor.lineNumbers}
+                onChange={(event) => onUpdateEditor({ lineNumbers: event.target.checked })}
+                aria-label="Show line numbers"
+              />
+              Show line numbers
+            </label>
           </SectionCard>
         );
       case "files":
@@ -274,6 +301,11 @@ export function SettingsPage({
                 label="Appearance"
                 isActive={activeSection === "appearance"}
                 onClick={() => setActiveSection("appearance")}
+              />
+              <SidebarButton
+                label="Editor"
+                isActive={activeSection === "editor"}
+                onClick={() => setActiveSection("editor")}
               />
               <SidebarButton
                 label="Preview"

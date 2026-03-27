@@ -55,7 +55,7 @@ export const defaultSettings: MarkoraSettings = {
   },
   editor: {
     wordWrap: true,
-    lineNumbers: true,
+    lineNumbers: false,
     highlightActiveLine: true,
     tabSize: 2,
     softTabs: true,

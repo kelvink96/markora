@@ -15,6 +15,7 @@ describe("SettingsPage", () => {
         version="0.1.0"
         onClose={() => {}}
         onUpdateAppearance={() => {}}
+        onUpdateEditor={() => {}}
         onUpdatePreview={() => {}}
         onUpdateFiles={() => {}}
         onTemplateDraftChange={() => {}}
@@ -26,6 +27,7 @@ describe("SettingsPage", () => {
 
     expect(screen.getByRole("heading", { name: "Application" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Appearance" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Editor" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "About" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Authoring Defaults" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "New Document Template" })).toBeInTheDocument();
@@ -42,6 +44,7 @@ describe("SettingsPage", () => {
         version="0.1.0"
         onClose={() => {}}
         onUpdateAppearance={() => {}}
+        onUpdateEditor={() => {}}
         onUpdatePreview={() => {}}
         onUpdateFiles={() => {}}
         onTemplateDraftChange={() => {}}
@@ -70,6 +73,7 @@ describe("SettingsPage", () => {
         version="0.1.0"
         onClose={() => {}}
         onUpdateAppearance={() => {}}
+        onUpdateEditor={() => {}}
         onUpdatePreview={() => {}}
         onUpdateFiles={() => {}}
         onTemplateDraftChange={onTemplateDraftChange}
@@ -100,6 +104,7 @@ describe("SettingsPage", () => {
         version="0.1.0"
         onClose={() => {}}
         onUpdateAppearance={() => {}}
+        onUpdateEditor={() => {}}
         onUpdatePreview={() => {}}
         onUpdateFiles={() => {}}
         onTemplateDraftChange={() => {}}
@@ -114,5 +119,34 @@ describe("SettingsPage", () => {
     await user.click(screen.getByRole("button", { name: "Reset all settings" }));
 
     expect(onResetAll).toHaveBeenCalled();
+  });
+
+  it("lets the user toggle line numbers from the editor section", async () => {
+    const user = userEvent.setup();
+    const settings = createDefaultSettings();
+    settings.editor.lineNumbers = true;
+    const onUpdateEditor = vi.fn();
+
+    render(
+      <SettingsPage
+        settings={settings}
+        templateDraft={settings.authoring.newDocumentTemplate}
+        version="0.1.0"
+        onClose={() => {}}
+        onUpdateAppearance={() => {}}
+        onUpdateEditor={onUpdateEditor}
+        onUpdatePreview={() => {}}
+        onUpdateFiles={() => {}}
+        onTemplateDraftChange={() => {}}
+        onSaveTemplate={() => {}}
+        onResetTemplate={() => {}}
+        onResetAll={() => {}}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Editor" }));
+    await user.click(screen.getByLabelText("Show line numbers"));
+
+    expect(onUpdateEditor).toHaveBeenCalledWith({ lineNumbers: false });
   });
 });

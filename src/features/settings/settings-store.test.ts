@@ -26,6 +26,12 @@ describe("settings-store", () => {
     expect(useSettingsStore.getState().settings.appearance.showStatusBar).toBe(false);
   });
 
+  it("updates editor settings fields", () => {
+    useSettingsStore.getState().updateEditor({ lineNumbers: false });
+
+    expect(useSettingsStore.getState().settings.editor.lineNumbers).toBe(false);
+  });
+
   it("updates preview settings fields", () => {
     useSettingsStore.getState().updatePreview({ contentWidth: "wide" });
 

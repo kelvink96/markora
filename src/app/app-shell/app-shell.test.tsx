@@ -9,12 +9,13 @@ describe("AppShell", () => {
         theme="light"
         topBar={<div>Top Bar</div>}
         workspace={<div>Workspace</div>}
+        statusBar={<div>Status Bar</div>}
       />,
     );
 
     const shell = screen.getByTestId("app-shell");
-    expect(shell).toHaveClass("min-h-screen");
-    expect(shell).toHaveClass("min-h-dvh");
+    expect(shell).toHaveClass("h-screen");
+    expect(shell).toHaveClass("h-dvh");
     expect(shell).toHaveClass("flex");
     expect(shell).toHaveClass("flex-col");
     expect(shell).toHaveClass("overflow-hidden");
@@ -28,6 +29,7 @@ describe("AppShell", () => {
         theme="dark"
         topBar={<div>Top Bar</div>}
         workspace={<div>Workspace</div>}
+        statusBar={<div>Status Bar</div>}
       />,
     );
 
@@ -40,6 +42,7 @@ describe("AppShell", () => {
         theme="light"
         topBar={<div>Top Bar</div>}
         workspace={<div>Workspace</div>}
+        statusBar={<div>Status Bar</div>}
       />,
     );
 
@@ -51,10 +54,29 @@ describe("AppShell", () => {
         theme="dark"
         topBar={<div>Top Bar</div>}
         workspace={<div>Workspace</div>}
+        statusBar={<div>Status Bar</div>}
       />,
     );
 
     expect(document.documentElement).toHaveAttribute("data-theme", "dark");
     expect(document.body).toHaveClass("theme-dark");
+  });
+
+  it("renders a footer status bar below the workspace", () => {
+    render(
+      <AppShell
+        theme="light"
+        topBar={<div>Top Bar</div>}
+        workspace={<div>Workspace</div>}
+        statusBar={<div>Status Bar</div>}
+      />,
+    );
+
+    expect(screen.getByText("Status Bar")).toBeInTheDocument();
+    expect(screen.getByText("Workspace").parentElement).toHaveClass(
+      "min-h-0",
+      "flex-1",
+      "overflow-y-auto",
+    );
   });
 });

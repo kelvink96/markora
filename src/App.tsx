@@ -6,6 +6,7 @@ import { EditorPane } from "./components/editor-page/editor-pane";
 import { TopBar } from "./components/editor-page/top-bar";
 import { PreviewPane } from "./components/editor-page/preview-pane";
 import { Workspace } from "./components/editor-page/workspace";
+import { FooterStatusBar } from "./components/editor-page/footer-status-bar";
 import { getDisplayFileName, getWordCount } from "./features/document/document-actions";
 import { useDocumentStore } from "./store/document";
 import { useThemeStore } from "./features/theme/theme-store";
@@ -107,7 +108,6 @@ export default function App() {
     <TopBar
       fileName={fileName}
       isDirty={isDirty}
-      wordCount={wordCount}
       theme={theme}
       onThemeToggle={toggleTheme}
       onNew={handleNew}
@@ -118,6 +118,7 @@ export default function App() {
   );
 
   const workspace = <Workspace left={<EditorPane theme={theme} />} right={<PreviewPane />} />;
+  const statusBar = <FooterStatusBar wordCount={wordCount} />;
 
-  return <AppShell theme={theme} topBar={topBar} workspace={workspace} />;
+  return <AppShell theme={theme} topBar={topBar} workspace={workspace} statusBar={statusBar} />;
 }

@@ -9,7 +9,6 @@ describe("TopBar", () => {
       <TopBar
         fileName="notes.md"
         isDirty
-        wordCount={12}
         theme="light"
         onThemeToggle={() => {}}
         onNew={() => {}}
@@ -20,7 +19,6 @@ describe("TopBar", () => {
     );
 
     expect(screen.getByText("notes.md")).toBeInTheDocument();
-    expect(screen.getByText("12 words")).toBeInTheDocument();
     expect(screen.getByText("Live Preview")).toBeInTheDocument();
   });
 
@@ -29,7 +27,6 @@ describe("TopBar", () => {
       <TopBar
         fileName="notes.md"
         isDirty
-        wordCount={12}
         theme="light"
         onThemeToggle={vi.fn()}
         onNew={vi.fn()}
@@ -53,7 +50,6 @@ describe("TopBar", () => {
       <TopBar
         fileName="notes.md"
         isDirty
-        wordCount={12}
         theme="light"
         onThemeToggle={vi.fn()}
         onNew={vi.fn()}
@@ -74,7 +70,6 @@ describe("TopBar", () => {
       <TopBar
         fileName="notes.md"
         isDirty={false}
-        wordCount={1}
         theme="light"
         onThemeToggle={vi.fn()}
         onNew={vi.fn()}
@@ -92,7 +87,6 @@ describe("TopBar", () => {
       <TopBar
         fileName="notes.md"
         isDirty={false}
-        wordCount={1}
         theme="light"
         onThemeToggle={vi.fn()}
         onNew={vi.fn()}
@@ -116,7 +110,6 @@ describe("TopBar", () => {
       <TopBar
         fileName="notes.md"
         isDirty={false}
-        wordCount={12}
         theme="light"
         onThemeToggle={vi.fn()}
         onNew={vi.fn()}
@@ -131,5 +124,23 @@ describe("TopBar", () => {
 
     expect(onOpen).toHaveBeenCalled();
     expect(screen.queryByRole("button", { name: "File actions" })).not.toBeInTheDocument();
+  });
+
+  it("keeps the utility zone focused on preview and theme controls", () => {
+    render(
+      <TopBar
+        fileName="notes.md"
+        isDirty={false}
+        theme="light"
+        onThemeToggle={vi.fn()}
+        onNew={vi.fn()}
+        onOpen={vi.fn()}
+        onSave={vi.fn()}
+        onSaveAs={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("Live Preview")).toBeInTheDocument();
+    expect(screen.queryByText(/word/)).not.toBeInTheDocument();
   });
 });

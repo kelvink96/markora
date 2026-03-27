@@ -50,7 +50,7 @@ export function TopBar({
   ];
 
   return (
-    <header className="grid grid-cols-[minmax(0,1.25fr)_auto_minmax(0,1fr)] items-center gap-3 border-b border-[color:var(--ghost-border)] bg-app-panel/90 px-3 py-2.5 backdrop-blur-md">
+    <header className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-b border-[color:var(--ghost-border)] bg-app-panel/90 px-3 py-2.5 backdrop-blur-md">
       <div className="flex min-w-0 items-center justify-start gap-2" data-testid="top-bar-document">
         <DocumentStatus fileName={getDisplayFileName(fileName)} isDirty={isDirty} />
       </div>

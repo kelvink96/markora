@@ -57,6 +57,7 @@ describe("TopBar", () => {
     );
 
     expect(screen.getByRole("banner")).toHaveClass("px-3", "py-2.5");
+    expect(screen.getByRole("banner")).toHaveClass("grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]");
     expect(screen.getByTestId("top-bar-menu")).toHaveClass("rounded-[var(--radius-md)]");
     expect(screen.getByTestId("top-bar-menu")).toHaveClass("px-1", "py-0.5");
     expect(screen.getByTestId("top-bar-utilities")).toHaveClass("rounded-full", "p-0");

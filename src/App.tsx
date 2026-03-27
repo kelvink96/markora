@@ -1,5 +1,4 @@
 import { useCallback, useEffect } from "react";
-import { invoke } from "@tauri-apps/api/core";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { AppShell } from "./app/app-shell";
 import { EditorPane } from "./components/editor-page/editor-pane";
@@ -9,18 +8,34 @@ import { PreviewPane } from "./components/editor-page/preview-pane";
 import { Workspace } from "./components/editor-page/workspace";
 import { FooterStatusBar } from "./components/editor-page/footer-status-bar";
 import { getWordCount } from "./features/document/document-actions";
+import { loadSettings, saveSettings } from "./features/settings/settings-api";
+import { useSettingsStore } from "./features/settings/settings-store";
 import { useEditorStatusState } from "./features/workspace/editor-status-state";
 import { useWorkspaceState } from "./features/workspace/workspace-state";
 import { useDocumentStore } from "./store/document";
 import { useThemeStore } from "./features/theme/theme-store";
+import { invoke } from "@tauri-apps/api/core";
+
+function getSystemThemePreference() {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    return "light" as const;
+  }
+
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
 
 export default function App() {
   const { openDocument, setFilePath, markClean, newDocument, selectDocument, closeDocument } =
     useDocumentStore();
-  const theme = useThemeStore((state) => state.theme);
+  const theme = useThemeStore((state) => state.resolvedTheme);
   const toggleTheme = useThemeStore((state) => state.toggleTheme);
+  const setThemePreference = useThemeStore((state) => state.setThemePreference);
+  const setSystemTheme = useThemeStore((state) => state.setSystemTheme);
   const viewMode = useWorkspaceState((state) => state.viewMode);
   const setViewMode = useWorkspaceState((state) => state.setViewMode);
+  const settings = useSettingsStore((state) => state.settings);
+  const hydrateSettings = useSettingsStore((state) => state.hydrate);
+  const updateAppearance = useSettingsStore((state) => state.updateAppearance);
   const line = useEditorStatusState((state) => state.line);
   const column = useEditorStatusState((state) => state.column);
 
@@ -66,22 +81,64 @@ export default function App() {
   }, [handleSaveAs, markClean]);
 
   const handleNew = useCallback(() => {
-    newDocument();
+    newDocument(useSettingsStore.getState().settings.authoring.newDocumentTemplate);
   }, [newDocument]);
 
   const handleCloseTab = useCallback(
     (documentId: string) => {
       const { activeDocumentId, isDirty, openDocuments } = useDocumentStore.getState();
+      const confirmOnUnsavedClose = useSettingsStore.getState().settings.files.confirmOnUnsavedClose;
       const targetDocument = openDocuments.find((document) => document.id === documentId);
       if (!targetDocument) return;
 
       const shouldConfirm = documentId === activeDocumentId ? isDirty : targetDocument.isDirty;
-      if (shouldConfirm && !window.confirm("Discard unsaved changes?")) return;
+      if (shouldConfirm && confirmOnUnsavedClose && !window.confirm("Discard unsaved changes?")) return;
 
       closeDocument(documentId);
     },
     [closeDocument],
   );
+
+  useEffect(() => {
+    let isActive = true;
+
+    loadSettings()
+      .then((loadedSettings) => {
+        if (!isActive) return;
+        hydrateSettings(loadedSettings);
+      })
+      .catch((error) => console.error("load_settings failed:", error));
+
+    return () => {
+      isActive = false;
+    };
+  }, [hydrateSettings]);
+
+  useEffect(() => {
+    setThemePreference(settings.appearance.theme);
+  }, [setThemePreference, settings.appearance.theme]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia?.("(prefers-color-scheme: dark)");
+    if (!mediaQuery) return;
+
+    setSystemTheme(getSystemThemePreference());
+    const handleChange = (event: MediaQueryListEvent) => {
+      setSystemTheme(event.matches ? "dark" : "light");
+    };
+
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, [setSystemTheme]);
+
+  const handleThemeToggle = useCallback(() => {
+    toggleTheme();
+    const nextThemePreference = useThemeStore.getState().themePreference;
+    updateAppearance({ theme: nextThemePreference });
+    void saveSettings(useSettingsStore.getState().settings).catch((error) =>
+      console.error("save_settings failed:", error),
+    );
+  }, [toggleTheme, updateAppearance]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -141,7 +198,7 @@ export default function App() {
 
   const commandBar = (
     <TopBar
-      onThemeToggle={toggleTheme}
+      onThemeToggle={handleThemeToggle}
       onNew={handleNew}
       onOpen={handleOpen}
       onSave={handleSave}

@@ -1,17 +1,42 @@
 import { create } from "zustand";
+import type { ThemePreference } from "../settings/settings-schema";
 
-type Theme = "light" | "dark";
+export type Theme = "light" | "dark";
 
 interface ThemeStore {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
+  themePreference: ThemePreference;
+  resolvedTheme: Theme;
+  systemTheme: Theme;
+  setThemePreference: (themePreference: ThemePreference) => void;
+  setSystemTheme: (systemTheme: Theme) => void;
   toggleTheme: () => void;
 }
 
-export const useThemeStore = create<ThemeStore>((set, get) => ({
-  theme: "light",
-  setTheme: (theme) => set({ theme }),
-  // Keep the toggle logic local to the store so components only call one action.
+function resolveTheme(themePreference: ThemePreference, systemTheme: Theme): Theme {
+  return themePreference === "system" ? systemTheme : themePreference;
+}
+
+export const useThemeStore = create<ThemeStore>()((set, get) => ({
+  themePreference: "system",
+  resolvedTheme: "light",
+  systemTheme: "light",
+  setThemePreference: (themePreference) =>
+    set((state) => ({
+      themePreference,
+      resolvedTheme: resolveTheme(themePreference, state.systemTheme),
+    })),
+  setSystemTheme: (systemTheme) =>
+    set((state) => ({
+      systemTheme,
+      resolvedTheme: resolveTheme(state.themePreference, systemTheme),
+    })),
   toggleTheme: () =>
-    set({ theme: get().theme === "light" ? "dark" : "light" }),
+    set((state) => {
+      const nextTheme = state.resolvedTheme === "light" ? "dark" : "light";
+
+      return {
+        themePreference: nextTheme,
+        resolvedTheme: nextTheme,
+      };
+    }),
 }));

@@ -5,6 +5,8 @@ export function getUntitledStarterContent() {
   return defaultNewDocumentTemplate;
 }
 
+export const untitledStarterContent = getUntitledStarterContent();
+
 export interface DocumentTab {
   id: string;
   content: string;
@@ -22,7 +24,7 @@ interface DocumentStore {
   setContent: (content: string) => void;
   setFilePath: (path: string | null) => void;
   markClean: () => void;
-  newDocument: () => void;
+  newDocument: (content?: string) => void;
   addDocument: (document?: Partial<Omit<DocumentTab, "id">>) => string;
   openDocument: (document?: Partial<Omit<DocumentTab, "id">>) => string;
   selectDocument: (id: string) => void;
@@ -118,9 +120,9 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => ({
         ...syncActiveDocument({ openDocuments, activeDocumentId: state.activeDocumentId }),
       };
     }),
-  newDocument: () =>
+  newDocument: (content) =>
     set((state) => {
-      const newDocument = createDocumentTab(state.openDocuments);
+      const newDocument = createDocumentTab(state.openDocuments, { content });
       const openDocuments = [...state.openDocuments, newDocument];
 
       return {

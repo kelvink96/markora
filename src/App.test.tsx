@@ -1,8 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
 import { untitledStarterContent, useDocumentStore } from "./store/document";
+import { createDefaultSettings } from "./features/settings/settings-schema";
+import { useSettingsStore } from "./features/settings/settings-store";
 import { useWorkspaceState } from "./features/workspace/workspace-state";
 import { useThemeStore } from "./features/theme/theme-store";
 
@@ -100,6 +102,7 @@ describe("App", () => {
   });
 
   beforeEach(() => {
+    const settings = createDefaultSettings();
     useDocumentStore.setState({
       openDocuments: [
         { id: "document-1", content: untitledStarterContent, filePath: null, isDirty: false },
@@ -110,8 +113,24 @@ describe("App", () => {
       filePath: "D:\\notes\\dirty.md",
       isDirty: true,
     });
+    useSettingsStore.setState({
+      isHydrated: false,
+      settings,
+      templateDraft: settings.authoring.newDocumentTemplate,
+    });
     useWorkspaceState.setState({ viewMode: "edit" });
-    useThemeStore.setState({ theme: "light" });
+    useThemeStore.setState({
+      themePreference: "system",
+      systemTheme: "light",
+      resolvedTheme: "light",
+    });
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === "load_settings") {
+        return settings;
+      }
+
+      return undefined;
+    });
   });
 
   it("does not close a dirty active tab when the user cancels confirmation", async () => {
@@ -123,6 +142,46 @@ describe("App", () => {
 
     expect(useDocumentStore.getState().openDocuments).toHaveLength(2);
     expect(useDocumentStore.getState().activeDocumentId).toBe("document-2");
+  });
+
+  it("uses the saved template for newly created tabs", async () => {
+    const user = userEvent.setup();
+    const settings = createDefaultSettings();
+    settings.authoring.newDocumentTemplate = "# Saved template";
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === "load_settings") {
+        return settings;
+      }
+
+      return undefined;
+    });
+
+    render(<App />);
+    await waitFor(() => expect(useSettingsStore.getState().isHydrated).toBe(true));
+    await user.click(screen.getByRole("button", { name: "new-tab" }));
+
+    expect(useDocumentStore.getState().content).toBe("# Saved template");
+  });
+
+  it("closes dirty tabs without confirmation when the setting is disabled", async () => {
+    const user = userEvent.setup();
+    const settings = createDefaultSettings();
+    settings.files.confirmOnUnsavedClose = false;
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === "load_settings") {
+        return settings;
+      }
+
+      return undefined;
+    });
+    const confirmSpy = vi.spyOn(window, "confirm");
+
+    render(<App />);
+    await waitFor(() => expect(useSettingsStore.getState().isHydrated).toBe(true));
+    await user.click(screen.getByRole("button", { name: "close-active" }));
+
+    expect(useDocumentStore.getState().openDocuments).toHaveLength(1);
+    expect(confirmSpy).not.toHaveBeenCalled();
   });
 
   it("closes a clean active tab without confirmation", async () => {
@@ -165,7 +224,17 @@ describe("App", () => {
       isDirty: false,
     });
     openMock.mockResolvedValue("D:\\notes\\daily.md");
-    invokeMock.mockResolvedValue("# Fresh from disk");
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === "load_settings") {
+        return createDefaultSettings();
+      }
+
+      if (command === "read_file") {
+        return "# Fresh from disk";
+      }
+
+      return undefined;
+    });
 
     render(<App />);
     await user.keyboard("{Control>}o{/Control}");

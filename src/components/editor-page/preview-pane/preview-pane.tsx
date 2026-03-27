@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { useDocumentStore } from "../store/document";
+import { useDocumentStore } from "../../../store/document";
+import "./preview-pane.css";
 
-export function Preview() {
+export function PreviewPane() {
   // Subscribe only to the content field so this component updates when markdown text changes.
   const content = useDocumentStore((state) => state.content);
   const [html, setHtml] = useState("");
@@ -15,10 +16,14 @@ export function Preview() {
   }, [content]);
 
   return (
-    <div
-      className="preview-container"
-      // This HTML comes from our own Rust markdown renderer, not an external source.
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
+    <div className="preview-pane">
+      <div className="preview-pane__surface">
+        <div
+          className="preview-pane__content"
+          // This HTML comes from our own Rust markdown renderer, not an external source.
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+      </div>
+    </div>
   );
 }

@@ -1,0 +1,16 @@
+.preview-pane {
+  height: 100%;
+  padding: var(--space-4);
+}
+
+.preview-pane__surface {
+  height: 100%;
+  border-radius: var(--radius-lg);
+  background: var(--surface-preview);
+  box-shadow: var(--shadow-ambient);
+  overflow: auto;
+}
+
+.preview-pane__content {
+  padding: var(--space-6);
+}

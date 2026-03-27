@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, waitFor } from "@testing-library/react";
-import { Preview } from "./Preview";
-import { useDocumentStore } from "../store/document";
+import { PreviewPane } from "./preview-pane";
+import { useDocumentStore } from "../../../store/document";
 
 // Replace Tauri's runtime bridge with a predictable mock for tests.
 vi.mock("@tauri-apps/api/core", () => ({
@@ -10,14 +10,14 @@ vi.mock("@tauri-apps/api/core", () => ({
   ),
 }));
 
-describe("Preview", () => {
+describe("PreviewPane", () => {
   it("renders HTML returned from parse_markdown", async () => {
     useDocumentStore.setState({ content: "hello", filePath: null, isDirty: false });
 
-    const { container } = render(<Preview />);
+    const { container } = render(<PreviewPane />);
 
     await waitFor(() => {
-      expect(container.querySelector(".preview-container")?.innerHTML).toContain(
+      expect(container.querySelector(".preview-pane")?.innerHTML).toContain(
         "<p>hello</p>",
       );
     });

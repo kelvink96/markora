@@ -1,0 +1,24 @@
+.workspace {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.workspace__left,
+.workspace__right {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.workspace__divider {
+  width: 8px;
+  flex-shrink: 0;
+  cursor: col-resize;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--ghost-border),
+    transparent
+  );
+}

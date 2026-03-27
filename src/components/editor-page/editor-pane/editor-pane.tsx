@@ -4,13 +4,14 @@ import { EditorState } from "@codemirror/state";
 import { EditorView as CMView } from "@codemirror/view";
 import { markdown } from "@codemirror/lang-markdown";
 import { oneDark } from "@codemirror/theme-one-dark";
-import { useDocumentStore } from "../store/document";
+import { useDocumentStore } from "../../../store/document";
+import "./editor-pane.css";
 
-interface EditorProps {
+interface EditorPaneProps {
   theme: "light" | "dark";
 }
 
-export function Editor({ theme }: EditorProps) {
+export function EditorPane({ theme }: EditorPaneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Keep the imperative CodeMirror instance in a ref so React re-renders do not recreate it.
   const viewRef = useRef<EditorView | null>(null);
@@ -60,5 +61,9 @@ export function Editor({ theme }: EditorProps) {
     }
   }, [content]);
 
-  return <div ref={containerRef} className="editor-container" />;
+  return (
+    <div className="editor-pane">
+      <div ref={containerRef} className="editor-pane__surface" />
+    </div>
+  );
 }

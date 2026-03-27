@@ -1,11 +1,12 @@
 import { type ReactNode, useCallback, useRef, useState } from "react";
+import "./workspace.css";
 
-interface SplitPaneProps {
+interface WorkspaceProps {
   left: ReactNode;
   right: ReactNode;
 }
 
-export function SplitPane({ left, right }: SplitPaneProps) {
+export function Workspace({ left, right }: WorkspaceProps) {
   const [splitPct, setSplitPct] = useState(50);
   const containerRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
@@ -23,7 +24,7 @@ export function SplitPane({ left, right }: SplitPaneProps) {
   return (
     <div
       ref={containerRef}
-      className="split-pane"
+      className="workspace"
       onMouseMove={onMouseMove}
       onMouseUp={() => {
         dragging.current = false;
@@ -32,16 +33,16 @@ export function SplitPane({ left, right }: SplitPaneProps) {
         dragging.current = false;
       }}
     >
-      <div className="split-left" style={{ width: `${splitPct}%` }}>
+      <div className="workspace__left" style={{ width: `${splitPct}%` }}>
         {left}
       </div>
       <div
-        className="split-divider"
+        className="workspace__divider"
         onMouseDown={() => {
           dragging.current = true;
         }}
       />
-      <div className="split-right" style={{ width: `${100 - splitPct}%` }}>
+      <div className="workspace__right" style={{ width: `${100 - splitPct}%` }}>
         {right}
       </div>
     </div>

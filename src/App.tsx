@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open, save } from "@tauri-apps/plugin-dialog";
-import { Editor } from "./components/Editor";
-import { Preview } from "./components/Preview";
-import { SplitPane } from "./components/SplitPane";
+import { EditorPane } from "./components/editor-page/editor-pane";
+import { PreviewPane } from "./components/editor-page/preview-pane";
+import { Workspace } from "./components/editor-page/workspace";
 import { Toolbar } from "./components/Toolbar";
 import { useDocumentStore } from "./store/document";
 
@@ -109,7 +109,7 @@ export default function App() {
         isDirty={isDirty}
         filePath={filePath}
       />
-      <SplitPane left={<Editor theme={theme} />} right={<Preview />} />
+      <Workspace left={<EditorPane theme={theme} />} right={<PreviewPane />} />
     </div>
   );
 }

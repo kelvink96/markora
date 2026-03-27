@@ -5,7 +5,7 @@ import { TabStrip } from "./tab-strip";
 
 describe("TabStrip", () => {
   it("renders tabs with an active document and a new-tab action", () => {
-    render(
+    const { container } = render(
       <TabStrip
         tabs={[
           { id: "one", content: "", filePath: "D:\\notes\\one.md", isDirty: false },
@@ -18,6 +18,7 @@ describe("TabStrip", () => {
       />,
     );
 
+    expect(container.firstChild).toHaveClass("border-b", "bg-app-panel/96");
     expect(screen.getByRole("tab", { name: "one.md" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("tab", { name: "Untitled *" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "New tab" })).toBeInTheDocument();

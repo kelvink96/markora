@@ -59,7 +59,19 @@ export function TopBar({
         className="flex min-w-0 items-center justify-center"
         data-testid="top-bar-toolbar"
       >
-        <FormattingToolbar onBold={() => {}} onItalic={() => {}} onList={() => {}} />
+        <FormattingToolbar
+          onHeading={() => {}}
+          onBold={() => {}}
+          onItalic={() => {}}
+          onStrike={() => {}}
+          onBulletList={() => {}}
+          onOrderedList={() => {}}
+          onTaskList={() => {}}
+          onQuote={() => {}}
+          onCodeBlock={() => {}}
+          onLink={() => {}}
+          onTable={() => {}}
+        />
       </div>
       <div
         className="flex items-center justify-end gap-2 rounded-full p-0"

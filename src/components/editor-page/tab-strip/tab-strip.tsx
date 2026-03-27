@@ -17,8 +17,12 @@ export function TabStrip({
   onNewTab,
 }: TabStripProps) {
   return (
-    <div className="flex items-center gap-2 border-b border-[color:var(--ghost-border)] bg-app-panel px-2 py-1.5">
-      <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto" role="tablist" aria-label="Open documents">
+    <div className="flex items-center gap-2 border-b border-[color:var(--ghost-border)] bg-app-panel/96 px-2 py-1">
+      <div
+        className="flex min-w-0 flex-1 items-end gap-1 overflow-x-auto"
+        role="tablist"
+        aria-label="Open documents"
+      >
         {tabs.map((tab) => {
           const isActive = tab.id === activeTabId;
           const title = getDisplayFileName(tab.filePath);
@@ -26,17 +30,17 @@ export function TabStrip({
           return (
             <div
               key={tab.id}
-              className={`group inline-flex min-w-0 items-center gap-2 rounded-t-[var(--radius-md)] border px-3 py-1.5 text-sm ${
+              className={`group inline-flex min-w-0 items-center gap-1.5 rounded-t-[12px] border px-3 py-1.5 text-[0.82rem] ${
                 isActive
-                  ? "border-[color:var(--ghost-border)] bg-app-panel-strong text-app-text"
-                  : "border-transparent bg-transparent text-app-text-secondary hover:bg-app-panel-strong/60"
+                  ? "border-[color:var(--ghost-border)] border-b-app-panel bg-app-panel-strong text-app-text shadow-[var(--shadow-crisp)]"
+                  : "border-transparent bg-transparent text-app-text-secondary hover:bg-app-panel-strong/55"
               }`}
             >
               <button
                 type="button"
                 role="tab"
                 aria-selected={isActive}
-                className="truncate focus-visible:outline-none"
+                className="truncate font-medium focus-visible:outline-none"
                 onClick={() => onSelectTab(tab.id)}
               >
                 {title}
@@ -45,7 +49,7 @@ export function TabStrip({
               <button
                 type="button"
                 aria-label={`Close ${title}`}
-                className="text-app-text-muted opacity-70 transition hover:opacity-100 focus-visible:outline-none"
+                className="inline-flex size-5 items-center justify-center rounded-full text-app-text-muted opacity-0 transition hover:bg-app-subtle hover:text-app-text hover:opacity-100 focus-visible:outline-none group-hover:opacity-80"
                 onClick={() => onCloseTab(tab.id)}
               >
                 x
@@ -57,7 +61,7 @@ export function TabStrip({
       <button
         type="button"
         aria-label="New tab"
-        className="inline-flex size-8 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-app-panel-strong text-app-text shadow-[var(--shadow-crisp)] focus-visible:outline-none"
+        className="inline-flex size-8 shrink-0 items-center justify-center rounded-[10px] border border-transparent bg-transparent text-app-text-secondary transition hover:bg-app-panel-strong hover:text-app-text focus-visible:outline-none"
         onClick={onNewTab}
       >
         +

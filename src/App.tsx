@@ -9,6 +9,7 @@ import { PreviewPane } from "./components/editor-page/preview-pane";
 import { Workspace } from "./components/editor-page/workspace";
 import { FooterStatusBar } from "./components/editor-page/footer-status-bar";
 import { getWordCount } from "./features/document/document-actions";
+import { useEditorStatusState } from "./features/workspace/editor-status-state";
 import { useWorkspaceState } from "./features/workspace/workspace-state";
 import { useDocumentStore } from "./store/document";
 import { useThemeStore } from "./features/theme/theme-store";
@@ -20,6 +21,8 @@ export default function App() {
   const toggleTheme = useThemeStore((state) => state.toggleTheme);
   const viewMode = useWorkspaceState((state) => state.viewMode);
   const setViewMode = useWorkspaceState((state) => state.setViewMode);
+  const line = useEditorStatusState((state) => state.line);
+  const column = useEditorStatusState((state) => state.column);
 
   const handleOpen = useCallback(async () => {
     // `open()` is a native dialog, not an HTML file input, so it feels like a desktop app.
@@ -144,7 +147,9 @@ export default function App() {
   const workspace = (
     <Workspace left={<EditorPane theme={theme} />} right={<PreviewPane />} viewMode={viewMode} />
   );
-  const statusBar = <FooterStatusBar wordCount={wordCount} viewMode={viewMode} />;
+  const statusBar = (
+    <FooterStatusBar wordCount={wordCount} viewMode={viewMode} line={line} column={column} />
+  );
 
   return (
     <AppShell

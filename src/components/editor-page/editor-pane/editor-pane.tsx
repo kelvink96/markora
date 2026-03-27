@@ -5,6 +5,7 @@ import { EditorView as CMView } from "@codemirror/view";
 import { markdown } from "@codemirror/lang-markdown";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { useDocumentStore } from "../../../store/document";
+import { useEditorStatusState } from "../../../features/workspace/editor-status-state";
 
 interface EditorPaneProps {
   theme: "light" | "dark";
@@ -15,6 +16,7 @@ export function EditorPane({ theme }: EditorPaneProps) {
   // Keep the imperative CodeMirror instance in a ref so React re-renders do not recreate it.
   const viewRef = useRef<EditorView | null>(null);
   const { content, setContent } = useDocumentStore();
+  const setCursorPosition = useEditorStatusState((state) => state.setCursorPosition);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -23,6 +25,12 @@ export function EditorPane({ theme }: EditorPaneProps) {
       if (update.docChanged) {
         // Push user edits from CodeMirror into the Zustand store.
         setContent(update.state.doc.toString());
+      }
+
+      if (update.docChanged || update.selectionSet || update.focusChanged) {
+        const cursor = update.state.selection.main.head;
+        const line = update.state.doc.lineAt(cursor);
+        setCursorPosition(line.number, cursor - line.from + 1);
       }
     });
 
@@ -45,7 +53,7 @@ export function EditorPane({ theme }: EditorPaneProps) {
     return () => {
       viewRef.current?.destroy();
     };
-  }, [setContent, theme]);
+  }, [setContent, setCursorPosition, theme]);
 
   useEffect(() => {
     const view = viewRef.current;

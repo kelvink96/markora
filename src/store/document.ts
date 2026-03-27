@@ -22,15 +22,20 @@ interface DocumentStore {
   markClean: () => void;
   newDocument: () => void;
   addDocument: (document?: Partial<Omit<DocumentTab, "id">>) => string;
+  openDocument: (document?: Partial<Omit<DocumentTab, "id">>) => string;
   selectDocument: (id: string) => void;
   closeDocument: (id: string) => void;
 }
 
-let nextUntitledDocument = 1;
+function createDocumentId(existingDocuments: DocumentTab[]) {
+  const highestId = existingDocuments.reduce((maxId, document) => {
+    const match = /^document-(\d+)$/.exec(document.id);
+    if (!match) return maxId;
 
-function createDocumentId() {
-  nextUntitledDocument += 1;
-  return `document-${nextUntitledDocument}`;
+    return Math.max(maxId, Number(match[1]));
+  }, 0);
+
+  return `document-${highestId + 1}`;
 }
 
 function createUntitledDocument(): DocumentTab {
@@ -42,9 +47,12 @@ function createUntitledDocument(): DocumentTab {
   };
 }
 
-function createDocumentTab(overrides: Partial<Omit<DocumentTab, "id">> = {}): DocumentTab {
+function createDocumentTab(
+  existingDocuments: DocumentTab[],
+  overrides: Partial<Omit<DocumentTab, "id">> = {},
+): DocumentTab {
   return {
-    id: createDocumentId(),
+    id: createDocumentId(existingDocuments),
     content: overrides.content ?? untitledStarterContent,
     filePath: overrides.filePath ?? null,
     isDirty: overrides.isDirty ?? false,
@@ -69,7 +77,7 @@ function syncActiveDocument(state: {
 
 const initialDocument = createUntitledDocument();
 
-export const useDocumentStore = create<DocumentStore>((set) => ({
+export const useDocumentStore = create<DocumentStore>()((set, get) => ({
   content: initialDocument.content,
   filePath: initialDocument.filePath,
   isDirty: initialDocument.isDirty,
@@ -110,7 +118,7 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
     }),
   newDocument: () =>
     set((state) => {
-      const newDocument = createDocumentTab();
+      const newDocument = createDocumentTab(state.openDocuments);
       const openDocuments = [...state.openDocuments, newDocument];
 
       return {
@@ -119,7 +127,7 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
       };
     }),
   addDocument: (document = {}) => {
-    const newDocument = createDocumentTab(document);
+    const newDocument = createDocumentTab(get().openDocuments, document);
 
     set((state) => {
       const openDocuments = [...state.openDocuments, newDocument];
@@ -131,6 +139,39 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
     });
 
     return newDocument.id;
+  },
+  openDocument: (document = {}): string => {
+    const targetPath = document.filePath ?? null;
+    if (!targetPath) {
+      return get().addDocument(document);
+    }
+
+    const existingDocument = get().openDocuments.find(
+      (openDocument: DocumentTab) => openDocument.filePath === targetPath,
+    );
+
+    if (existingDocument) {
+      set((state) => {
+        const openDocuments = state.openDocuments.map((openDocument) =>
+          openDocument.id === existingDocument.id
+            ? {
+                ...openDocument,
+                content: document.content ?? openDocument.content,
+                isDirty: document.isDirty ?? openDocument.isDirty,
+              }
+            : openDocument,
+        );
+
+        return {
+          openDocuments,
+          ...syncActiveDocument({ openDocuments, activeDocumentId: existingDocument.id }),
+        };
+      });
+
+      return existingDocument.id;
+    }
+
+    return get().addDocument(document);
   },
   selectDocument: (id) =>
     set((state) => {

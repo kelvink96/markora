@@ -15,7 +15,7 @@ import { useDocumentStore } from "./store/document";
 import { useThemeStore } from "./features/theme/theme-store";
 
 export default function App() {
-  const { addDocument, setFilePath, markClean, newDocument, selectDocument, closeDocument } =
+  const { openDocument, setFilePath, markClean, newDocument, selectDocument, closeDocument } =
     useDocumentStore();
   const theme = useThemeStore((state) => state.theme);
   const toggleTheme = useThemeStore((state) => state.toggleTheme);
@@ -34,9 +34,9 @@ export default function App() {
     if (typeof selected === "string") {
       // The frontend never reads the file directly; it asks Rust to do it through a command.
       const text = await invoke<string>("read_file", { path: selected });
-      addDocument({ content: text, filePath: selected, isDirty: false });
+      openDocument({ content: text, filePath: selected, isDirty: false });
     }
-  }, [addDocument]);
+  }, [openDocument]);
 
   const handleSaveAs = useCallback(async () => {
     // getState() gives the latest store snapshot without waiting for React to re-render.
@@ -66,10 +66,6 @@ export default function App() {
   }, [handleSaveAs, markClean]);
 
   const handleNew = useCallback(() => {
-    const { isDirty } = useDocumentStore.getState();
-
-    // Guard against discarding unsaved edits when starting a fresh document.
-    if (isDirty && !window.confirm("Discard unsaved changes?")) return;
     newDocument();
   }, [newDocument]);
 

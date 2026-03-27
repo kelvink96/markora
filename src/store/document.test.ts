@@ -65,6 +65,25 @@ describe("DocumentStore", () => {
     expect(useDocumentStore.getState().content).toBe(untitledStarterContent);
   });
 
+  it("reuses an already open file tab instead of creating a duplicate", () => {
+    const existingId = useDocumentStore.getState().addDocument({
+      content: "# Existing",
+      filePath: "D:\\notes\\existing.md",
+      isDirty: false,
+    });
+
+    const reopenedId = useDocumentStore.getState().openDocument({
+      content: "# Fresh from disk",
+      filePath: "D:\\notes\\existing.md",
+      isDirty: false,
+    });
+
+    expect(reopenedId).toBe(existingId);
+    expect(useDocumentStore.getState().openDocuments).toHaveLength(2);
+    expect(useDocumentStore.getState().activeDocumentId).toBe(existingId);
+    expect(useDocumentStore.getState().content).toBe("# Fresh from disk");
+  });
+
   it("closes the active tab and falls back to a remaining document", () => {
     const firstId = useDocumentStore.getState().activeDocumentId;
     const secondId = useDocumentStore.getState().addDocument({

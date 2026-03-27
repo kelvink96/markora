@@ -6,13 +6,19 @@ import { untitledStarterContent, useDocumentStore } from "./store/document";
 import { useWorkspaceState } from "./features/workspace/workspace-state";
 import { useThemeStore } from "./features/theme/theme-store";
 
+const { invokeMock, openMock, saveMock } = vi.hoisted(() => ({
+  invokeMock: vi.fn(),
+  openMock: vi.fn(),
+  saveMock: vi.fn(),
+}));
+
 vi.mock("@tauri-apps/api/core", () => ({
-  invoke: vi.fn(),
+  invoke: invokeMock,
 }));
 
 vi.mock("@tauri-apps/plugin-dialog", () => ({
-  open: vi.fn(),
-  save: vi.fn(),
+  open: openMock,
+  save: saveMock,
 }));
 
 vi.mock("./app/app-shell", () => ({
@@ -66,15 +72,20 @@ vi.mock("./components/editor-page/tab-strip", () => ({
     tabs,
     activeTabId,
     onCloseTab,
+    onNewTab,
   }: {
     tabs: Array<{ id: string; filePath: string | null }>;
     activeTabId: string;
     onCloseTab: (id: string) => void;
+    onNewTab: () => void;
   }) => (
     <div>
       <div>{tabs.length} tabs</div>
       <button type="button" onClick={() => onCloseTab(activeTabId)}>
         close-active
+      </button>
+      <button type="button" onClick={onNewTab}>
+        new-tab
       </button>
     </div>
   ),
@@ -83,6 +94,9 @@ vi.mock("./components/editor-page/tab-strip", () => ({
 describe("App", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    invokeMock.mockReset();
+    openMock.mockReset();
+    saveMock.mockReset();
   });
 
   beforeEach(() => {
@@ -130,6 +144,46 @@ describe("App", () => {
 
     expect(useDocumentStore.getState().openDocuments).toHaveLength(1);
     expect(useDocumentStore.getState().activeDocumentId).toBe("document-1");
+    expect(confirmSpy).not.toHaveBeenCalled();
+  });
+
+  it("selects an already-open file when opening the same path again", async () => {
+    const user = userEvent.setup();
+    useDocumentStore.setState({
+      openDocuments: [
+        { id: "document-1", content: untitledStarterContent, filePath: null, isDirty: false },
+        {
+          id: "document-2",
+          content: "# Existing file",
+          filePath: "D:\\notes\\daily.md",
+          isDirty: false,
+        },
+      ],
+      activeDocumentId: "document-1",
+      content: untitledStarterContent,
+      filePath: null,
+      isDirty: false,
+    });
+    openMock.mockResolvedValue("D:\\notes\\daily.md");
+    invokeMock.mockResolvedValue("# Fresh from disk");
+
+    render(<App />);
+    await user.keyboard("{Control>}o{/Control}");
+
+    expect(useDocumentStore.getState().openDocuments).toHaveLength(2);
+    expect(useDocumentStore.getState().activeDocumentId).toBe("document-2");
+    expect(useDocumentStore.getState().content).toBe("# Fresh from disk");
+  });
+
+  it("creates a new tab without prompting to discard dirty changes", async () => {
+    const user = userEvent.setup();
+    const confirmSpy = vi.spyOn(window, "confirm");
+
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "new-tab" }));
+
+    expect(useDocumentStore.getState().openDocuments).toHaveLength(3);
+    expect(useDocumentStore.getState().activeDocumentId).not.toBe("document-2");
     expect(confirmSpy).not.toHaveBeenCalled();
   });
 });

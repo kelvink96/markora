@@ -20,7 +20,7 @@ body {
     radial-gradient(circle at 85% 18%, rgba(198, 176, 140, 0.1), transparent 22%),
     var(--surface-base);
   color: var(--text-primary);
-  font-family: "Manrope", "Segoe UI", sans-serif;
+  font-family: var(--font-ui);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
@@ -28,4 +28,11 @@ body {
 button,
 input {
   font: inherit;
+}
+
+code,
+pre,
+kbd,
+samp {
+  font-family: var(--font-editor);
 }

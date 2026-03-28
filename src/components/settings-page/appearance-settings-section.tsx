@@ -5,12 +5,82 @@ import type {
 } from "../../features/settings/settings-schema";
 import { Checkbox } from "../shared/checkbox";
 import { Field } from "../shared/field";
-import { Select } from "../shared/select";
 import {
   SectionActions,
   SectionCard,
   hasChanges,
 } from "./settings-page-shared";
+
+function ThemeModeSwatch({
+  description,
+  isSelected,
+  onSelect,
+  previewMode,
+  resolvedThemeMode,
+  title,
+  value,
+}: {
+  description: string;
+  isSelected: boolean;
+  onSelect: (value: ThemePreference) => void;
+  previewMode: "light" | "dark";
+  resolvedThemeMode: "light" | "dark";
+  title: string;
+  value: ThemePreference;
+}) {
+  return (
+    <button
+      type="button"
+      data-testid={`theme-swatch-${value}`}
+      data-theme={value}
+      data-resolved-theme-mode={resolvedThemeMode}
+      onClick={() => onSelect(value)}
+      className={`rounded-app-md border p-3 text-left transition ${
+        isSelected
+          ? "border-[color:var(--accent-strong)] shadow-[0_0_0_1px_var(--accent-strong)]"
+          : "border-[color:var(--glass-border-strong)] hover:border-[color:var(--glass-border)]"
+      }`}
+    >
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <div className="text-sm font-semibold">{title}</div>
+          <div className="text-xs opacity-75">{description}</div>
+        </div>
+        <div
+          className={`h-3 w-3 rounded-full border ${
+            isSelected ? "border-current bg-current" : "border-current/50"
+          }`}
+          aria-hidden="true"
+        />
+      </div>
+      <div
+        className={`space-y-2 rounded-app-sm border border-current/10 p-3 ${
+          previewMode === "dark"
+            ? "bg-slate-950 text-slate-100"
+            : "bg-stone-50 text-slate-900"
+        }`}
+      >
+        <div className="text-sm font-semibold">Workspace chrome</div>
+        <div className="text-xs opacity-75">
+          {value === "system"
+            ? `Follows your OS and resolves to ${resolvedThemeMode}.`
+            : `Always use ${value} mode for the app shell.`}
+        </div>
+        <div className="flex items-center gap-2 text-xs opacity-75">
+          <span className="h-px flex-1 bg-current/15" />
+          <span>{previewMode} preview</span>
+        </div>
+        <div
+          className={`inline-block rounded-app-sm border border-current/10 px-2 py-1 text-[11px] ${
+            previewMode === "dark" ? "bg-slate-900" : "bg-white"
+          }`}
+        >
+          theme sample
+        </div>
+      </div>
+    </button>
+  );
+}
 
 function ColorSchemeSwatch({
   description,
@@ -88,27 +158,72 @@ export function AppearanceSettingsSection({
     onAppearanceChange({ ...appearance, ...updates });
   };
 
+  const themeCards: Array<{
+    description: string;
+    resolvedThemeMode: "light" | "dark";
+    title: string;
+    value: ThemePreference;
+  }> = [
+    {
+      title: "System",
+      description: "Match your operating system preference.",
+      value: "system",
+      resolvedThemeMode: previewThemeMode,
+    },
+    {
+      title: "Light",
+      description: "Keep the shell bright and airy.",
+      value: "light",
+      resolvedThemeMode: "light",
+    },
+    {
+      title: "Dark",
+      description: "Use a darker shell for lower-glare editing.",
+      value: "dark",
+      resolvedThemeMode: "dark",
+    },
+  ];
+
   return (
     <div className="space-y-4">
       <SectionCard
         title="Appearance"
         description="Control the app chrome, shell theme, and supporting interface elements."
       >
-        <Select
-          id="theme-preference"
-          className="w-full rounded-app-sm"
-          label="Theme mode"
-          helper="System follows your OS color scheme."
-          value={appearance.theme}
-          onChange={(event) =>
-            updateAppearance({ theme: event.target.value as ThemePreference })
-          }
-        >
-          <option value="system">System</option>
-          <option value="light">Light</option>
-          <option value="dark">Dark</option>
-        </Select>
+        <div className="space-y-3">
+          <div>
+            <div className="text-sm font-medium text-app-text">Theme mode</div>
+            <div className="text-xs text-app-text/60">
+              System follows your OS color scheme.
+            </div>
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
+            {themeCards.map((themeCard) => (
+              <ThemeModeSwatch
+                key={themeCard.value}
+                title={themeCard.title}
+                description={themeCard.description}
+                previewMode={themeCard.resolvedThemeMode}
+                resolvedThemeMode={themeCard.resolvedThemeMode}
+                value={themeCard.value}
+                isSelected={appearance.theme === themeCard.value}
+                onSelect={(value) => updateAppearance({ theme: value })}
+              />
+            ))}
+          </div>
+        </div>
 
+        <SectionActions
+          canSave={hasChanges(appearance, savedAppearance)}
+          label="Save theme mode"
+          onSave={() => onSave(appearance)}
+        />
+      </SectionCard>
+
+      <SectionCard
+        title="Status Bar"
+        description="Control whether footer metrics stay visible while you write."
+      >
         <Field
           label="Show status bar"
           helper="Keep the footer metrics visible while writing."
@@ -124,7 +239,7 @@ export function AppearanceSettingsSection({
         </Field>
         <SectionActions
           canSave={hasChanges(appearance, savedAppearance)}
-          label="Save theme mode"
+          label="Save status bar"
           onSave={() => onSave(appearance)}
         />
       </SectionCard>
@@ -133,20 +248,9 @@ export function AppearanceSettingsSection({
         title="Color Scheme"
         description="Choose the palette character that the whole app shell will use in both light and dark modes."
       >
-        <Select
-          id="color-scheme"
-          className="w-full rounded-app-sm"
-          label="Color scheme"
-          helper="Each scheme adapts to the current theme mode, so the shell, editor, and preview stay aligned."
-          value={appearance.colorScheme}
-          onChange={(event) =>
-            updateAppearance({ colorScheme: event.target.value as ColorScheme })
-          }
-        >
-          <option value="standard">Standard</option>
-          <option value="sepia">Sepia</option>
-          <option value="high-contrast">High Contrast</option>
-        </Select>
+        <div className="text-xs text-app-text/60">
+          Each scheme adapts to the current theme mode, so the shell, editor, and preview stay aligned.
+        </div>
         <div className="grid gap-3 md:grid-cols-2">
           <ColorSchemeSwatch
             title="Standard"

@@ -102,9 +102,12 @@ describe("SettingsPage", () => {
     await user.click(screen.getByRole("button", { name: "Appearance" }));
 
     expect(screen.getByRole("heading", { name: "Appearance", level: 3 })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Status Bar", level: 3 })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Color Scheme", level: 3 })).toBeInTheDocument();
-    expect(screen.getByLabelText(/^Color scheme/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/^Color scheme/i)).toHaveClass("w-full", "rounded-app-sm");
+    expect(screen.queryByLabelText(/^Theme mode/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Color scheme/i)).not.toBeInTheDocument();
+    expect(screen.getAllByTestId(/theme-swatch-/i)).toHaveLength(3);
+    expect(screen.getAllByTestId(/scheme-swatch-/i)).toHaveLength(3);
   });
 
   it("lets the user save the template draft explicitly", async () => {
@@ -214,8 +217,7 @@ describe("SettingsPage", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "Appearance" }));
-    await user.click(screen.getByLabelText(/^Color scheme/i));
-    await user.click(screen.getByRole("menuitemradio", { name: "Sepia" }));
+    await user.click(screen.getByTestId("scheme-swatch-sepia"));
     expect(onSaveAppearance).not.toHaveBeenCalled();
     await user.click(screen.getByRole("button", { name: "Save color scheme" }));
 
@@ -243,6 +245,9 @@ describe("SettingsPage", () => {
     );
 
     expect(screen.getAllByTestId(/scheme-swatch-/i)).toHaveLength(3);
+    expect(screen.getAllByTestId(/theme-swatch-/i)).toHaveLength(3);
+    expect(screen.getByTestId("theme-swatch-system")).toHaveAttribute("data-theme", "system");
+    expect(screen.getByTestId("theme-swatch-system")).toHaveAttribute("data-resolved-theme-mode", "light");
     expect(screen.getByTestId("scheme-swatch-standard")).toHaveAttribute("data-color-scheme", "standard");
     expect(screen.getByTestId("scheme-swatch-sepia")).toHaveAttribute("data-color-scheme", "sepia");
     expect(screen.getByTestId("scheme-swatch-sepia")).toHaveAttribute("data-theme-mode", "light");

@@ -27,9 +27,15 @@ describe("AppearanceSettingsSection", () => {
 
     render(<TestHarness />);
 
-    await user.click(screen.getByLabelText("Theme mode"));
-    await user.click(screen.getByRole("menuitemradio", { name: "Dark" }));
-    expect(screen.getByLabelText("Theme mode")).toHaveTextContent("Dark");
+    expect(screen.queryByLabelText("Theme mode")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Color scheme")).not.toBeInTheDocument();
+    expect(screen.getAllByTestId(/theme-swatch-/i)).toHaveLength(3);
+    expect(screen.getByTestId("theme-swatch-system")).toHaveAttribute(
+      "data-resolved-theme-mode",
+      "light",
+    );
+
+    await user.click(screen.getByTestId("theme-swatch-dark"));
 
     await user.click(screen.getByTestId("scheme-swatch-sepia"));
     expect(screen.getByRole("button", { name: "Save color scheme" })).toBeEnabled();

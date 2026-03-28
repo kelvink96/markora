@@ -38,6 +38,14 @@ export function MenuContent({ children, className }: MenuContentProps) {
   );
 }
 
+export function MenuSeparator() {
+  return (
+    <DropdownMenu.Separator
+      className="my-1.5 h-px border-0 bg-[color:color-mix(in_srgb,var(--glass-border)_85%,transparent)]"
+    />
+  );
+}
+
 interface MenuItemProps {
   children: string;
   disabled?: boolean;

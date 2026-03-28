@@ -82,4 +82,28 @@ describe("MenuBar", () => {
 
     expect(screen.getByRole("menuitem", { name: "About Markora" }).querySelector("svg")).not.toBeNull();
   });
+
+  it("renders separators inside a menu group", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MenuBar
+        groups={[
+          {
+            label: "File",
+            items: [
+              { label: "Open", onSelect: vi.fn() },
+              { type: "separator", label: "separator-file-settings" },
+              { label: "Settings", onSelect: vi.fn() },
+            ],
+          },
+        ]}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "File" }));
+
+    expect(screen.getByRole("separator")).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Settings" })).toBeInTheDocument();
+  });
 });

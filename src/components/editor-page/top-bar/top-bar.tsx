@@ -18,8 +18,7 @@ import {
   Type,
   Undo2,
 } from "lucide-react";
-import { MenuBar } from "../../shared/menu-bar";
-import { IconButton } from "../../shared/icon-button";
+import { MenuBar, type MenuBarGroup } from "../../shared/menu-bar";
 import { FormattingToolbar } from "../formatting-toolbar";
 import { ViewModeSwitcher } from "../view-mode-switcher";
 import { useEditorCommandState } from "../../../features/editor/editor-command-state";
@@ -63,7 +62,7 @@ export function TopBar({
   const runToolbarAction = useEditorCommandState((state) => state.runToolbarAction);
   const runEditAction = useEditorCommandState((state) => state.runEditAction);
   const modifierLabel = getModifierLabel();
-  const menuGroups = [
+  const menuGroups: MenuBarGroup[] = [
     {
       label: "File",
       items: [
@@ -72,6 +71,8 @@ export function TopBar({
         { label: "Save", icon: <Save className="size-4" />, shortcut: `${modifierLabel}+S`, onSelect: onSave },
         { label: "Save As", icon: <FileOutput className="size-4" />, shortcut: `${modifierLabel}+Shift+S`, onSelect: onSaveAs },
         { label: "Close Tab", icon: <PanelLeftClose className="size-4" />, onSelect: onCloseTab },
+        { type: "separator", label: "separator-file-settings" },
+        { label: "Settings", icon: <Settings2 className="size-4" />, onSelect: onOpenSettings },
       ],
     },
     {
@@ -92,7 +93,6 @@ export function TopBar({
         { label: "Split View", icon: <PanelsTopLeft className="size-4" />, onSelect: () => onViewModeChange("split") },
         { label: "Preview View", icon: <Eye className="size-4" />, onSelect: () => onViewModeChange("preview") },
         { label: "Toggle Theme", icon: <MoonStar className="size-4" />, onSelect: onThemeToggle },
-        { label: "Open Settings", icon: <Settings2 className="size-4" />, onSelect: onOpenSettings },
       ],
     },
     {
@@ -133,21 +133,6 @@ export function TopBar({
         data-testid="top-bar-utilities"
       >
         <ViewModeSwitcher value={viewMode} onValueChange={onViewModeChange} />
-        <IconButton label="Settings" type="button" onClick={onOpenSettings}>
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 24 24"
-            className="size-4.5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="12" cy="12" r="3.25" />
-            <path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a2 2 0 0 1-2.8 2.8l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a2 2 0 0 1-4 0v-.2a1 1 0 0 0-.7-.9 1 1 0 0 0-1.1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a2 2 0 0 1 0-4h.2a1 1 0 0 0 .9-.7 1 1 0 0 0-.2-1.1l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1 1 0 0 0 1.1.2h.1a1 1 0 0 0 .6-.9V4a2 2 0 0 1 4 0v.2a1 1 0 0 0 .7.9 1 1 0 0 0 1.1-.2l.1-.1a2 2 0 0 1 2.8 2.8l-.1.1a1 1 0 0 0-.2 1.1v.1a1 1 0 0 0 .9.6H20a2 2 0 0 1 0 4h-.2a1 1 0 0 0-.9.7Z" />
-          </svg>
-        </IconButton>
       </div>
     </header>
   );

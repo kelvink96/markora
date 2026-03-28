@@ -1,1 +1,1 @@
-export { MenuContent, MenuItem, MenuTrigger } from "./menu";
+export { MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "./menu";

@@ -52,7 +52,7 @@ describe("TopBar", () => {
     );
 
     expect(screen.getByLabelText("Formatting")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Settings" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Settings" })).not.toBeInTheDocument();
   });
 
   it("renders document, menu, and utility zones", () => {
@@ -104,10 +104,13 @@ describe("TopBar", () => {
     expect(screen.getByTestId("top-bar-utilities")).toHaveClass("gap-2", "rounded-app-sm", "p-0.5");
   });
 
-  it("renders a settings icon button", () => {
+  it("places settings at the bottom of the file menu behind a divider", async () => {
+    const user = userEvent.setup();
+    const onOpenSettings = vi.fn();
+
     render(
       <TopBar
-        onOpenSettings={vi.fn()}
+        onOpenSettings={onOpenSettings}
         onThemeToggle={vi.fn()}
         onNew={vi.fn()}
         onOpen={vi.fn()}
@@ -118,7 +121,11 @@ describe("TopBar", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: "Settings" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "File" }));
+
+    expect(screen.getByRole("separator")).toBeInTheDocument();
+    await user.click(screen.getByRole("menuitem", { name: "Settings" }));
+    expect(onOpenSettings).toHaveBeenCalled();
   });
 
   it("keeps document identity separate from utility controls", () => {
@@ -186,6 +193,8 @@ describe("TopBar", () => {
 
     await user.click(screen.getByRole("button", { name: "File" }));
     expect(screen.getByRole("menuitem", { name: "Close Tab" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Settings" })).toBeInTheDocument();
+    expect(screen.getByRole("separator")).toBeInTheDocument();
     await user.keyboard("{Escape}");
 
     await user.click(screen.getByRole("button", { name: "Edit" }));
@@ -194,7 +203,6 @@ describe("TopBar", () => {
     await user.keyboard("{Escape}");
 
     await user.click(screen.getByRole("button", { name: "View" }));
-    expect(screen.getByRole("menuitem", { name: "Open Settings" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Preview View" })).toBeInTheDocument();
     await user.keyboard("{Escape}");
 
@@ -219,14 +227,30 @@ describe("TopBar", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: "Settings" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Edit" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Split" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Preview" })).toBeInTheDocument();
     expect(onViewModeChange).not.toHaveBeenCalled();
   });
 
-  it("opens settings from the utility button", async () => {
+  it("does not render a standalone settings utility button", () => {
+    render(
+      <TopBar
+        onOpenSettings={vi.fn()}
+        onThemeToggle={vi.fn()}
+        onNew={vi.fn()}
+        onOpen={vi.fn()}
+        onSave={vi.fn()}
+        onSaveAs={vi.fn()}
+        viewMode="edit"
+        onViewModeChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: "Settings" })).not.toBeInTheDocument();
+  });
+
+  it("opens settings from the file menu", async () => {
     const user = userEvent.setup();
     const onOpenSettings = vi.fn();
 
@@ -243,7 +267,8 @@ describe("TopBar", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "Settings" }));
+    await user.click(screen.getByRole("button", { name: "File" }));
+    await user.click(screen.getByRole("menuitem", { name: "Settings" }));
 
     expect(onOpenSettings).toHaveBeenCalled();
   });

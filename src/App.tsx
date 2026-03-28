@@ -407,7 +407,7 @@ export default function App() {
           <p>Version {packageJson.version}</p>
           <p>Markora keeps writing and reading in dedicated modes for a focused markdown workflow.</p>
           <a
-            href="https://your-org.github.io/markora/privacy"
+            href="https://kelvink96.github.io/markora/privacy"
             target="_blank"
             rel="noopener noreferrer"
             className="text-app-accent underline"

@@ -26,6 +26,4 @@ When you use copy/paste features, Markora reads from and writes to your system c
 
 ## Contact
 
-If you have questions about this policy, open an issue at: https://github.com/your-org/markora/issues
-
-_Replace `your-org` with your actual GitHub org before publishing._
+If you have questions about this policy, open an issue at: https://github.com/kelvink96/markora/issues

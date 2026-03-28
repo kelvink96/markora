@@ -85,7 +85,7 @@ export function SettingsPage({
     about: (
       <AboutSettingsSection
         version={version}
-        privacyPolicyUrl="https://your-org.github.io/markora/privacy"
+        privacyPolicyUrl="https://kelvink96.github.io/markora/privacy"
       />
     ),
     template: (

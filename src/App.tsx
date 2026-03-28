@@ -21,6 +21,7 @@ import { useWorkspaceState } from "./features/workspace/workspace-state";
 import { useDocumentStore } from "./store/document";
 import { useThemeStore } from "./features/theme/theme-store";
 import { invoke } from "@tauri-apps/api/core";
+import { ErrorBanner } from "./components/editor-page/error-banner";
 
 function getSystemThemePreference() {
   if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
@@ -37,6 +38,7 @@ export default function App() {
   >(null);
   const [isKeyboardShortcutsOpen, setIsKeyboardShortcutsOpen] = useState(false);
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
   const {
     openDocument,
     setFilePath,
@@ -71,50 +73,55 @@ export default function App() {
   }, []);
 
   const handleOpen = useCallback(async () => {
-    // `open()` is a native dialog, not an HTML file input, so it feels like a desktop app.
-    const selected = await open({
-      multiple: false,
-      filters: [{ name: "Markdown", extensions: ["md", "markdown", "txt"] }],
-    });
-
-    if (typeof selected === "string") {
-      // The frontend never reads the file directly; it asks Rust to do it through a command.
-      const text = await invoke<string>("read_file", { path: selected });
-      openDocument({ content: text, filePath: selected, isDirty: false });
+    try {
+      const selected = await open({
+        multiple: false,
+        filters: [{ name: "Markdown", extensions: ["md", "markdown", "txt"] }],
+      });
+      if (typeof selected === "string") {
+        const text = await invoke<string>("read_file", { path: selected });
+        openDocument({ content: text, filePath: selected, isDirty: false });
+      }
+    } catch (error) {
+      setFileError("Failed to open file. Please try again.");
+      console.error("read_file failed:", error);
     }
   }, [openDocument]);
 
   const handleSaveAs = useCallback(async () => {
-    // getState() gives the latest store snapshot without waiting for React to re-render.
     const { activeDocumentId, content } = useDocumentStore.getState();
-    if (!activeDocumentId) {
-      return;
-    }
+    if (!activeDocumentId) return;
 
-    const savePath = await save({
-      filters: [{ name: "Markdown", extensions: ["md"] }],
-      defaultPath: "untitled.md",
-    });
-
-    if (savePath) {
-      await invoke("write_file", { path: savePath, content });
-      setFilePath(savePath);
-      markClean();
+    try {
+      const savePath = await save({
+        filters: [{ name: "Markdown", extensions: ["md"] }],
+        defaultPath: "untitled.md",
+      });
+      if (savePath) {
+        await invoke("write_file", { path: savePath, content });
+        setFilePath(savePath);
+        markClean();
+      }
+    } catch (error) {
+      setFileError("Failed to save file. Please try again.");
+      console.error("write_file failed:", error);
     }
   }, [markClean, setFilePath]);
 
   const handleSave = useCallback(async () => {
-    // Read from the store directly so save always uses the newest content and file path.
     const { activeDocumentId, filePath, content } = useDocumentStore.getState();
-    if (!activeDocumentId) {
-      return;
-    }
+    if (!activeDocumentId) return;
 
-    if (filePath) {
-      await invoke("write_file", { path: filePath, content });
-      markClean();
-    } else {
-      await handleSaveAs();
+    try {
+      if (filePath) {
+        await invoke("write_file", { path: filePath, content });
+        markClean();
+      } else {
+        await handleSaveAs();
+      }
+    } catch (error) {
+      setFileError("Failed to save file. Please try again.");
+      console.error("write_file failed:", error);
     }
   }, [handleSaveAs, markClean]);
 
@@ -345,6 +352,7 @@ export default function App() {
 
   return (
     <>
+      <ErrorBanner message={fileError} onDismiss={() => setFileError(null)} />
       <AppShell
         themeMode={theme}
         colorScheme={settings.appearance.colorScheme}

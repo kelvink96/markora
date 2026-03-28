@@ -203,6 +203,7 @@ describe("TopBar", () => {
     await user.keyboard("{Escape}");
 
     await user.click(screen.getByRole("button", { name: "View" }));
+    expect(screen.getByRole("menuitem", { name: "Split View" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Preview View" })).toBeInTheDocument();
     await user.keyboard("{Escape}");
 
@@ -211,7 +212,7 @@ describe("TopBar", () => {
     expect(screen.getByRole("menuitem", { name: "About Markora" })).toBeInTheDocument();
   });
 
-  it("keeps the utility zone focused on a single settings action", () => {
+  it("renders icon-only view mode controls with accessible labels", () => {
     const onViewModeChange = vi.fn();
 
     render(
@@ -227,9 +228,9 @@ describe("TopBar", () => {
       />,
     );
 
-    expect(screen.getByRole("tab", { name: "Edit" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Split" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Preview" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Edit view" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Split view" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Preview view" })).toBeInTheDocument();
     expect(onViewModeChange).not.toHaveBeenCalled();
   });
 

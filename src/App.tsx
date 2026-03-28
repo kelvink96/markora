@@ -345,7 +345,7 @@ export default function App() {
       >
         <div className="space-y-2 text-sm text-app-text">
           <p>Version {packageJson.version}</p>
-          <p>Markora keeps editing on the left and live preview on the right for a focused writing flow.</p>
+          <p>Markora keeps writing and reading in dedicated modes for a focused markdown workflow.</p>
         </div>
       </Dialog>
     </>

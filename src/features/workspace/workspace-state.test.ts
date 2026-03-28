@@ -11,6 +11,9 @@ describe("workspace-state", () => {
   });
 
   it("switches the active view mode", () => {
+    useWorkspaceState.getState().setViewMode("split");
+    expect(useWorkspaceState.getState().viewMode).toBe("split");
+
     useWorkspaceState.getState().setViewMode("preview");
     expect(useWorkspaceState.getState().viewMode).toBe("preview");
   });

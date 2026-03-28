@@ -3,23 +3,15 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { Workspace } from "./workspace";
 
 describe("Workspace", () => {
-  it("applies the Tailwind split-pane layout and still renders both panes", () => {
+  it("renders a split layout with a resizable divider", () => {
     const { getByText } = render(
       <Workspace left={<div>Left</div>} right={<div>Right</div>} viewMode="split" />,
     );
 
     const workspace = getByText("Left").closest(".workspace");
-    expect(workspace).toHaveClass("flex");
-    expect(workspace).toHaveClass("min-h-0");
-    expect(workspace).toHaveClass("overflow-hidden");
-    expect(workspace).toHaveClass("gap-2");
-    expect(workspace).toHaveClass("px-3");
-    expect(workspace).toHaveClass("pb-3");
-    expect(workspace).toHaveClass("pt-2.5");
-
+    expect(workspace).toHaveClass("flex", "min-h-0", "overflow-hidden", "gap-2", "px-3", "pb-3", "pt-2.5");
     expect(screen.getByRole("region", { name: "Editor workspace" })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Preview workspace" })).toBeInTheDocument();
-
     expect(screen.getByRole("separator", { name: "Resize editor and preview panes" })).toHaveClass(
       "cursor-col-resize",
       "rounded-[999px]",

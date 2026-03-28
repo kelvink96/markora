@@ -28,7 +28,6 @@ export function Workspace({ left, right, viewMode }: WorkspaceProps) {
     const rect = containerRef.current.getBoundingClientRect();
     const nextPct = ((event.clientX - rect.left) / rect.width) * 100;
 
-    // Clamp the divider so neither pane becomes unusably small.
     setSplitPct(Math.min(80, Math.max(20, nextPct)));
   }, []);
 
@@ -37,12 +36,12 @@ export function Workspace({ left, right, viewMode }: WorkspaceProps) {
 
     if (event.key === "ArrowLeft") {
       event.preventDefault();
-      setSplitPct((value) => Math.max(20, value - step));
+      setSplitPct((current) => Math.max(20, current - step));
     }
 
     if (event.key === "ArrowRight") {
       event.preventDefault();
-      setSplitPct((value) => Math.min(80, value + step));
+      setSplitPct((current) => Math.min(80, current + step));
     }
 
     if (event.key === "Home") {
@@ -66,7 +65,7 @@ export function Workspace({ left, right, viewMode }: WorkspaceProps) {
     );
   }
 
-  const editorWidth = viewMode === "preview" ? splitPct : splitPct;
+  const editorWidth = splitPct;
   const previewWidth = 100 - splitPct;
   const primaryPane = viewMode === "preview" ? right : left;
   const secondaryPane = viewMode === "preview" ? left : right;

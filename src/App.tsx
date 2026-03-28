@@ -398,6 +398,14 @@ export default function App() {
         <div className="space-y-2 text-sm text-app-text">
           <p>Version {packageJson.version}</p>
           <p>Markora keeps writing and reading in dedicated modes for a focused markdown workflow.</p>
+          <a
+            href="https://your-org.github.io/markora/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-app-accent underline"
+          >
+            Privacy Policy
+          </a>
         </div>
       </Dialog>
     </>

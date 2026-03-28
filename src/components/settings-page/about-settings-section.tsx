@@ -3,9 +3,10 @@ import { SectionCard } from "./settings-page-shared";
 
 interface AboutSettingsSectionProps {
   version: string;
+  privacyPolicyUrl: string;
 }
 
-export function AboutSettingsSection({ version }: AboutSettingsSectionProps) {
+export function AboutSettingsSection({ version, privacyPolicyUrl }: AboutSettingsSectionProps) {
   return (
     <SectionCard
       title="About"
@@ -16,6 +17,14 @@ export function AboutSettingsSection({ version }: AboutSettingsSectionProps) {
       <Text tone="muted">
         Built with Tauri, Rust, React, TypeScript, and CodeMirror 6.
       </Text>
+      <a
+        href={privacyPolicyUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-sm text-app-accent underline"
+      >
+        Privacy Policy
+      </a>
     </SectionCard>
   );
 }

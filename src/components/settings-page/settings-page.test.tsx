@@ -4,6 +4,14 @@ import { within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createDefaultSettings } from "../../features/settings/settings-schema";
 import { SettingsPage } from "./settings-page";
+import { AboutSettingsSection } from "./about-settings-section";
+
+it("renders a privacy policy link in the about section", () => {
+  render(<AboutSettingsSection version="1.0.0" privacyPolicyUrl="https://example.com/privacy" />);
+  const link = screen.getByRole("link", { name: /privacy policy/i });
+  expect(link).toBeInTheDocument();
+  expect(link).toHaveAttribute("href", "https://example.com/privacy");
+});
 
 describe("SettingsPage", () => {
   it("renders application and authoring defaults sections", () => {

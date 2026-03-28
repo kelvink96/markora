@@ -82,7 +82,12 @@ export function SettingsPage({
         onSave={onSaveFiles}
       />
     ),
-    about: <AboutSettingsSection version={version} />,
+    about: (
+      <AboutSettingsSection
+        version={version}
+        privacyPolicyUrl="https://your-org.github.io/markora/privacy"
+      />
+    ),
     template: (
       <TemplateSettingsSection
         templateDraft={templateDraftValue}

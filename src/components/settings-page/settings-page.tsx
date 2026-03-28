@@ -11,7 +11,6 @@ import { AppearanceSettingsSection } from "./appearance-settings-section";
 import { EditorSettingsSection } from "./editor-settings-section";
 import { FilesSettingsSection } from "./files-settings-section";
 import type { SettingsSection } from "./settings-page-types";
-import { PreviewSettingsSection } from "./preview-settings-section";
 import { SettingsSidebar } from "./settings-sidebar";
 import { TemplateSettingsSection } from "./template-settings-section";
 import { useSettingsPageState } from "./use-settings-page-state";
@@ -67,7 +66,6 @@ export function SettingsPage({
         onSave={onSaveAppearance}
       />
     ),
-    preview: <PreviewSettingsSection />,
     editor: (
       <EditorSettingsSection
         editor={editorDraft}

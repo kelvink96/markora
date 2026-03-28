@@ -13,7 +13,6 @@ describe("settings-navigation", () => {
         items: [
           { id: "appearance", label: "Appearance" },
           { id: "editor", label: "Editor" },
-          { id: "preview", label: "Preview" },
           { id: "files", label: "Files" },
           { id: "about", label: "About" },
           { id: "advanced", label: "Advanced" },

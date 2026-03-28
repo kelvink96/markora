@@ -35,6 +35,7 @@ describe("SettingsPage", () => {
     );
     expect(screen.getByRole("button", { name: "Appearance" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Editor" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Preview" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "About" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Back to editor" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Back to editor" })).toHaveClass(

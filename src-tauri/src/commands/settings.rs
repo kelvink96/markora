@@ -42,6 +42,8 @@ pub struct PreviewSettings {
     pub sync_scroll: bool,
     pub open_links_externally: bool,
     pub content_width: PreviewContentWidth,
+    #[serde(default = "default_reader_theme")]
+    pub reader_theme: PreviewReaderTheme,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -50,6 +52,15 @@ pub enum PreviewContentWidth {
     Narrow,
     Normal,
     Wide,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub enum PreviewReaderTheme {
+    Paper,
+    Dark,
+    Sepia,
+    HighContrast,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -76,6 +87,10 @@ pub struct MarkoraSettings {
     pub authoring: AuthoringDefaults,
 }
 
+fn default_reader_theme() -> PreviewReaderTheme {
+    PreviewReaderTheme::Paper
+}
+
 pub fn default_settings() -> MarkoraSettings {
     MarkoraSettings {
         appearance: AppearanceSettings {
@@ -97,6 +112,7 @@ pub fn default_settings() -> MarkoraSettings {
             sync_scroll: true,
             open_links_externally: true,
             content_width: PreviewContentWidth::Normal,
+            reader_theme: default_reader_theme(),
         },
         files: FileSettings {
             autosave: false,
@@ -222,6 +238,50 @@ mod tests {
 
         assert_eq!(reset, default_settings());
         assert_eq!(load_settings_from_dir(&temp_dir).unwrap(), default_settings());
+
+        fs::remove_dir_all(temp_dir).ok();
+    }
+
+    #[test]
+    fn load_settings_defaults_missing_reader_theme_for_existing_files() {
+        let temp_dir = temp_settings_dir();
+        let path = settings_file_path(&temp_dir);
+        let legacy_settings = r##"{
+  "appearance": {
+    "theme": "system",
+    "editorFontSize": 15,
+    "previewFontScale": 100,
+    "editorLineHeight": 160,
+    "splitRatio": 50,
+    "showStatusBar": true
+  },
+  "editor": {
+    "wordWrap": true,
+    "lineNumbers": false,
+    "highlightActiveLine": true,
+    "tabSize": 2,
+    "softTabs": true
+  },
+  "preview": {
+    "syncScroll": true,
+    "openLinksExternally": true,
+    "contentWidth": "normal"
+  },
+  "files": {
+    "autosave": false,
+    "restorePreviousSession": false,
+    "confirmOnUnsavedClose": true
+  },
+  "authoring": {
+    "newDocumentTemplate": "# Legacy"
+  }
+}"##;
+
+        fs::write(&path, legacy_settings).unwrap();
+
+        let settings = load_settings_from_dir(&temp_dir).unwrap();
+
+        assert_eq!(settings.preview.reader_theme, PreviewReaderTheme::Paper);
 
         fs::remove_dir_all(temp_dir).ok();
     }

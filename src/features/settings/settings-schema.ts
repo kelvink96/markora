@@ -21,6 +21,7 @@ export interface PreviewSettings {
   syncScroll: boolean;
   openLinksExternally: boolean;
   contentWidth: "narrow" | "normal" | "wide";
+  readerTheme: "paper" | "dark" | "sepia" | "high-contrast";
 }
 
 export interface FileSettings {
@@ -64,6 +65,7 @@ export const defaultSettings: MarkoraSettings = {
     syncScroll: true,
     openLinksExternally: true,
     contentWidth: "normal",
+    readerTheme: "paper",
   },
   files: {
     autosave: false,

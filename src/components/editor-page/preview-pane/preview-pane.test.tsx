@@ -45,4 +45,20 @@ describe("PreviewPane", () => {
       "rounded-[calc(var(--radius-sm)-1px)]",
     );
   });
+
+  it("applies the selected reader theme preset to the preview surface", async () => {
+    const settings = createDefaultSettings();
+    settings.preview.readerTheme = "sepia";
+    useSettingsStore.setState({
+      isHydrated: true,
+      settings,
+      templateDraft: settings.authoring.newDocumentTemplate,
+    });
+
+    render(<PreviewPane />);
+
+    const content = await screen.findByTestId("preview-content");
+    expect(content).toHaveAttribute("data-reader-theme", "sepia");
+    expect(content).toHaveClass("preview-reader-theme", "preview-reader-theme-sepia");
+  });
 });

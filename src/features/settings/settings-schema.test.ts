@@ -6,6 +6,10 @@ describe("settings-schema", () => {
     expect(defaultSettings.appearance.theme).toBe("system");
   });
 
+  it("defaults the preview to the paper reader theme", () => {
+    expect(defaultSettings.preview.readerTheme).toBe("paper");
+  });
+
   it("includes a non-empty new document template", () => {
     expect(defaultSettings.authoring.newDocumentTemplate.trim().length).toBeGreaterThan(0);
   });

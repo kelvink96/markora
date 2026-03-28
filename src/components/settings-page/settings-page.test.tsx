@@ -72,6 +72,33 @@ describe("SettingsPage", () => {
     expect(screen.getByText("Version 0.1.0")).toBeInTheDocument();
   });
 
+  it("keeps reader color scheme controls inside the appearance section", async () => {
+    const user = userEvent.setup();
+    const settings = createDefaultSettings();
+
+    render(
+      <SettingsPage
+        settings={settings}
+        templateDraft={settings.authoring.newDocumentTemplate}
+        version="0.1.0"
+        onClose={() => {}}
+        onSaveAppearance={() => {}}
+        onSaveEditor={() => {}}
+        onSavePreview={() => {}}
+        onSaveFiles={() => {}}
+        onSaveTemplate={() => {}}
+        onResetTemplate={() => {}}
+        onResetAll={() => {}}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Appearance" }));
+
+    expect(screen.getByRole("heading", { name: "Appearance", level: 3 })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Reader Color Scheme", level: 3 })).toBeInTheDocument();
+    expect(screen.getByLabelText(/Reader color scheme/i)).toBeInTheDocument();
+  });
+
   it("lets the user save the template draft explicitly", async () => {
     const user = userEvent.setup();
     const settings = createDefaultSettings();
@@ -159,6 +186,61 @@ describe("SettingsPage", () => {
     expect(onSaveEditor).toHaveBeenCalledWith(
       expect.objectContaining({ lineNumbers: false }),
     );
+  });
+
+  it("saves the reader color scheme explicitly from the appearance section", async () => {
+    const user = userEvent.setup();
+    const settings = createDefaultSettings();
+    const onSavePreview = vi.fn();
+
+    render(
+      <SettingsPage
+        settings={settings}
+        templateDraft={settings.authoring.newDocumentTemplate}
+        version="0.1.0"
+        onClose={() => {}}
+        onSaveAppearance={() => {}}
+        onSaveEditor={() => {}}
+        onSavePreview={onSavePreview}
+        onSaveFiles={() => {}}
+        onSaveTemplate={() => {}}
+        onResetTemplate={() => {}}
+        onResetAll={() => {}}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Appearance" }));
+    await user.selectOptions(screen.getByLabelText(/Reader color scheme/i), "sepia");
+    expect(onSavePreview).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "Save reader scheme" }));
+
+    expect(onSavePreview).toHaveBeenCalledWith(
+      expect.objectContaining({ readerTheme: "sepia" }),
+    );
+  });
+
+  it("renders visual preview cards for each reader color scheme", () => {
+    const settings = createDefaultSettings();
+
+    render(
+      <SettingsPage
+        settings={settings}
+        templateDraft={settings.authoring.newDocumentTemplate}
+        version="0.1.0"
+        onClose={() => {}}
+        onSaveAppearance={() => {}}
+        onSaveEditor={() => {}}
+        onSavePreview={() => {}}
+        onSaveFiles={() => {}}
+        onSaveTemplate={() => {}}
+        onResetTemplate={() => {}}
+        onResetAll={() => {}}
+      />,
+    );
+
+    expect(screen.getAllByTestId(/reader-swatch-/i)).toHaveLength(4);
+    expect(screen.getByTestId("reader-swatch-paper")).toHaveAttribute("data-reader-theme", "paper");
+    expect(screen.getByTestId("reader-swatch-sepia")).toHaveClass("preview-reader-theme-sepia");
   });
 
   it("returns to the workspace from the back action", async () => {

@@ -33,9 +33,10 @@ describe("settings-store", () => {
   });
 
   it("updates preview settings fields", () => {
-    useSettingsStore.getState().updatePreview({ contentWidth: "wide" });
+    useSettingsStore.getState().updatePreview({ contentWidth: "wide", readerTheme: "sepia" });
 
     expect(useSettingsStore.getState().settings.preview.contentWidth).toBe("wide");
+    expect(useSettingsStore.getState().settings.preview.readerTheme).toBe("sepia");
   });
 
   it("resets back to defaults", () => {

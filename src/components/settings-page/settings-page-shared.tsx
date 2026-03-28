@@ -13,21 +13,27 @@ export function getSystemThemeMode() {
 }
 
 export function SidebarButton({
+  isHighContrast,
   isActive,
   label,
   onClick,
 }: {
+  isHighContrast?: boolean;
   isActive: boolean;
   label: string;
   onClick: () => void;
 }) {
+  const activeClassName = isHighContrast
+    ? "border-2 border-l-4 border-[color:var(--app-text)] bg-[color:color-mix(in_srgb,var(--surface-panel)_92%,var(--surface-panel-strong))] font-semibold text-app-text shadow-[0_0_0_1px_var(--app-text)]"
+    : "bg-[color:var(--glass-elevated)] text-app-text shadow-[0_1px_0_rgba(255,255,255,0.18)_inset]";
+
   return (
     <button
       type="button"
       onClick={onClick}
       className={`w-full rounded-app-sm border border-transparent px-3 py-2 text-left text-sm transition ${
         isActive
-          ? "bg-[color:var(--glass-elevated)] text-app-text shadow-[0_1px_0_rgba(255,255,255,0.18)_inset]"
+          ? activeClassName
           : "text-app-text/70 hover:border-[color:var(--glass-border)] hover:bg-[color:var(--glass-hover)]"
       }`}
     >

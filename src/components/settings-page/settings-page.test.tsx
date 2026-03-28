@@ -43,11 +43,39 @@ describe("SettingsPage", () => {
       "min-h-10",
     );
     expect(screen.getByRole("button", { name: "Back to editor" }).parentElement).toHaveClass(
-      "mb-4",
-      "items-start",
+      "mt-auto",
+      "pt-4",
     );
     expect(screen.getByRole("heading", { name: "Authoring Defaults" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "New Document Template" })).toBeInTheDocument();
+  });
+
+  it("uses a strong bordered active state in high contrast mode", () => {
+    const settings = createDefaultSettings();
+    settings.appearance.colorScheme = "high-contrast";
+
+    render(
+      <SettingsPage
+        settings={settings}
+        templateDraft={settings.authoring.newDocumentTemplate}
+        version="0.1.0"
+        onClose={() => {}}
+        onSaveAppearance={() => {}}
+        onSaveEditor={() => {}}
+        onSaveFiles={() => {}}
+        onSaveTemplate={() => {}}
+        onResetTemplate={() => {}}
+        onResetAll={() => {}}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Appearance" })).toHaveClass(
+      "border-2",
+      "border-l-4",
+      "border-[color:var(--app-text)]",
+      "font-semibold",
+      "shadow-[0_0_0_1px_var(--app-text)]",
+    );
   });
 
   it("switches sections from the sidebar", async () => {

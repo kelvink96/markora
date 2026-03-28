@@ -99,6 +99,7 @@ export function SettingsPage({
       <div className="grid h-full min-h-0 grid-cols-[18rem_minmax(0,1fr)] gap-4">
         <SettingsSidebar
           activeSection={activeSection}
+          colorScheme={appearanceDraft.colorScheme}
           onClose={onClose}
           onSectionChange={setActiveSection}
         />

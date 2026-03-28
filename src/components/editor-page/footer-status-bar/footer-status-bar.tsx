@@ -15,9 +15,6 @@ export function FooterStatusBar({ wordCount, viewMode, line, column }: FooterSta
       aria-label="Footer status bar"
     >
       <div className="flex items-center gap-3">
-        <span className="text-[0.75rem] font-medium uppercase tracking-[0.12em] text-app-text-muted">
-          Status
-        </span>
         <span className="text-sm font-medium capitalize text-app-text-secondary">{viewMode}</span>
         <span className="text-sm text-app-text-muted">Markdown</span>
         <span className="text-sm text-app-text-muted">{`Ln ${line}, Col ${column}`}</span>

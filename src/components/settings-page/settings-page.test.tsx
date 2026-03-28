@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createDefaultSettings } from "../../features/settings/settings-schema";
 import { SettingsPage } from "./settings-page";
@@ -36,6 +37,9 @@ describe("SettingsPage", () => {
     expect(screen.getByRole("button", { name: "Appearance" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Editor" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Preview" })).not.toBeInTheDocument();
+    expect(within(screen.getByRole("button", { name: "Appearance" })).getByTestId("settings-tab-icon-appearance")).toBeInTheDocument();
+    expect(within(screen.getByRole("button", { name: "Advanced" })).getByTestId("settings-tab-icon-advanced")).toBeInTheDocument();
+    expect(within(screen.getByRole("button", { name: "New Document Template" })).getByTestId("settings-tab-icon-template")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "About" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Back to editor" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Back to editor" })).toHaveClass(
@@ -76,6 +80,7 @@ describe("SettingsPage", () => {
       "font-semibold",
       "shadow-[0_0_0_1px_var(--app-text)]",
     );
+    expect(screen.getByTestId("settings-tab-icon-appearance")).toHaveClass("size-4");
   });
 
   it("switches sections from the sidebar", async () => {
@@ -304,5 +309,36 @@ describe("SettingsPage", () => {
     await user.click(screen.getByRole("button", { name: "Back to editor" }));
 
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it("renders icons for the main settings actions", async () => {
+    const user = userEvent.setup();
+    const settings = createDefaultSettings();
+
+    render(
+      <SettingsPage
+        settings={settings}
+        templateDraft={settings.authoring.newDocumentTemplate}
+        version="0.1.0"
+        onClose={() => {}}
+        onSaveAppearance={() => {}}
+        onSaveEditor={() => {}}
+        onSaveFiles={() => {}}
+        onSaveTemplate={() => {}}
+        onResetTemplate={() => {}}
+        onResetAll={() => {}}
+      />,
+    );
+
+    expect(within(screen.getByRole("button", { name: "Back to editor" })).getByTestId("settings-back-icon")).toBeInTheDocument();
+    expect(within(screen.getByRole("button", { name: "Save theme mode" })).getByTestId("settings-save-icon")).toBeInTheDocument();
+    expect(within(screen.getByRole("button", { name: "Save color scheme" })).getByTestId("settings-save-icon")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "New Document Template" }));
+    expect(within(screen.getByRole("button", { name: "Save template" })).getByTestId("settings-save-icon")).toBeInTheDocument();
+    expect(within(screen.getByRole("button", { name: "Reset template" })).getByTestId("settings-reset-icon")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Advanced" }));
+    expect(within(screen.getByRole("button", { name: "Reset all settings" })).getByTestId("settings-danger-icon")).toBeInTheDocument();
   });
 });

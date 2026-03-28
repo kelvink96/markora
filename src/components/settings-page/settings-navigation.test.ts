@@ -11,16 +11,16 @@ describe("settings-navigation", () => {
       {
         title: "Application",
         items: [
-          { id: "appearance", label: "Appearance" },
-          { id: "editor", label: "Editor" },
-          { id: "files", label: "Files" },
-          { id: "about", label: "About" },
-          { id: "advanced", label: "Advanced" },
+          { id: "appearance", label: "Appearance", icon: "palette" },
+          { id: "editor", label: "Editor", icon: "pen-square" },
+          { id: "files", label: "Files", icon: "folder-open" },
+          { id: "about", label: "About", icon: "info" },
+          { id: "advanced", label: "Advanced", icon: "sliders-horizontal" },
         ],
       },
       {
         title: "Authoring Defaults",
-        items: [{ id: "template", label: "New Document Template" }],
+        items: [{ id: "template", label: "New Document Template", icon: "file-plus-2" }],
       },
     ]);
   });

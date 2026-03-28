@@ -1,3 +1,4 @@
+import { ArrowLeft } from "lucide-react";
 import type { ColorScheme } from "../../features/settings/settings-schema";
 import type { SettingsSection } from "./settings-page-types";
 import { SETTINGS_NAVIGATION_GROUPS } from "./settings-navigation";
@@ -46,6 +47,8 @@ export function SettingsSidebar({
             {group.items.map((item) => (
               <SidebarButton
                 key={item.id}
+                icon={item.icon}
+                iconTestId={`settings-tab-icon-${item.id}`}
                 label={item.label}
                 isHighContrast={isHighContrast}
                 isActive={activeSection === item.id}
@@ -57,7 +60,10 @@ export function SettingsSidebar({
       </div>
 
       <div className="mt-auto flex items-start pt-4">
-        <Button onClick={onClose}>
+        <Button
+          leftSection={<ArrowLeft data-testid="settings-back-icon" className="size-4" />}
+          onClick={onClose}
+        >
           Back to editor
         </Button>
       </div>

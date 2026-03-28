@@ -9,6 +9,7 @@ describe("DocumentStatus", () => {
     expect(screen.getByRole("group", { name: "Document status" })).toBeInTheDocument();
     expect(screen.getByText("notes.md")).toBeInTheDocument();
     expect(screen.getByText("Unsaved changes")).toBeInTheDocument();
+    expect(screen.getByText("Unsaved changes").parentElement).toHaveClass("rounded-full");
 
     rerender(<DocumentStatus fileName="notes.md" isDirty={false} />);
     expect(screen.getByText("Saved")).toBeInTheDocument();

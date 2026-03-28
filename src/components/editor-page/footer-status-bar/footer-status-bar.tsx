@@ -1,4 +1,5 @@
 import { WordCount } from "../../shared/word-count";
+import { Text } from "../../shared/text";
 import type { WorkspaceViewMode } from "../../../features/workspace/workspace-state";
 
 interface FooterStatusBarProps {
@@ -15,9 +16,15 @@ export function FooterStatusBar({ wordCount, viewMode, line, column }: FooterSta
       aria-label="Footer status bar"
     >
       <div className="flex items-center gap-3">
-        <span className="text-sm font-medium capitalize text-app-text-secondary">{viewMode}</span>
-        <span className="text-sm text-app-text-muted">Markdown</span>
-        <span className="text-sm text-app-text-muted">{`Ln ${line}, Col ${column}`}</span>
+        <Text as="span" weight="medium" className="capitalize text-app-text">
+          {viewMode}
+        </Text>
+        <Text as="span" tone="subtle">
+          Markdown
+        </Text>
+        <Text as="span" tone="subtle">
+          {`Ln ${line}, Col ${column}`}
+        </Text>
       </div>
       <WordCount value={wordCount} />
     </footer>

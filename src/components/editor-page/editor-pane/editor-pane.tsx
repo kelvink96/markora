@@ -15,6 +15,7 @@ import {
 } from "../../../features/editor/slash-commands";
 import { useEditorStatusState } from "../../../features/workspace/editor-status-state";
 import { useSettingsStore } from "../../../features/settings/settings-store";
+import { Panel } from "../../shared/panel";
 import { SlashCommandMenu } from "../slash-command-menu/slash-command-menu";
 
 interface EditorPaneProps {
@@ -214,7 +215,7 @@ export function EditorPane({ theme }: EditorPaneProps) {
         }
       }}
     >
-      <div className="editor-pane__panel flex h-full flex-col overflow-hidden rounded-app-sm border border-[color:var(--glass-border)] bg-[color:var(--glass-panel)] backdrop-blur-[var(--glass-blur-soft)] shadow-[0_1px_0_rgba(255,255,255,0.22)_inset,0_14px_36px_rgba(0,0,0,0.16)]">
+      <Panel className="editor-pane__panel flex h-full flex-col overflow-hidden">
         <div className="relative min-h-0 flex-1">
           <div
             ref={containerRef}
@@ -231,7 +232,7 @@ export function EditorPane({ theme }: EditorPaneProps) {
             />
           ) : null}
         </div>
-      </div>
+      </Panel>
     </section>
   );
 }

@@ -9,6 +9,7 @@ import type {
 import type { ChangeEvent, ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { Button } from "../shared/button";
+import { Card } from "../shared/card";
 import { Checkbox } from "../shared/checkbox";
 import { Field } from "../shared/field";
 import { Select } from "../shared/select";
@@ -79,7 +80,7 @@ function SectionCard({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-app-sm border border-[color:var(--glass-border)] bg-[color:var(--glass-panel)] p-5 backdrop-blur-[var(--glass-blur-soft)] shadow-[0_1px_0_rgba(255,255,255,0.14)_inset,0_14px_36px_rgba(0,0,0,0.08)]">
+    <Card>
       <header className="mb-4 space-y-1">
         <Title as="h3" size="sm">
           {title}
@@ -87,7 +88,7 @@ function SectionCard({
         <Text tone="muted">{description}</Text>
       </header>
       <div className="space-y-4">{children}</div>
-    </section>
+    </Card>
   );
 }
 
@@ -471,7 +472,7 @@ export function SettingsPage({
   return (
     <section className="h-full min-h-0 p-4" aria-label="Settings">
       <div className="grid h-full min-h-0 grid-cols-[18rem_minmax(0,1fr)] gap-4">
-        <aside className="rounded-app-sm border border-[color:var(--glass-border)] bg-[color:var(--glass-panel)] p-4 backdrop-blur-[var(--glass-blur-soft)] shadow-[0_1px_0_rgba(255,255,255,0.14)_inset,0_14px_36px_rgba(0,0,0,0.08)]">
+        <Card as="aside" className="p-4">
           <div className="mb-4 flex items-start">
             <Button onClick={onClose}>
               Back to editor
@@ -540,7 +541,7 @@ export function SettingsPage({
               />
             </div>
           </div>
-        </aside>
+        </Card>
 
         <div className="min-h-0 overflow-auto">{renderContent()}</div>
       </div>

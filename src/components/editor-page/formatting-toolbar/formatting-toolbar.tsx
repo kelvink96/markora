@@ -13,6 +13,7 @@ import {
   Table2,
 } from "lucide-react";
 import { IconButton } from "../../shared/icon-button";
+import { Toolbar } from "../../shared/toolbar";
 import { ToolbarGroup } from "../../shared/toolbar-group";
 
 interface FormattingToolbarProps {
@@ -51,11 +52,7 @@ export function FormattingToolbar({
   const separatorClassName = "mx-0.5 h-4 w-px shrink-0 rounded-full bg-[color:var(--glass-border-strong)]";
 
   return (
-    <div
-      role="toolbar"
-      aria-label="Formatting"
-      className="formatting-toolbar inline-flex max-w-full items-center gap-0.5 overflow-x-auto rounded-app-sm border border-[color:var(--glass-border)] bg-[color:var(--glass-panel)] p-0.5 backdrop-blur-[var(--glass-blur-soft)] shadow-[var(--shadow-crisp)]"
-    >
+    <Toolbar ariaLabel="Formatting" className="formatting-toolbar">
       <ToolbarGroup>
         <IconButton label="Heading" onClick={onHeading} disabled={disabled} className={actionClassName}>
           <Heading1 size={16} aria-hidden="true" />
@@ -118,6 +115,6 @@ export function FormattingToolbar({
           <ImageIcon size={16} aria-hidden="true" />
         </IconButton>
       </ToolbarGroup>
-    </div>
+    </Toolbar>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useDocumentStore } from "../../../store/document";
+import { Panel } from "../../shared/panel";
 
 export function PreviewPane() {
   // Subscribe only to the content field so this component updates when markdown text changes.
@@ -16,14 +17,14 @@ export function PreviewPane() {
 
   return (
     <section className="preview-pane h-full min-h-0 pl-0 pr-0" aria-label="Preview">
-      <div className="preview-pane__surface h-full overflow-auto rounded-app-sm border border-[color:var(--glass-border)] bg-[color:var(--glass-panel)] backdrop-blur-[var(--glass-blur-soft)] shadow-[0_1px_0_rgba(255,255,255,0.22)_inset,0_14px_36px_rgba(0,0,0,0.14)]">
+      <Panel className="preview-pane__surface h-full overflow-auto shadow-[0_1px_0_rgba(255,255,255,0.22)_inset,0_14px_36px_rgba(0,0,0,0.14)]">
         <div
           className="preview-pane__content prose min-h-full w-full rounded-[calc(var(--radius-sm)-1px)] bg-app-preview p-[calc(var(--space-6)-0.1rem)]"
           data-testid="preview-content"
           // This HTML comes from our own Rust markdown renderer, not an external source.
           dangerouslySetInnerHTML={{ __html: html }}
         />
-      </div>
+      </Panel>
     </section>
   );
 }

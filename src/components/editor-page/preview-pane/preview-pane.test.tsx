@@ -54,4 +54,15 @@ describe("PreviewPane", () => {
     expect(content).not.toHaveClass("preview-reader-theme");
     expect(content).toHaveClass("bg-app-preview");
   });
+
+  it("strips script tags from rendered HTML", async () => {
+    invokeMock.mockResolvedValue('<p>Hello</p><script>alert("xss")</script>');
+    render(<PreviewPane />);
+    await waitFor(() => {
+      const content = screen.getByTestId("preview-content");
+      expect(content.innerHTML).toContain("<p>Hello</p>");
+      expect(content.innerHTML).not.toContain("<script>");
+      expect(content.innerHTML).not.toContain("alert");
+    });
+  });
 });

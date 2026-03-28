@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import DOMPurify from "dompurify";
 import { useDocumentStore } from "../../../store/document";
 import { Panel } from "../../shared/panel";
 
@@ -11,7 +12,7 @@ export function PreviewPane() {
   useEffect(() => {
     // Call the Rust command by its registered name and pass the markdown argument object.
     invoke<string>("parse_markdown", { markdown: content })
-      .then(setHtml)
+      .then((raw) => setHtml(DOMPurify.sanitize(raw)))
       .catch((error) => console.error("parse_markdown failed:", error));
   }, [content]);
 

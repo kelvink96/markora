@@ -2,6 +2,9 @@ type MockUpdate = {
   docChanged?: boolean;
   selectionSet?: boolean;
   focusChanged?: boolean;
+  view?: {
+    hasFocus: boolean;
+  };
   state: {
     doc: {
       toString: () => string;
@@ -18,6 +21,7 @@ type MockUpdate = {
 };
 
 import { act, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useEditorCommandState } from "../../../features/editor/editor-command-state";
 import { createDefaultSettings } from "../../../features/settings/settings-schema";
@@ -231,6 +235,7 @@ describe("EditorPane", () => {
       mockState.updateListener?.({
         docChanged: true,
         selectionSet: true,
+        view: { hasFocus: true },
         state: {
           doc: {
             toString: () => "Hello /ta",
@@ -249,5 +254,98 @@ describe("EditorPane", () => {
 
     expect(screen.getByRole("listbox", { name: "Slash commands" })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: /table/i })).toBeInTheDocument();
+  });
+
+  it("shows an inline formatting flyout when the editor keeps focus with a collapsed cursor", () => {
+    render(<EditorPane theme="light" />);
+
+    act(() => {
+      mockState.updateListener?.({
+        focusChanged: true,
+        selectionSet: true,
+        view: { hasFocus: true },
+        state: {
+          doc: {
+            toString: () => "Hello world",
+            lineAt: () => ({ number: 1, from: 0 }),
+          },
+          selection: {
+            main: {
+              head: 5,
+              from: 5,
+              to: 5,
+            },
+          },
+        },
+      });
+    });
+
+    expect(screen.getByRole("toolbar", { name: "Inline formatting" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Bold" })).toBeInTheDocument();
+  });
+
+  it("hides the inline formatting flyout while the slash command menu is open", () => {
+    render(<EditorPane theme="light" />);
+
+    act(() => {
+      mockState.updateListener?.({
+        docChanged: true,
+        selectionSet: true,
+        focusChanged: true,
+        view: { hasFocus: true },
+        state: {
+          doc: {
+            toString: () => "Hello /ta",
+            lineAt: () => ({ number: 1, from: 0 }),
+          },
+          selection: {
+            main: {
+              head: 9,
+              from: 9,
+              to: 9,
+            },
+          },
+        },
+      });
+    });
+
+    expect(screen.getByRole("listbox", { name: "Slash commands" })).toBeInTheDocument();
+    expect(screen.queryByRole("toolbar", { name: "Inline formatting" })).not.toBeInTheDocument();
+  });
+
+  it("applies inline flyout actions to the editor document", async () => {
+    const user = userEvent.setup();
+    render(<EditorPane theme="light" />);
+
+    act(() => {
+      mockState.updateListener?.({
+        focusChanged: true,
+        selectionSet: true,
+        view: { hasFocus: true },
+        state: {
+          doc: {
+            toString: () => "Hello world",
+            lineAt: () => ({ number: 1, from: 0 }),
+          },
+          selection: {
+            main: {
+              head: 5,
+              from: 0,
+              to: 5,
+            },
+          },
+        },
+      });
+    });
+
+    await user.click(screen.getByRole("button", { name: "Bold" }));
+
+    expect(mockState.dispatchSpy).toHaveBeenCalled();
+    const lastCall = mockState.dispatchSpy.mock.calls[mockState.dispatchSpy.mock.calls.length - 1]?.[0];
+    expect(lastCall).toMatchObject({
+      changes: expect.objectContaining({
+        insert: expect.stringContaining("**"),
+      }),
+    });
   });
 });

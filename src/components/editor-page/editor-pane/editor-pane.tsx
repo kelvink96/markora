@@ -18,6 +18,7 @@ import {
 import { useEditorStatusState } from "../../../features/workspace/editor-status-state";
 import { useSettingsStore } from "../../../features/settings/settings-store";
 import { Panel } from "../../shared/panel";
+import { InlineFormattingMenu } from "../inline-formatting-menu";
 import { SlashCommandMenu } from "../slash-command-menu/slash-command-menu";
 
 interface EditorPaneProps {
@@ -35,6 +36,13 @@ interface SlashMenuState {
   };
 }
 
+interface InlineMenuState {
+  position: {
+    top: number;
+    left: number;
+  };
+}
+
 export function EditorPane({ theme }: EditorPaneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Keep the imperative CodeMirror instance in a ref so React re-renders do not recreate it.
@@ -45,6 +53,7 @@ export function EditorPane({ theme }: EditorPaneProps) {
   const setRunToolbarAction = useEditorCommandState((state) => state.setRunToolbarAction);
   const setRunEditAction = useEditorCommandState((state) => state.setRunEditAction);
   const [slashMenu, setSlashMenu] = useState<SlashMenuState | null>(null);
+  const [inlineMenu, setInlineMenu] = useState<InlineMenuState | null>(null);
 
   const applyEditResult = (text: string, selectionStart: number, selectionEnd: number) => {
     const view = viewRef.current;
@@ -72,6 +81,31 @@ export function EditorPane({ theme }: EditorPaneProps) {
     setSlashMenu(null);
   };
 
+  const runMarkdownAction = (action: MarkdownToolbarAction) => {
+    const view = viewRef.current;
+    if (!view) return;
+
+    const selection = view.state.selection.main;
+    const result = applyMarkdownToolbarAction(
+      view.state.doc.toString(),
+      selection.from,
+      selection.to,
+      action,
+    );
+
+    applyEditResult(result.text, result.selectionStart, result.selectionEnd);
+  };
+
+  const getFloatingPosition = (anchor: number) => {
+    const coords = viewRef.current?.coordsAtPos(anchor);
+    const containerBounds = containerRef.current?.getBoundingClientRect();
+
+    return {
+      top: (coords?.bottom ?? 0) - (containerBounds?.top ?? 0) + 10,
+      left: (coords?.left ?? 0) - (containerBounds?.left ?? 0),
+    };
+  };
+
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -89,27 +123,32 @@ export function EditorPane({ theme }: EditorPaneProps) {
         const context = getSlashCommandContext(update.state.doc.toString(), cursor);
         if (!context) {
           setSlashMenu(null);
-          return;
+        } else {
+          const commands = matchSlashCommands(context.query);
+          if (commands.length === 0) {
+            setSlashMenu(null);
+          } else {
+            setSlashMenu({
+              commands,
+              selectedIndex: 0,
+              from: context.from,
+              to: context.to,
+              position: getFloatingPosition(cursor),
+            });
+            setInlineMenu(null);
+            return;
+          }
         }
 
-        const commands = matchSlashCommands(context.query);
-        if (commands.length === 0) {
-          setSlashMenu(null);
-          return;
+        if (update.view.hasFocus) {
+          const selection = update.state.selection.main;
+          const anchor = selection.from === selection.to ? selection.head : selection.to;
+          setInlineMenu({
+            position: getFloatingPosition(anchor),
+          });
+        } else {
+          setInlineMenu(null);
         }
-
-        const coords = viewRef.current?.coordsAtPos(cursor);
-        const containerBounds = containerRef.current?.getBoundingClientRect();
-        setSlashMenu({
-          commands,
-          selectedIndex: 0,
-          from: context.from,
-          to: context.to,
-          position: {
-            top: (coords?.bottom ?? 0) - (containerBounds?.top ?? 0) + 10,
-            left: (coords?.left ?? 0) - (containerBounds?.left ?? 0),
-          },
-        });
       }
     });
 
@@ -140,22 +179,7 @@ export function EditorPane({ theme }: EditorPaneProps) {
   }, [lineNumbers, setContent, setCursorPosition, theme]);
 
   useEffect(() => {
-    const runAction = (action: MarkdownToolbarAction) => {
-      const view = viewRef.current;
-      if (!view) return;
-
-      const selection = view.state.selection.main;
-      const result = applyMarkdownToolbarAction(
-        view.state.doc.toString(),
-        selection.from,
-        selection.to,
-        action,
-      );
-
-      applyEditResult(result.text, result.selectionStart, result.selectionEnd);
-    };
-
-    setRunToolbarAction(runAction);
+    setRunToolbarAction(runMarkdownAction);
     return () => setRunToolbarAction(() => {});
   }, [setRunToolbarAction]);
 
@@ -290,6 +314,9 @@ export function EditorPane({ theme }: EditorPaneProps) {
               position={slashMenu.position}
               onSelect={applySelectedSlashCommand}
             />
+          ) : null}
+          {inlineMenu && !slashMenu ? (
+            <InlineFormattingMenu position={inlineMenu.position} onSelect={runMarkdownAction} />
           ) : null}
         </div>
       </Panel>

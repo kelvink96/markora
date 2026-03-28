@@ -1,4 +1,5 @@
 import type { SlashCommandDefinition } from "../../../features/editor/slash-commands";
+import { FloatingMenu } from "../../shared/floating-menu";
 
 interface SlashCommandMenuProps {
   commands: SlashCommandDefinition[];
@@ -17,10 +18,7 @@ export function SlashCommandMenu({
   onSelect,
 }: SlashCommandMenuProps) {
   return (
-    <div
-      className="absolute z-30 w-72 overflow-hidden rounded-[18px] border border-[color:var(--ghost-border)] bg-app-panel-strong/98 shadow-[0_18px_40px_rgba(30,43,52,0.16)] backdrop-blur-md"
-      style={{ top: position.top, left: position.left }}
-    >
+    <FloatingMenu position={position} className="w-72">
       <div role="listbox" aria-label="Slash commands" className="max-h-80 overflow-y-auto p-1.5">
         {commands.map((command, index) => (
           <button
@@ -49,6 +47,6 @@ export function SlashCommandMenu({
           </button>
         ))}
       </div>
-    </div>
+    </FloatingMenu>
   );
 }

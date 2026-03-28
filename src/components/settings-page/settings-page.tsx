@@ -5,18 +5,16 @@ import type {
   MarkoraSettings,
 } from "../../features/settings/settings-schema";
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
 import { AboutSettingsSection } from "./about-settings-section";
 import { AdvancedSettingsSection } from "./advanced-settings-section";
 import { AppearanceSettingsSection } from "./appearance-settings-section";
 import { EditorSettingsSection } from "./editor-settings-section";
 import { FilesSettingsSection } from "./files-settings-section";
-import { DEFAULT_SETTINGS_SECTION } from "./settings-navigation";
-import { getSystemThemeMode } from "./settings-page-shared";
 import type { SettingsSection } from "./settings-page-types";
 import { PreviewSettingsSection } from "./preview-settings-section";
 import { SettingsSidebar } from "./settings-sidebar";
 import { TemplateSettingsSection } from "./template-settings-section";
+import { useSettingsPageState } from "./use-settings-page-state";
 
 interface SettingsPageProps {
   settings: MarkoraSettings;
@@ -43,37 +41,22 @@ export function SettingsPage({
   onResetTemplate,
   onResetAll,
 }: SettingsPageProps) {
-  const [activeSection, setActiveSection] = useState<SettingsSection>(DEFAULT_SETTINGS_SECTION);
-  const [appearanceDraft, setAppearanceDraft] = useState(settings.appearance);
-  const [editorDraft, setEditorDraft] = useState(settings.editor);
-  const [filesDraft, setFilesDraft] = useState(settings.files);
-  const [templateDraftValue, setTemplateDraftValue] = useState(templateDraft);
-  const [systemThemeMode, setSystemThemeMode] = useState<"light" | "dark">(getSystemThemeMode);
-
-  useEffect(() => {
-    setAppearanceDraft(settings.appearance);
-    setEditorDraft(settings.editor);
-    setFilesDraft(settings.files);
-  }, [settings]);
-
-  useEffect(() => {
-    setTemplateDraftValue(templateDraft);
-  }, [templateDraft]);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia?.("(prefers-color-scheme: dark)");
-    if (!mediaQuery) return;
-
-    const handleChange = (event: MediaQueryListEvent) => {
-      setSystemThemeMode(event.matches ? "dark" : "light");
-    };
-
-    setSystemThemeMode(mediaQuery.matches ? "dark" : "light");
-    mediaQuery.addEventListener("change", handleChange);
-    return () => mediaQuery.removeEventListener("change", handleChange);
-  }, []);
-
-  const previewThemeMode = appearanceDraft.theme === "system" ? systemThemeMode : appearanceDraft.theme;
+  const {
+    activeSection,
+    appearanceDraft,
+    editorDraft,
+    filesDraft,
+    previewThemeMode,
+    setActiveSection,
+    setAppearanceDraft,
+    setEditorDraft,
+    setFilesDraft,
+    setTemplateDraftValue,
+    templateDraftValue,
+  } = useSettingsPageState({
+    settings,
+    templateDraft,
+  });
   const sectionContent: Record<SettingsSection, ReactNode> = {
     appearance: (
       <AppearanceSettingsSection

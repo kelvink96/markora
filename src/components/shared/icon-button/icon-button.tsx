@@ -1,14 +1,17 @@
 import * as Tooltip from "@radix-ui/react-tooltip";
 import type { ButtonHTMLAttributes, PropsWithChildren } from "react";
+import { getButtonClassName, type ButtonVariant } from "../button";
 
 interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   label: string;
+  variant?: ButtonVariant;
 }
 
 export function IconButton({
   label,
   children,
   className,
+  variant = "secondary",
   ...props
 }: PropsWithChildren<IconButtonProps>) {
   return (
@@ -16,8 +19,13 @@ export function IconButton({
       <Tooltip.Root>
         <Tooltip.Trigger asChild>
           <button
-            className={`inline-flex min-h-10 min-w-10 items-center justify-center rounded-app-sm border border-[color:var(--glass-border-strong)] bg-[color:var(--glass-panel)] px-3 py-2 text-app-text backdrop-blur-[var(--glass-blur-soft)] transition hover:border-[color:var(--glass-border)] hover:bg-[color:var(--glass-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-app-accent/40 disabled:cursor-not-allowed disabled:opacity-50 ${className ?? ""}`}
+            className={getButtonClassName({
+              variant,
+              size: "icon",
+              className,
+            })}
             aria-label={label}
+            type="button"
             {...props}
           >
             {children}

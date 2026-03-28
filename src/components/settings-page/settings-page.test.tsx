@@ -24,6 +24,10 @@ describe("SettingsPage", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Application" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Settings", level: 2 })).toHaveClass(
+      "font-semibold",
+      "tracking-[-0.02em]",
+    );
     expect(screen.getByRole("complementary")).toHaveClass(
       "bg-[color:var(--glass-panel)]",
       "backdrop-blur-[var(--glass-blur-soft)]",
@@ -33,6 +37,10 @@ describe("SettingsPage", () => {
     expect(screen.getByRole("button", { name: "Editor" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "About" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Back to editor" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Back to editor" })).toHaveClass(
+      "transition-[background-color,border-color,color,box-shadow]",
+      "bg-[color:var(--glass-elevated)]",
+    );
     expect(screen.getByRole("button", { name: "Back to editor" }).parentElement).toHaveClass(
       "mb-4",
       "items-start",
@@ -68,6 +76,7 @@ describe("SettingsPage", () => {
     );
     expect(screen.getByText("Markora is a desktop-first markdown editor.")).toBeInTheDocument();
     expect(screen.getByText("Version 0.1.0")).toBeInTheDocument();
+    expect(screen.getByText("Version 0.1.0")).toHaveClass("text-app-text-secondary");
   });
 
   it("keeps app color scheme controls inside the appearance section", async () => {
@@ -94,6 +103,7 @@ describe("SettingsPage", () => {
     expect(screen.getByRole("heading", { name: "Appearance", level: 3 })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Color Scheme", level: 3 })).toBeInTheDocument();
     expect(screen.getByLabelText(/^Color scheme/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Color scheme/i)).toHaveClass("w-full", "rounded-app-sm");
   });
 
   it("lets the user save the template draft explicitly", async () => {

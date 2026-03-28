@@ -8,6 +8,12 @@ import type {
 } from "../../features/settings/settings-schema";
 import type { ChangeEvent, ReactNode } from "react";
 import { useEffect, useState } from "react";
+import { Button } from "../shared/button";
+import { Checkbox } from "../shared/checkbox";
+import { Field } from "../shared/field";
+import { Select } from "../shared/select";
+import { Text } from "../shared/text";
+import { Title } from "../shared/title";
 
 type SettingsSection =
   | "appearance"
@@ -75,8 +81,10 @@ function SectionCard({
   return (
     <section className="rounded-app-sm border border-[color:var(--glass-border)] bg-[color:var(--glass-panel)] p-5 backdrop-blur-[var(--glass-blur-soft)] shadow-[0_1px_0_rgba(255,255,255,0.14)_inset,0_14px_36px_rgba(0,0,0,0.08)]">
       <header className="mb-4 space-y-1">
-        <h3 className="text-base font-semibold text-app-text">{title}</h3>
-        <p className="text-sm text-app-text/70">{description}</p>
+        <Title as="h3" size="sm">
+          {title}
+        </Title>
+        <Text tone="muted">{description}</Text>
       </header>
       <div className="space-y-4">{children}</div>
     </section>
@@ -168,14 +176,9 @@ function SectionActions({
 }) {
   return (
     <div className="flex justify-end pt-2">
-      <button
-        type="button"
-        className="rounded-app-sm border border-[color:var(--glass-border)] bg-[color:var(--glass-elevated)] px-3 py-2 text-sm text-app-text backdrop-blur-[var(--glass-blur-soft)] disabled:cursor-not-allowed disabled:opacity-50"
-        disabled={!canSave}
-        onClick={onSave}
-      >
+      <Button disabled={!canSave} onClick={onSave}>
         {label}
-      </button>
+      </Button>
     </div>
   );
 }
@@ -237,12 +240,10 @@ export function SettingsPage({
               title="Appearance"
               description="Control the app chrome, shell theme, and supporting interface elements."
             >
-              <FieldLabel htmlFor="theme-preference" helper="System follows your OS color scheme.">
-                Theme mode
-              </FieldLabel>
-              <select
+              <Select
                 id="theme-preference"
-                className="rounded-app-sm border border-[color:var(--glass-border)] bg-[color:var(--glass-elevated)] px-3 py-2 backdrop-blur-[var(--glass-blur-soft)]"
+                label="Theme mode"
+                helper="System follows your OS color scheme."
                 value={appearanceDraft.theme}
                 onChange={(event) =>
                   setAppearanceDraft((current) => ({
@@ -254,13 +255,15 @@ export function SettingsPage({
                 <option value="system">System</option>
                 <option value="light">Light</option>
                 <option value="dark">Dark</option>
-              </select>
+              </Select>
 
-              <FieldLabel htmlFor="status-bar-toggle">Show status bar</FieldLabel>
-              <label className="inline-flex items-center gap-3 text-sm text-app-text">
-                <input
+              <Field
+                label="Show status bar"
+                helper="Keep the footer metrics visible while writing."
+              >
+                <Checkbox
                   id="status-bar-toggle"
-                  type="checkbox"
+                  label="Keep the footer metrics visible while writing"
                   checked={appearanceDraft.showStatusBar}
                   onChange={(event) =>
                     setAppearanceDraft((current) => ({
@@ -269,8 +272,7 @@ export function SettingsPage({
                     }))
                   }
                 />
-                Keep the footer metrics visible while writing
-              </label>
+              </Field>
               <SectionActions
                 canSave={hasChanges(appearanceDraft, settings.appearance)}
                 label="Save theme mode"
@@ -282,15 +284,10 @@ export function SettingsPage({
               title="Color Scheme"
               description="Choose the palette character that the whole app shell will use in both light and dark modes."
             >
-              <FieldLabel
-                htmlFor="color-scheme"
-                helper="Each scheme adapts to the current theme mode, so the shell, editor, and preview stay aligned."
-              >
-                Color scheme
-              </FieldLabel>
-              <select
+              <Select
                 id="color-scheme"
-                className="rounded-app-sm border border-[color:var(--glass-border)] bg-[color:var(--glass-elevated)] px-3 py-2 backdrop-blur-[var(--glass-blur-soft)]"
+                label="Color scheme"
+                helper="Each scheme adapts to the current theme mode, so the shell, editor, and preview stay aligned."
                 value={appearanceDraft.colorScheme}
                 onChange={(event) =>
                   setAppearanceDraft((current) => ({
@@ -302,7 +299,7 @@ export function SettingsPage({
                 <option value="standard">Standard</option>
                 <option value="sepia">Sepia</option>
                 <option value="high-contrast">High Contrast</option>
-              </select>
+              </Select>
               <div className="grid gap-3 md:grid-cols-2">
                 <ColorSchemeSwatch
                   title="Standard"
@@ -358,12 +355,12 @@ export function SettingsPage({
             title="Preview"
             description="Preview content fills the pane and inherits the active app color scheme."
           >
-            <p className="text-sm text-app-text/70">
+            <Text tone="muted">
               Preview content uses the full available width of the pane.
-            </p>
-            <p className="text-sm text-app-text/70">
+            </Text>
+            <Text tone="muted">
               Use Appearance to switch app color schemes and compare the shell presets visually.
-            </p>
+            </Text>
           </SectionCard>
         );
       case "editor":
@@ -372,20 +369,16 @@ export function SettingsPage({
             title="Editor"
             description="Tune the writing surface and keep technical chrome optional."
           >
-            <label className="inline-flex items-center gap-3 text-sm text-app-text">
-              <input
-                type="checkbox"
-                checked={editorDraft.lineNumbers}
-                onChange={(event) =>
-                  setEditorDraft((current) => ({
-                    ...current,
-                    lineNumbers: event.target.checked,
-                  }))
-                }
-                aria-label="Show line numbers"
-              />
-              Show line numbers
-            </label>
+            <Checkbox
+              label="Show line numbers"
+              checked={editorDraft.lineNumbers}
+              onChange={(event) =>
+                setEditorDraft((current) => ({
+                  ...current,
+                  lineNumbers: event.target.checked,
+                }))
+              }
+            />
             <SectionActions
               canSave={hasChanges(editorDraft, settings.editor)}
               onSave={() => onSaveEditor(editorDraft)}
@@ -398,19 +391,16 @@ export function SettingsPage({
             title="Files"
             description="Control document safety prompts and other desktop file behaviors."
           >
-            <label className="inline-flex items-center gap-3 text-sm text-app-text">
-              <input
-                type="checkbox"
-                checked={filesDraft.confirmOnUnsavedClose}
-                onChange={(event) =>
-                  setFilesDraft((current) => ({
-                    ...current,
-                    confirmOnUnsavedClose: event.target.checked,
-                  }))
-                }
-              />
-              Confirm before closing unsaved tabs
-            </label>
+            <Checkbox
+              label="Confirm before closing unsaved tabs"
+              checked={filesDraft.confirmOnUnsavedClose}
+              onChange={(event) =>
+                setFilesDraft((current) => ({
+                  ...current,
+                  confirmOnUnsavedClose: event.target.checked,
+                }))
+              }
+            />
             <SectionActions
               canSave={hasChanges(filesDraft, settings.files)}
               onSave={() => onSaveFiles(filesDraft)}
@@ -423,11 +413,11 @@ export function SettingsPage({
             title="About"
             description="Current app details and the stack behind Markora."
           >
-            <p className="text-sm text-app-text">Markora is a desktop-first markdown editor.</p>
-            <p className="text-sm text-app-text/70">{`Version ${version}`}</p>
-            <p className="text-sm text-app-text/70">
+            <Text>Markora is a desktop-first markdown editor.</Text>
+            <Text tone="muted">{`Version ${version}`}</Text>
+            <Text tone="muted">
               Built with Tauri, Rust, React, TypeScript, and CodeMirror 6.
-            </p>
+            </Text>
           </SectionCard>
         );
       case "template":
@@ -446,20 +436,12 @@ export function SettingsPage({
               }
             />
             <div className="flex flex-wrap gap-3">
-              <button
-                type="button"
-                className="rounded-app-sm border border-[color:var(--glass-border)] bg-[color:var(--glass-elevated)] px-3 py-2 text-sm text-app-text backdrop-blur-[var(--glass-blur-soft)]"
-                onClick={() => onSaveTemplate(templateDraftValue)}
-              >
+              <Button onClick={() => onSaveTemplate(templateDraftValue)}>
                 Save template
-              </button>
-              <button
-                type="button"
-                className="rounded-app-sm border border-[color:var(--glass-border)] bg-[color:var(--glass-panel)] px-3 py-2 text-sm text-app-text backdrop-blur-[var(--glass-blur-soft)]"
-                onClick={onResetTemplate}
-              >
+              </Button>
+              <Button variant="ghost" onClick={onResetTemplate}>
                 Reset template
-              </button>
+              </Button>
             </div>
           </SectionCard>
         );
@@ -469,9 +451,8 @@ export function SettingsPage({
             title="Advanced"
             description="Use reset carefully. This restores both app preferences and authoring defaults."
           >
-            <button
-              type="button"
-              className="rounded-app-sm border border-red-300/70 bg-red-50/85 px-3 py-2 text-sm text-red-700 backdrop-blur-[var(--glass-blur-soft)]"
+            <Button
+              variant="danger"
               onClick={() => {
                 if (window.confirm("Reset all settings to their defaults?")) {
                   onResetAll();
@@ -479,7 +460,7 @@ export function SettingsPage({
               }}
             >
               Reset all settings
-            </button>
+            </Button>
           </SectionCard>
         );
       default:
@@ -492,24 +473,25 @@ export function SettingsPage({
       <div className="grid h-full min-h-0 grid-cols-[18rem_minmax(0,1fr)] gap-4">
         <aside className="rounded-app-sm border border-[color:var(--glass-border)] bg-[color:var(--glass-panel)] p-4 backdrop-blur-[var(--glass-blur-soft)] shadow-[0_1px_0_rgba(255,255,255,0.14)_inset,0_14px_36px_rgba(0,0,0,0.08)]">
           <div className="mb-4 flex items-start">
-            <button
-              type="button"
-              className="rounded-app-sm border border-[color:var(--glass-border)] bg-[color:var(--glass-elevated)] px-3 py-2 text-sm text-app-text backdrop-blur-[var(--glass-blur-soft)]"
-              onClick={onClose}
-            >
+            <Button onClick={onClose}>
               Back to editor
-            </button>
+            </Button>
           </div>
           <div className="mb-5">
-            <h2 className="text-lg font-semibold text-app-text">Settings</h2>
-            <p className="text-sm text-app-text/70">Tune Markora for your writing flow.</p>
+            <Title as="h2">Settings</Title>
+            <Text tone="muted">Tune Markora for your writing flow.</Text>
           </div>
 
           <div className="space-y-5">
             <div className="space-y-2">
-              <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-app-text/50">
+              <Text
+                as="h3"
+                size="xs"
+                weight="semibold"
+                className="uppercase tracking-[0.16em] text-app-text/50"
+              >
                 Application
-              </h3>
+              </Text>
               <SidebarButton
                 label="Appearance"
                 isActive={activeSection === "appearance"}
@@ -543,9 +525,14 @@ export function SettingsPage({
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-app-text/50">
+              <Text
+                as="h3"
+                size="xs"
+                weight="semibold"
+                className="uppercase tracking-[0.16em] text-app-text/50"
+              >
                 Authoring Defaults
-              </h3>
+              </Text>
               <SidebarButton
                 label="New Document Template"
                 isActive={activeSection === "template"}

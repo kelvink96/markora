@@ -9,6 +9,8 @@ import { PreviewPane } from "./components/editor-page/preview-pane";
 import { SettingsPage } from "./components/settings-page/settings-page";
 import { Workspace } from "./components/editor-page/workspace";
 import { FooterStatusBar } from "./components/editor-page/footer-status-bar";
+import { Button } from "./components/shared/button";
+import { Dialog } from "./components/shared/dialog";
 import { getWordCount } from "./features/document/document-actions";
 import { loadSettings, resetSettings, saveSettings } from "./features/settings/settings-api";
 import { createDefaultSettings } from "./features/settings/settings-schema";
@@ -29,6 +31,7 @@ function getSystemThemePreference() {
 
 export default function App() {
   const [activeScreen, setActiveScreen] = useState<"workspace" | "settings">("workspace");
+  const [pendingCloseDocumentId, setPendingCloseDocumentId] = useState<string | null>(null);
   const { openDocument, setFilePath, markClean, newDocument, selectDocument, closeDocument } =
     useDocumentStore();
   const theme = useThemeStore((state) => state.resolvedTheme);
@@ -107,12 +110,28 @@ export default function App() {
       if (!targetDocument) return;
 
       const shouldConfirm = documentId === activeDocumentId ? isDirty : targetDocument.isDirty;
-      if (shouldConfirm && confirmOnUnsavedClose && !window.confirm("Discard unsaved changes?")) return;
+      if (shouldConfirm && confirmOnUnsavedClose) {
+        setPendingCloseDocumentId(documentId);
+        return;
+      }
 
       closeDocument(documentId);
     },
     [closeDocument],
   );
+
+  const handleCancelPendingClose = useCallback(() => {
+    setPendingCloseDocumentId(null);
+  }, []);
+
+  const handleConfirmPendingClose = useCallback(() => {
+    if (!pendingCloseDocumentId) {
+      return;
+    }
+
+    closeDocument(pendingCloseDocumentId);
+    setPendingCloseDocumentId(null);
+  }, [closeDocument, pendingCloseDocumentId]);
 
   useEffect(() => {
     let isActive = true;
@@ -269,13 +288,30 @@ export default function App() {
   );
 
   return (
-    <AppShell
-      themeMode={theme}
-      colorScheme={settings.appearance.colorScheme}
-      tabStrip={activeScreen === "workspace" ? tabStrip : null}
-      commandBar={activeScreen === "workspace" ? commandBar : null}
-      workspace={workspace}
-      statusBar={settings.appearance.showStatusBar && activeScreen === "workspace" ? statusBar : null}
-    />
+    <>
+      <AppShell
+        themeMode={theme}
+        colorScheme={settings.appearance.colorScheme}
+        tabStrip={activeScreen === "workspace" ? tabStrip : null}
+        commandBar={activeScreen === "workspace" ? commandBar : null}
+        workspace={workspace}
+        statusBar={settings.appearance.showStatusBar && activeScreen === "workspace" ? statusBar : null}
+      />
+      <Dialog
+        open={pendingCloseDocumentId !== null}
+        title="Discard unsaved changes?"
+        description="This document has unsaved edits. Discard them and close the tab?"
+        actions={
+          <>
+            <Button onClick={handleCancelPendingClose}>Cancel</Button>
+            <Button variant="danger" onClick={handleConfirmPendingClose}>
+              Discard
+            </Button>
+          </>
+        }
+      >
+        Closing this tab will remove any unsaved changes in the current document.
+      </Dialog>
+    </>
   );
 }

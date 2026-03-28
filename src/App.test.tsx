@@ -140,15 +140,37 @@ describe("App", () => {
     });
   });
 
-  it("does not close a dirty active tab when the user cancels confirmation", async () => {
+  it("opens a custom discard dialog for dirty active tabs", async () => {
     const user = userEvent.setup();
-    vi.spyOn(window, "confirm").mockReturnValue(false);
+    const confirmSpy = vi.spyOn(window, "confirm");
 
     render(<App />);
     await user.click(screen.getByRole("button", { name: "close-active" }));
 
+    expect(screen.getByRole("dialog", { name: "Discard unsaved changes?" })).toBeInTheDocument();
+    expect(confirmSpy).not.toHaveBeenCalled();
+  });
+
+  it("does not close a dirty active tab when the user cancels the discard dialog", async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "close-active" }));
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+
     expect(useDocumentStore.getState().openDocuments).toHaveLength(2);
     expect(useDocumentStore.getState().activeDocumentId).toBe("document-2");
+  });
+
+  it("closes a dirty active tab when the user confirms the discard dialog", async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "close-active" }));
+    await user.click(screen.getByRole("button", { name: "Discard" }));
+
+    expect(useDocumentStore.getState().openDocuments).toHaveLength(1);
+    expect(useDocumentStore.getState().activeDocumentId).toBe("document-1");
   });
 
   it("uses the saved template for newly created tabs", async () => {
@@ -181,14 +203,12 @@ describe("App", () => {
 
       return undefined;
     });
-    const confirmSpy = vi.spyOn(window, "confirm");
-
     render(<App />);
     await waitFor(() => expect(useSettingsStore.getState().isHydrated).toBe(true));
     await user.click(screen.getByRole("button", { name: "close-active" }));
 
     expect(useDocumentStore.getState().openDocuments).toHaveLength(1);
-    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(screen.queryByRole("dialog", { name: "Discard unsaved changes?" })).not.toBeInTheDocument();
   });
 
   it("closes a clean active tab without confirmation", async () => {
@@ -203,14 +223,12 @@ describe("App", () => {
       filePath: "D:\\notes\\clean.md",
       isDirty: false,
     });
-    const confirmSpy = vi.spyOn(window, "confirm");
-
     render(<App />);
     await user.click(screen.getByRole("button", { name: "close-active" }));
 
     expect(useDocumentStore.getState().openDocuments).toHaveLength(1);
     expect(useDocumentStore.getState().activeDocumentId).toBe("document-1");
-    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(screen.queryByRole("dialog", { name: "Discard unsaved changes?" })).not.toBeInTheDocument();
   });
 
   it("selects an already-open file when opening the same path again", async () => {
@@ -253,14 +271,13 @@ describe("App", () => {
 
   it("creates a new tab without prompting to discard dirty changes", async () => {
     const user = userEvent.setup();
-    const confirmSpy = vi.spyOn(window, "confirm");
 
     render(<App />);
     await user.click(screen.getByRole("button", { name: "new-tab" }));
 
     expect(useDocumentStore.getState().openDocuments).toHaveLength(3);
     expect(useDocumentStore.getState().activeDocumentId).not.toBe("document-2");
-    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(screen.queryByRole("dialog", { name: "Discard unsaved changes?" })).not.toBeInTheDocument();
   });
 
   it("cycles to the next tab with ctrl+tab", () => {

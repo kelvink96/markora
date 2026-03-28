@@ -1,5 +1,9 @@
 # AGENTS
 
+## Repository Rules
+
+- Commit messages should follow commitlint rules.
+
 ## Project Summary
 
 Markora is a desktop-first markdown editor built with:

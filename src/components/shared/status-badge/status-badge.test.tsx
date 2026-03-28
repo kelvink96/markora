@@ -6,6 +6,6 @@ describe("StatusBadge", () => {
   it("renders a status badge with tone styling", () => {
     render(<StatusBadge tone="success">Saved</StatusBadge>);
 
-    expect(screen.getByText("Saved")).toHaveClass("text-app-text-secondary");
+    expect(screen.getByText("Saved")).toHaveClass("app-chip", "text-app-text-secondary");
   });
 });

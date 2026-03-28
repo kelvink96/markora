@@ -12,7 +12,7 @@ describe("Tab", () => {
 
     const tab = screen.getByRole("tab", { name: "Notes" });
     expect(tab).toHaveAttribute("aria-selected", "true");
-    expect(tab.parentElement).toHaveClass("rounded-app-sm", "border");
+    expect(tab.parentElement).toHaveClass("rounded-app-md", "border", "shadow-[var(--shadow-crisp)]");
   });
 
   it("renders optional left and right sections", () => {

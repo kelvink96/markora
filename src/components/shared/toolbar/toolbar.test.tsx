@@ -6,10 +6,6 @@ describe("Toolbar", () => {
   it("renders a shared toolbar container", () => {
     render(<Toolbar ariaLabel="Formatting">Body</Toolbar>);
 
-    expect(screen.getByLabelText("Formatting")).toHaveClass(
-      "rounded-app-sm",
-      "gap-0.5",
-      "p-0.5",
-    );
+    expect(screen.getByLabelText("Formatting")).toHaveClass("app-toolbar", "gap-0.5", "p-0.5");
   });
 });

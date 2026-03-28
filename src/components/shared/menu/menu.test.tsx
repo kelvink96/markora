@@ -20,7 +20,7 @@ describe("Menu", () => {
     const trigger = screen.getByRole("button", { name: "Open" });
     await user.click(trigger);
 
-    expect(trigger).toHaveClass("rounded-app-sm");
+    expect(trigger).toHaveClass("rounded-app-md");
     expect(screen.getByRole("menuitem", { name: "Rename" })).toBeInTheDocument();
   });
 });

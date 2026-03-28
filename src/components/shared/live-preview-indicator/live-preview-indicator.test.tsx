@@ -5,6 +5,7 @@ import { LivePreviewIndicator } from "./live-preview-indicator";
 describe("LivePreviewIndicator", () => {
   it("renders the live preview label", () => {
     render(<LivePreviewIndicator />);
+    expect(screen.getByLabelText("Live Preview")).toHaveClass("app-chip");
     expect(screen.getByText("Live Preview")).toBeInTheDocument();
   });
 });

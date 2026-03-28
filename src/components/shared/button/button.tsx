@@ -11,22 +11,22 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const baseClassName =
-  "inline-flex items-center justify-center rounded-app-sm border text-app-text transition-[background-color,border-color,color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-app-accent/40 disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex items-center justify-center gap-2 rounded-app-md border text-app-text shadow-[var(--shadow-crisp)] transition-[background-color,border-color,color,box-shadow,transform] duration-150 ease-out focus-visible:outline-none focus-visible:ring-0 focus-visible:shadow-[var(--shadow-crisp),0_0_0_3px_color-mix(in_srgb,var(--accent)_22%,transparent)] active:translate-y-[0.5px] disabled:cursor-not-allowed disabled:opacity-60";
 
 const variantClassNames: Record<ButtonVariant, string> = {
   primary:
-    "border-app-accent/70 bg-app-accent text-white shadow-[var(--shadow-crisp)] hover:border-app-accent hover:bg-app-accent/90",
+    "border-[color:color-mix(in_srgb,var(--accent)_55%,var(--glass-border-strong))] bg-[color:var(--accent-strong)] text-[color:var(--surface-panel-strong)] hover:border-[color:var(--accent-strong)] hover:brightness-[1.05]",
   secondary:
-    "border-[color:var(--glass-border)] bg-[color:var(--glass-elevated)] backdrop-blur-[var(--glass-blur-soft)] hover:bg-[color:var(--glass-hover)]",
+    "border-[color:color-mix(in_srgb,var(--glass-border)_70%,var(--glass-border-strong))] bg-[color:color-mix(in_srgb,var(--glass-elevated)_88%,var(--surface-panel-strong))] hover:border-[color:color-mix(in_srgb,var(--glass-border-strong)_60%,var(--accent)_18%)] hover:bg-[color:color-mix(in_srgb,var(--glass-elevated)_76%,var(--surface-panel-strong))]",
   ghost:
-    "border-transparent bg-transparent hover:bg-[color:var(--glass-hover)]",
+    "border-transparent bg-transparent shadow-none hover:border-[color:color-mix(in_srgb,var(--glass-border)_60%,transparent)] hover:bg-[color:color-mix(in_srgb,var(--surface-panel)_88%,var(--surface-subtle))]",
   danger:
-    "border-red-300/70 bg-red-50/85 text-red-700 backdrop-blur-[var(--glass-blur-soft)] hover:bg-red-100/90",
+    "border-red-400/45 bg-[color:color-mix(in_srgb,#f5d7d7_62%,var(--surface-panel-strong))] text-red-700 hover:border-red-500/55 hover:bg-[color:color-mix(in_srgb,#f1c6c6_72%,var(--surface-panel-strong))] dark:text-red-200",
 };
 
 const sizeClassNames: Record<ButtonSize, string> = {
   sm: "min-h-9 px-3 py-2 text-sm",
-  md: "min-h-10 px-3 py-2 text-sm",
+  md: "min-h-10 px-3.5 py-2.5 text-sm",
   icon: "size-10 min-h-10 min-w-10 p-0",
 };
 

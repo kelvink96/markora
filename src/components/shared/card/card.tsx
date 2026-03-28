@@ -16,7 +16,7 @@ export function Card<T extends ElementType = "section">({
 
   return (
     <Component
-      className={`rounded-app-sm border border-[color:var(--glass-border)] bg-[color:var(--glass-panel)] p-5 backdrop-blur-[var(--glass-blur-soft)] shadow-[0_1px_0_rgba(255,255,255,0.14)_inset,0_14px_36px_rgba(0,0,0,0.08)] ${className ?? ""}`}
+      className={`app-surface p-5 ${className ?? ""}`}
       {...props}
     >
       {children}

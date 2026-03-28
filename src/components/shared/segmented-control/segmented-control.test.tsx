@@ -18,7 +18,7 @@ describe("SegmentedControl", () => {
       />,
     );
 
-    expect(screen.getByRole("tablist", { name: "View mode" })).toHaveClass("rounded-app-sm");
+    expect(screen.getByRole("tablist", { name: "View mode" })).toHaveClass("app-toolbar");
     expect(screen.getByRole("tab", { name: "Split" })).toHaveAttribute("aria-selected", "true");
   });
 

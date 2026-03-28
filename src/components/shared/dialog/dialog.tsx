@@ -16,12 +16,12 @@ export function Dialog({ actions, children, description, open, title }: DialogPr
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/38 p-4 backdrop-blur-[2px]">
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="dialog-title"
-        className="w-full max-w-md rounded-app-sm border border-[color:var(--glass-border)] bg-[color:var(--glass-elevated)] p-5 shadow-[0_18px_40px_rgba(30,43,52,0.18)] backdrop-blur-[var(--glass-blur-strong)]"
+        className="app-flyout w-full max-w-md p-5"
       >
         <div className="space-y-2">
           <Title as="h2" size="sm" id="dialog-title">

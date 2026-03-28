@@ -21,10 +21,10 @@ export function Tab({
   return (
     <div
       data-tab-item="true"
-      className={`inline-flex min-w-0 items-center gap-1.5 rounded-app-sm border px-3.5 py-2 text-[0.82rem] transition-[background-color,border-color,color,box-shadow,transform] ${
+      className={`inline-flex min-w-0 items-center gap-2 rounded-app-md border px-3.5 py-2 text-[0.82rem] shadow-[var(--shadow-crisp)] transition-[background-color,border-color,color,box-shadow,transform] duration-150 ease-out ${
         isActive
-          ? "border-[color:var(--glass-border)] bg-[color:var(--glass-elevated)] text-app-text"
-          : "border-transparent bg-[color:var(--glass-panel)] text-app-text-secondary hover:border-[color:var(--glass-border)] hover:bg-[color:var(--glass-hover)] hover:text-app-text"
+          ? "border-[color:color-mix(in_srgb,var(--glass-border)_74%,var(--glass-border-strong))] bg-[color:color-mix(in_srgb,var(--glass-elevated)_88%,var(--surface-panel-strong))] text-app-text"
+          : "border-[color:transparent] bg-[color:color-mix(in_srgb,var(--surface-panel)_90%,var(--surface-subtle))] text-app-text-secondary shadow-none hover:border-[color:color-mix(in_srgb,var(--glass-border)_66%,transparent)] hover:bg-[color:color-mix(in_srgb,var(--surface-panel)_94%,var(--surface-panel-strong))] hover:text-app-text"
       } ${className ?? ""}`}
     >
       {leftSection ? <span className="shrink-0">{leftSection}</span> : null}

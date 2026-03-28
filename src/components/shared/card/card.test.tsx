@@ -6,9 +6,6 @@ describe("Card", () => {
   it("renders a shared card surface", () => {
     render(<Card>Card body</Card>);
 
-    expect(screen.getByText("Card body")).toHaveClass(
-      "rounded-app-sm",
-      "bg-[color:var(--glass-panel)]",
-    );
+    expect(screen.getByText("Card body")).toHaveClass("app-surface");
   });
 });

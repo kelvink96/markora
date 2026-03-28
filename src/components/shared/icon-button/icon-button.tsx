@@ -33,7 +33,7 @@ export function IconButton({
         </Tooltip.Trigger>
         <Tooltip.Portal>
           <Tooltip.Content
-            className="z-50 rounded-app-sm border border-[color:var(--glass-border)] bg-[color:var(--glass-elevated)] px-2 py-1 text-sm text-app-text shadow-[0_18px_40px_rgba(30,43,52,0.12)] backdrop-blur-[var(--glass-blur-soft)]"
+            className="app-flyout z-50 px-2 py-1 text-sm text-app-text"
             sideOffset={8}
           >
             {label}

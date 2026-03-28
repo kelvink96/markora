@@ -23,14 +23,13 @@ describe("MenuBar", () => {
 
     expect(trigger).toHaveClass(
       "menu-bar__trigger",
-      "rounded-app-sm",
-      "bg-[color:var(--glass-panel)]",
+      "rounded-app-md",
+      "shadow-[var(--shadow-crisp)]",
     );
     expect(screen.getByRole("menuitem", { name: "New" })).toBeInTheDocument();
     expect(screen.getByRole("menu")).toHaveClass(
       "menu-bar__content",
-      "rounded-app-sm",
-      "bg-[color:var(--glass-elevated)]",
+      "app-flyout",
     );
   });
 });

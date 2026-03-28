@@ -30,7 +30,8 @@
   }
 
   button,
-  input {
+  input,
+  select {
     font: inherit;
   }
 
@@ -39,6 +40,93 @@
   kbd,
   samp {
     font-family: var(--font-editor);
+  }
+}
+
+@layer components {
+  .app-control-shell {
+    position: relative;
+  }
+
+  .app-surface {
+    border-radius: var(--radius-md);
+    border: 1px solid color-mix(in srgb, var(--glass-border) 70%, var(--glass-border-strong));
+    background: color-mix(in srgb, var(--glass-elevated) 86%, var(--surface-panel-strong));
+    box-shadow: var(--shadow-crisp), 0 10px 24px rgba(0, 0, 0, 0.06);
+  }
+
+  .app-surface-muted {
+    border-radius: var(--radius-md);
+    border: 1px solid color-mix(in srgb, var(--glass-border) 62%, transparent);
+    background: color-mix(in srgb, var(--surface-panel) 92%, var(--surface-subtle));
+    box-shadow: var(--shadow-crisp), 0 1px 1px rgba(0, 0, 0, 0.02);
+  }
+
+  .app-flyout {
+    border-radius: var(--radius-md);
+    border: 1px solid color-mix(in srgb, var(--glass-border) 72%, var(--glass-border-strong));
+    background: color-mix(in srgb, var(--glass-elevated) 92%, var(--surface-panel-strong));
+    box-shadow: 0 18px 40px rgba(30, 43, 52, 0.14);
+  }
+
+  .app-chip {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--glass-border) 65%, var(--glass-border-strong));
+    background: color-mix(in srgb, var(--surface-panel) 86%, var(--surface-panel-strong));
+    box-shadow: var(--shadow-crisp);
+  }
+
+  .app-control {
+    width: 100%;
+    min-height: 2.625rem;
+    border-radius: var(--radius-md);
+    border: 1px solid color-mix(in srgb, var(--glass-border) 70%, var(--glass-border-strong));
+    background: color-mix(in srgb, var(--glass-elevated) 88%, var(--surface-panel-strong));
+    color: var(--text-primary);
+    box-shadow: var(--shadow-crisp), 0 1px 1px rgba(0, 0, 0, 0.02);
+    transition:
+      border-color 150ms ease-out,
+      background-color 150ms ease-out,
+      box-shadow 150ms ease-out,
+      color 150ms ease-out;
+  }
+
+  .app-control:hover {
+    border-color: color-mix(in srgb, var(--glass-border-strong) 60%, var(--accent) 18%);
+    background: color-mix(in srgb, var(--glass-elevated) 76%, var(--surface-panel-strong));
+  }
+
+  .app-control:focus-visible {
+    outline: none;
+    border-color: color-mix(in srgb, var(--accent) 42%, var(--glass-border-strong));
+    box-shadow:
+      var(--shadow-crisp),
+      0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent),
+      0 8px 20px rgba(0, 0, 0, 0.04);
+  }
+
+  .app-control:disabled {
+    cursor: not-allowed;
+    color: color-mix(in srgb, var(--text-muted) 86%, var(--text-secondary));
+    border-color: color-mix(in srgb, var(--glass-border) 58%, transparent);
+    background: color-mix(in srgb, var(--surface-panel) 88%, var(--surface-subtle));
+    box-shadow: none;
+    opacity: 0.72;
+  }
+
+  .app-control-select {
+    appearance: none;
+    padding: 0.6875rem 0.875rem;
+    line-height: 1.25rem;
+  }
+
+  .app-toolbar {
+    border-radius: var(--radius-md);
+    border: 1px solid color-mix(in srgb, var(--glass-border) 68%, var(--glass-border-strong));
+    background: color-mix(in srgb, var(--surface-panel) 92%, var(--surface-panel-strong));
+    box-shadow: var(--shadow-crisp), 0 8px 18px rgba(0, 0, 0, 0.04);
   }
 }
 

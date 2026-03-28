@@ -20,13 +20,32 @@ export function Select({
 
   return (
     <Field label={label} helper={helper} message={message} htmlFor={controlId}>
-      <select
-        id={controlId}
-        className={`w-full rounded-app-sm border border-[color:var(--glass-border)] bg-[color:var(--glass-elevated)] px-3 py-2 text-app-text backdrop-blur-[var(--glass-blur-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-app-accent/40 ${className ?? ""}`}
-        {...props}
-      >
-        {children}
-      </select>
+      <div className="app-control-shell group/select relative">
+        <select
+          id={controlId}
+          className={`app-control app-control-select pr-10 ${className ?? ""}`}
+          {...props}
+        >
+          {children}
+        </select>
+        <span
+          aria-hidden="true"
+          data-testid="select-chevron"
+          className="pointer-events-none absolute inset-y-0 right-0 flex w-10 items-center justify-center text-app-text-muted transition-colors duration-150 ease-out group-hover/select:text-app-text-secondary group-focus-within/select:text-app-text"
+        >
+          <svg
+            viewBox="0 0 12 12"
+            className="size-3"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M3 4.5 6 7.5l3-3" />
+          </svg>
+        </span>
+      </div>
     </Field>
   );
 }

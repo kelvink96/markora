@@ -36,9 +36,7 @@ describe("PreviewPane", () => {
 
     await waitFor(() => expect(screen.getByTestId("preview-content")).toBeInTheDocument());
     expect(screen.getByRole("region", { name: "Preview" }).firstElementChild).toHaveClass(
-      "rounded-app-sm",
-      "bg-[color:var(--glass-panel)]",
-      "backdrop-blur-[var(--glass-blur-soft)]",
+      "app-surface",
     );
     expect(screen.getByTestId("preview-content")).toHaveClass(
       "w-full",

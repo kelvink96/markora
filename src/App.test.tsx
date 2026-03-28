@@ -461,7 +461,7 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "open-about" }));
 
     expect(screen.getByRole("dialog", { name: "About Markora" })).toBeInTheDocument();
-    expect(screen.getByText(/Version 0\.1\.0/i)).toBeInTheDocument();
+    expect(screen.getByText(/Version 1\.0\.0/i)).toBeInTheDocument();
   });
 
   it("opens the discard dialog when closing the current tab from the menu", async () => {

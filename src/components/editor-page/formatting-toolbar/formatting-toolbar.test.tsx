@@ -54,7 +54,6 @@ describe("FormattingToolbar", () => {
     );
 
     expect(screen.getByLabelText("Formatting")).toHaveClass(
-      "rounded-app-sm",
       "gap-0.5",
       "p-0.5",
     );

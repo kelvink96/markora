@@ -8,7 +8,7 @@ describe("ViewModeSwitcher", () => {
     render(<ViewModeSwitcher value="edit" onValueChange={vi.fn()} />);
 
     expect(screen.getByRole("tablist", { name: "View mode" })).toHaveClass("app-toolbar", "inline-flex");
-    expect(screen.getByRole("tab", { name: "Edit view" })).toHaveClass("size-9", "px-0");
+    expect(screen.getByRole("tab", { name: "Edit view" })).toHaveClass("size-10", "px-0");
     expect(screen.getByRole("tab", { name: "Edit view" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("tab", { name: "Split view" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Preview view" })).toBeInTheDocument();

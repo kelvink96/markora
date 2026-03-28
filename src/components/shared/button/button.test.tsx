@@ -29,4 +29,22 @@ describe("Button", () => {
     expect(screen.getByRole("button", { name: "Ghost" })).toHaveClass("bg-transparent");
     expect(screen.getByRole("button", { name: "Danger" })).toHaveClass("text-red-700");
   });
+
+  it("renders optional left and right sections around the main label", () => {
+    render(
+      <Button
+        leftSection={<span data-testid="button-left">L</span>}
+        rightSection={<span data-testid="button-right">R</span>}
+      >
+        Library
+      </Button>,
+    );
+
+    const button = screen.getByRole("button", { name: "Library" });
+    expect(screen.getByTestId("button-left")).toBeInTheDocument();
+    expect(screen.getByTestId("button-right")).toBeInTheDocument();
+    expect(button).toContainElement(screen.getByTestId("button-left"));
+    expect(button).toContainElement(screen.getByTestId("button-right"));
+    expect(screen.getByText("Library")).toHaveClass("min-w-0");
+  });
 });

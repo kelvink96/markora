@@ -1,9 +1,11 @@
-import type { ButtonHTMLAttributes, PropsWithChildren } from "react";
+import type { ButtonHTMLAttributes, PropsWithChildren, ReactNode } from "react";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 export type ButtonSize = "sm" | "md" | "icon";
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  leftSection?: ReactNode;
+  rightSection?: ReactNode;
   variant?: ButtonVariant;
   size?: Exclude<ButtonSize, "icon">;
 }
@@ -47,6 +49,8 @@ export function getButtonClassName({
 export function Button({
   children,
   className,
+  leftSection,
+  rightSection,
   variant = "secondary",
   size = "md",
   type = "button",
@@ -58,7 +62,17 @@ export function Button({
       type={type}
       {...props}
     >
-      {children}
+      {leftSection ? (
+        <span aria-hidden="true" className="shrink-0">
+          {leftSection}
+        </span>
+      ) : null}
+      <span className="min-w-0 truncate">{children}</span>
+      {rightSection ? (
+        <span aria-hidden="true" className="shrink-0">
+          {rightSection}
+        </span>
+      ) : null}
     </button>
   );
 }

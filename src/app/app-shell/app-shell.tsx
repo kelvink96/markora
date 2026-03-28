@@ -1,29 +1,40 @@
 import { useEffect, type ReactNode } from "react";
+import type { ColorScheme } from "../../features/settings/settings-schema";
 
 interface AppShellProps {
-  theme: "light" | "dark";
+  themeMode: "light" | "dark";
+  colorScheme: ColorScheme;
   tabStrip: ReactNode;
   commandBar: ReactNode;
   workspace: ReactNode;
   statusBar: ReactNode;
 }
 
-export function AppShell({ theme, tabStrip, commandBar, workspace, statusBar }: AppShellProps) {
+export function AppShell({
+  themeMode,
+  colorScheme,
+  tabStrip,
+  commandBar,
+  workspace,
+  statusBar,
+}: AppShellProps) {
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-    document.body.classList.toggle("theme-dark", theme === "dark");
+    document.documentElement.setAttribute("data-theme-mode", themeMode);
+    document.documentElement.setAttribute("data-color-scheme", colorScheme);
+    document.body.classList.toggle("theme-dark", themeMode === "dark");
 
     return () => {
-      document.documentElement.removeAttribute("data-theme");
+      document.documentElement.removeAttribute("data-theme-mode");
+      document.documentElement.removeAttribute("data-color-scheme");
       document.body.classList.remove("theme-dark");
     };
-  }, [theme]);
+  }, [colorScheme, themeMode]);
 
   return (
     // Theme remains a class so the token layer can swap colors without extra JS.
     <div
       data-testid="app-shell"
-      className={`flex h-screen h-dvh w-full flex-col overflow-hidden bg-app-bg text-app-text antialiased ${theme === "dark" ? "theme-dark" : ""}`}
+      className={`color-scheme-${colorScheme} flex h-screen h-dvh w-full flex-col overflow-hidden bg-app-bg text-app-text antialiased ${themeMode === "dark" ? "theme-dark" : ""}`}
     >
       <div className="shrink-0">{tabStrip}</div>
       <div className="shrink-0">{commandBar}</div>

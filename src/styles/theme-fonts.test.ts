@@ -45,9 +45,24 @@ describe("theme fonts", () => {
       "utf8",
     );
 
+    expect(tailwindCss).toContain(':root[data-color-scheme="standard"][data-theme-mode="dark"]');
     expect(tailwindCss).toContain("--surface-base: #151515");
     expect(tailwindCss).toContain("--surface-subtle: #252525");
     expect(tailwindCss).toContain("--text-secondary: #c7c7c7");
     expect(tailwindCss).toContain("--accent: #b9b9b9");
+  });
+
+  it("defines paired light and dark tokens for every supported color scheme", () => {
+    const tailwindCss = readFileSync(
+      path.join(rootDirectory, "src", "styles", "tailwind.css"),
+      "utf8",
+    );
+
+    expect(tailwindCss).toContain(':root[data-color-scheme="standard"][data-theme-mode="light"]');
+    expect(tailwindCss).toContain(':root[data-color-scheme="sepia"][data-theme-mode="light"]');
+    expect(tailwindCss).toContain(':root[data-color-scheme="sepia"][data-theme-mode="dark"]');
+    expect(tailwindCss).toContain(':root[data-color-scheme="high-contrast"][data-theme-mode="light"]');
+    expect(tailwindCss).toContain(':root[data-color-scheme="high-contrast"][data-theme-mode="dark"]');
+    expect(tailwindCss).toContain("--shadow-ambient");
   });
 });

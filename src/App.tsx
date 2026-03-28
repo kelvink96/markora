@@ -41,7 +41,6 @@ export default function App() {
   const hydrateSettings = useSettingsStore((state) => state.hydrate);
   const updateAppearance = useSettingsStore((state) => state.updateAppearance);
   const updateEditor = useSettingsStore((state) => state.updateEditor);
-  const updatePreview = useSettingsStore((state) => state.updatePreview);
   const updateFiles = useSettingsStore((state) => state.updateFiles);
   const templateDraft = useSettingsStore((state) => state.templateDraft);
   const setTemplateDraft = useSettingsStore((state) => state.setTemplateDraft);
@@ -238,10 +237,6 @@ export default function App() {
           updateEditor(editor);
           void persistCurrentSettings();
         }}
-        onSavePreview={(preview) => {
-          updatePreview(preview);
-          void persistCurrentSettings();
-        }}
         onSaveFiles={(files) => {
           updateFiles(files);
           void persistCurrentSettings();
@@ -275,7 +270,8 @@ export default function App() {
 
   return (
     <AppShell
-      theme={theme}
+      themeMode={theme}
+      colorScheme={settings.appearance.colorScheme}
       tabStrip={activeScreen === "workspace" ? tabStrip : null}
       commandBar={activeScreen === "workspace" ? commandBar : null}
       workspace={workspace}

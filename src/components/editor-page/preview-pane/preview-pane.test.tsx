@@ -46,19 +46,12 @@ describe("PreviewPane", () => {
     );
   });
 
-  it("applies the selected reader theme preset to the preview surface", async () => {
-    const settings = createDefaultSettings();
-    settings.preview.readerTheme = "sepia";
-    useSettingsStore.setState({
-      isHydrated: true,
-      settings,
-      templateDraft: settings.authoring.newDocumentTemplate,
-    });
-
+  it("uses the shared app preview surface tokens instead of a preview-only theme class", async () => {
     render(<PreviewPane />);
 
     const content = await screen.findByTestId("preview-content");
-    expect(content).toHaveAttribute("data-reader-theme", "sepia");
-    expect(content).toHaveClass("preview-reader-theme", "preview-reader-theme-sepia");
+    expect(content).not.toHaveAttribute("data-reader-theme");
+    expect(content).not.toHaveClass("preview-reader-theme");
+    expect(content).toHaveClass("bg-app-preview");
   });
 });

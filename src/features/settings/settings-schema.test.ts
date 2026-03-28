@@ -6,6 +6,10 @@ describe("settings-schema", () => {
     expect(defaultSettings.appearance.theme).toBe("system");
   });
 
+  it("defaults to the standard color scheme", () => {
+    expect(defaultSettings.appearance.colorScheme).toBe("standard");
+  });
+
   it("defaults the preview to the paper reader theme", () => {
     expect(defaultSettings.preview.readerTheme).toBe("paper");
   });

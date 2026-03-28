@@ -1,9 +1,9 @@
 import type {
   AppearanceSettings,
+  ColorScheme,
   EditorSettings,
   FileSettings,
   MarkoraSettings,
-  PreviewSettings,
   ThemePreference,
 } from "../../features/settings/settings-schema";
 import type { ChangeEvent, ReactNode } from "react";
@@ -25,11 +25,18 @@ interface SettingsPageProps {
   onClose: () => void;
   onSaveAppearance: (appearance: AppearanceSettings) => void;
   onSaveEditor: (editor: EditorSettings) => void;
-  onSavePreview: (preview: PreviewSettings) => void;
   onSaveFiles: (files: FileSettings) => void;
   onSaveTemplate: (value: string) => void;
   onResetTemplate: () => void;
   onResetAll: () => void;
+}
+
+function getSystemThemeMode() {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    return "light" as const;
+  }
+
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
 function SidebarButton({
@@ -76,26 +83,29 @@ function SectionCard({
   );
 }
 
-function ReaderThemeSwatch({
+function ColorSchemeSwatch({
   description,
   isSelected,
   onSelect,
+  themeMode,
   title,
   value,
 }: {
   description: string;
   isSelected: boolean;
-  onSelect: (value: PreviewSettings["readerTheme"]) => void;
+  onSelect: (value: ColorScheme) => void;
+  themeMode: "light" | "dark";
   title: string;
-  value: PreviewSettings["readerTheme"];
+  value: ColorScheme;
 }) {
   return (
     <button
       type="button"
-      data-testid={`reader-swatch-${value}`}
-      data-reader-theme={value}
+      data-testid={`scheme-swatch-${value}`}
+      data-color-scheme={value}
+      data-theme-mode={themeMode}
       onClick={() => onSelect(value)}
-      className={`preview-reader-theme preview-reader-theme-${value} rounded-app-md border p-3 text-left transition ${
+      className={`scheme-swatch rounded-app-md border p-3 text-left transition ${
         isSelected
           ? "border-[color:var(--accent-strong)] shadow-[0_0_0_1px_var(--accent-strong)]"
           : "border-[color:var(--glass-border-strong)] hover:border-[color:var(--glass-border)]"
@@ -113,17 +123,17 @@ function ReaderThemeSwatch({
           aria-hidden="true"
         />
       </div>
-      <div className="space-y-2 rounded-app-sm border border-current/10 bg-black/5 p-3">
+      <div className="space-y-2 rounded-app-sm border border-current/10 bg-[color:var(--glass-panel-strong)] p-3">
         <div className="font-[var(--font-prose)] text-sm font-semibold">Heading</div>
         <div className="font-[var(--font-prose)] text-xs opacity-80">
-          Comfortable body copy for longer reading sessions.
+          Shell, editor, and preview all follow this scheme.
         </div>
         <div className="flex items-center gap-2 text-xs opacity-80">
           <span className="h-px flex-1 bg-current/15" />
-          <span>blockquote</span>
+          <span>accent</span>
         </div>
-        <div className="inline-block rounded-app-sm bg-black/8 px-2 py-1 font-[var(--font-editor)] text-[11px]">
-          code sample
+        <div className="inline-block rounded-app-sm border border-current/10 bg-[color:var(--surface-editor)] px-2 py-1 font-[var(--font-editor)] text-[11px]">
+          ui sample
         </div>
       </div>
     </button>
@@ -181,7 +191,6 @@ export function SettingsPage({
   onClose,
   onSaveAppearance,
   onSaveEditor,
-  onSavePreview,
   onSaveFiles,
   onSaveTemplate,
   onResetTemplate,
@@ -190,20 +199,34 @@ export function SettingsPage({
   const [activeSection, setActiveSection] = useState<SettingsSection>("appearance");
   const [appearanceDraft, setAppearanceDraft] = useState(settings.appearance);
   const [editorDraft, setEditorDraft] = useState(settings.editor);
-  const [previewDraft, setPreviewDraft] = useState(settings.preview);
   const [filesDraft, setFilesDraft] = useState(settings.files);
   const [templateDraftValue, setTemplateDraftValue] = useState(templateDraft);
+  const [systemThemeMode, setSystemThemeMode] = useState<"light" | "dark">(getSystemThemeMode);
 
   useEffect(() => {
     setAppearanceDraft(settings.appearance);
     setEditorDraft(settings.editor);
-    setPreviewDraft(settings.preview);
     setFilesDraft(settings.files);
   }, [settings]);
 
   useEffect(() => {
     setTemplateDraftValue(templateDraft);
   }, [templateDraft]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia?.("(prefers-color-scheme: dark)");
+    if (!mediaQuery) return;
+
+    const handleChange = (event: MediaQueryListEvent) => {
+      setSystemThemeMode(event.matches ? "dark" : "light");
+    };
+
+    setSystemThemeMode(mediaQuery.matches ? "dark" : "light");
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, []);
+
+  const previewThemeMode = appearanceDraft.theme === "system" ? systemThemeMode : appearanceDraft.theme;
 
   const renderContent = () => {
     switch (activeSection) {
@@ -215,7 +238,7 @@ export function SettingsPage({
               description="Control the app chrome, shell theme, and supporting interface elements."
             >
               <FieldLabel htmlFor="theme-preference" helper="System follows your OS color scheme.">
-                Theme
+                Theme mode
               </FieldLabel>
               <select
                 id="theme-preference"
@@ -250,91 +273,81 @@ export function SettingsPage({
               </label>
               <SectionActions
                 canSave={hasChanges(appearanceDraft, settings.appearance)}
-                label="Save appearance"
+                label="Save theme mode"
                 onSave={() => onSaveAppearance(appearanceDraft)}
               />
             </SectionCard>
 
             <SectionCard
-              title="Reader Color Scheme"
-              description="Choose how the preview reading surface feels without changing the rest of the app."
+              title="Color Scheme"
+              description="Choose the palette character that the whole app shell will use in both light and dark modes."
             >
               <FieldLabel
-                htmlFor="reader-color-scheme"
-                helper="These presets are wired directly to the preview pane so the swatches match the reading surface."
+                htmlFor="color-scheme"
+                helper="Each scheme adapts to the current theme mode, so the shell, editor, and preview stay aligned."
               >
-                Reader color scheme
+                Color scheme
               </FieldLabel>
               <select
-                id="reader-color-scheme"
+                id="color-scheme"
                 className="rounded-app-sm border border-[color:var(--glass-border)] bg-[color:var(--glass-elevated)] px-3 py-2 backdrop-blur-[var(--glass-blur-soft)]"
-                value={previewDraft.readerTheme}
+                value={appearanceDraft.colorScheme}
                 onChange={(event) =>
-                  setPreviewDraft((current) => ({
+                  setAppearanceDraft((current) => ({
                     ...current,
-                    readerTheme: event.target.value as PreviewSettings["readerTheme"],
+                    colorScheme: event.target.value as ColorScheme,
                   }))
                 }
               >
-                <option value="paper">Paper</option>
-                <option value="dark">Dark</option>
+                <option value="standard">Standard</option>
                 <option value="sepia">Sepia</option>
                 <option value="high-contrast">High Contrast</option>
               </select>
               <div className="grid gap-3 md:grid-cols-2">
-                <ReaderThemeSwatch
-                  title="Paper"
-                  description="Neutral and airy"
-                  value="paper"
-                  isSelected={previewDraft.readerTheme === "paper"}
+                <ColorSchemeSwatch
+                  title="Standard"
+                  description="Default Markora neutral"
+                  themeMode={previewThemeMode}
+                  value="standard"
+                  isSelected={appearanceDraft.colorScheme === "standard"}
                   onSelect={(value) =>
-                    setPreviewDraft((current) => ({
+                    setAppearanceDraft((current) => ({
                       ...current,
-                      readerTheme: value,
+                      colorScheme: value,
                     }))
                   }
                 />
-                <ReaderThemeSwatch
-                  title="Dark"
-                  description="Low-glare night reading"
-                  value="dark"
-                  isSelected={previewDraft.readerTheme === "dark"}
-                  onSelect={(value) =>
-                    setPreviewDraft((current) => ({
-                      ...current,
-                      readerTheme: value,
-                    }))
-                  }
-                />
-                <ReaderThemeSwatch
+                <ColorSchemeSwatch
                   title="Sepia"
-                  description="Warm editorial feel"
+                  description="Warm editorial palette"
+                  themeMode={previewThemeMode}
                   value="sepia"
-                  isSelected={previewDraft.readerTheme === "sepia"}
+                  isSelected={appearanceDraft.colorScheme === "sepia"}
                   onSelect={(value) =>
-                    setPreviewDraft((current) => ({
+                    setAppearanceDraft((current) => ({
                       ...current,
-                      readerTheme: value,
+                      colorScheme: value,
                     }))
                   }
                 />
-                <ReaderThemeSwatch
+                <ColorSchemeSwatch
                   title="High Contrast"
                   description="Sharper accessibility-first contrast"
+                  themeMode={previewThemeMode}
                   value="high-contrast"
-                  isSelected={previewDraft.readerTheme === "high-contrast"}
+                  isSelected={appearanceDraft.colorScheme === "high-contrast"}
                   onSelect={(value) =>
-                    setPreviewDraft((current) => ({
+                    setAppearanceDraft((current) => ({
                       ...current,
-                      readerTheme: value,
+                      colorScheme: value,
                     }))
                   }
                 />
               </div>
               <SectionActions
-                canSave={hasChanges(previewDraft, settings.preview)}
-                label="Save reader scheme"
-                onSave={() => onSavePreview(previewDraft)}
+                canSave={hasChanges(appearanceDraft, settings.appearance)}
+                label="Save color scheme"
+                onSave={() => onSaveAppearance(appearanceDraft)}
               />
             </SectionCard>
           </div>
@@ -343,13 +356,13 @@ export function SettingsPage({
         return (
           <SectionCard
             title="Preview"
-            description="Preview content fills the pane, while reader color schemes now live under Appearance."
+            description="Preview content fills the pane and inherits the active app color scheme."
           >
             <p className="text-sm text-app-text/70">
               Preview content uses the full available width of the pane.
             </p>
             <p className="text-sm text-app-text/70">
-              Use Appearance to choose the reader color scheme and compare the presets visually.
+              Use Appearance to switch app color schemes and compare the shell presets visually.
             </p>
           </SectionCard>
         );

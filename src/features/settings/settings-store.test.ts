@@ -20,9 +20,14 @@ describe("settings-store", () => {
   });
 
   it("updates nested settings fields", () => {
-    useSettingsStore.getState().updateAppearance({ theme: "light", showStatusBar: false });
+    useSettingsStore.getState().updateAppearance({
+      theme: "light",
+      colorScheme: "sepia",
+      showStatusBar: false,
+    });
 
     expect(useSettingsStore.getState().settings.appearance.theme).toBe("light");
+    expect(useSettingsStore.getState().settings.appearance.colorScheme).toBe("sepia");
     expect(useSettingsStore.getState().settings.appearance.showStatusBar).toBe(false);
   });
 

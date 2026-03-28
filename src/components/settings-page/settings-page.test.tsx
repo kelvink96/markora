@@ -16,7 +16,6 @@ describe("SettingsPage", () => {
         onClose={() => {}}
         onSaveAppearance={() => {}}
         onSaveEditor={() => {}}
-        onSavePreview={() => {}}
         onSaveFiles={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
@@ -54,7 +53,6 @@ describe("SettingsPage", () => {
         onClose={() => {}}
         onSaveAppearance={() => {}}
         onSaveEditor={() => {}}
-        onSavePreview={() => {}}
         onSaveFiles={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
@@ -72,7 +70,7 @@ describe("SettingsPage", () => {
     expect(screen.getByText("Version 0.1.0")).toBeInTheDocument();
   });
 
-  it("keeps reader color scheme controls inside the appearance section", async () => {
+  it("keeps app color scheme controls inside the appearance section", async () => {
     const user = userEvent.setup();
     const settings = createDefaultSettings();
 
@@ -84,7 +82,6 @@ describe("SettingsPage", () => {
         onClose={() => {}}
         onSaveAppearance={() => {}}
         onSaveEditor={() => {}}
-        onSavePreview={() => {}}
         onSaveFiles={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
@@ -95,8 +92,8 @@ describe("SettingsPage", () => {
     await user.click(screen.getByRole("button", { name: "Appearance" }));
 
     expect(screen.getByRole("heading", { name: "Appearance", level: 3 })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Reader Color Scheme", level: 3 })).toBeInTheDocument();
-    expect(screen.getByLabelText(/Reader color scheme/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Color Scheme", level: 3 })).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Color scheme/i)).toBeInTheDocument();
   });
 
   it("lets the user save the template draft explicitly", async () => {
@@ -112,7 +109,6 @@ describe("SettingsPage", () => {
         onClose={() => {}}
         onSaveAppearance={() => {}}
         onSaveEditor={() => {}}
-        onSavePreview={() => {}}
         onSaveFiles={() => {}}
         onSaveTemplate={onSaveTemplate}
         onResetTemplate={() => {}}
@@ -141,7 +137,6 @@ describe("SettingsPage", () => {
         onClose={() => {}}
         onSaveAppearance={() => {}}
         onSaveEditor={() => {}}
-        onSavePreview={() => {}}
         onSaveFiles={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
@@ -170,7 +165,6 @@ describe("SettingsPage", () => {
         onClose={() => {}}
         onSaveAppearance={() => {}}
         onSaveEditor={onSaveEditor}
-        onSavePreview={() => {}}
         onSaveFiles={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
@@ -188,10 +182,10 @@ describe("SettingsPage", () => {
     );
   });
 
-  it("saves the reader color scheme explicitly from the appearance section", async () => {
+  it("saves the app color scheme explicitly from the appearance section", async () => {
     const user = userEvent.setup();
     const settings = createDefaultSettings();
-    const onSavePreview = vi.fn();
+    const onSaveAppearance = vi.fn();
 
     render(
       <SettingsPage
@@ -199,9 +193,8 @@ describe("SettingsPage", () => {
         templateDraft={settings.authoring.newDocumentTemplate}
         version="0.1.0"
         onClose={() => {}}
-        onSaveAppearance={() => {}}
+        onSaveAppearance={onSaveAppearance}
         onSaveEditor={() => {}}
-        onSavePreview={onSavePreview}
         onSaveFiles={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
@@ -210,16 +203,16 @@ describe("SettingsPage", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "Appearance" }));
-    await user.selectOptions(screen.getByLabelText(/Reader color scheme/i), "sepia");
-    expect(onSavePreview).not.toHaveBeenCalled();
-    await user.click(screen.getByRole("button", { name: "Save reader scheme" }));
+    await user.selectOptions(screen.getByLabelText(/^Color scheme/i), "sepia");
+    expect(onSaveAppearance).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "Save color scheme" }));
 
-    expect(onSavePreview).toHaveBeenCalledWith(
-      expect.objectContaining({ readerTheme: "sepia" }),
+    expect(onSaveAppearance).toHaveBeenCalledWith(
+      expect.objectContaining({ colorScheme: "sepia" }),
     );
   });
 
-  it("renders visual preview cards for each reader color scheme", () => {
+  it("renders visual preview cards for each app color scheme", () => {
     const settings = createDefaultSettings();
 
     render(
@@ -230,7 +223,6 @@ describe("SettingsPage", () => {
         onClose={() => {}}
         onSaveAppearance={() => {}}
         onSaveEditor={() => {}}
-        onSavePreview={() => {}}
         onSaveFiles={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
@@ -238,9 +230,10 @@ describe("SettingsPage", () => {
       />,
     );
 
-    expect(screen.getAllByTestId(/reader-swatch-/i)).toHaveLength(4);
-    expect(screen.getByTestId("reader-swatch-paper")).toHaveAttribute("data-reader-theme", "paper");
-    expect(screen.getByTestId("reader-swatch-sepia")).toHaveClass("preview-reader-theme-sepia");
+    expect(screen.getAllByTestId(/scheme-swatch-/i)).toHaveLength(3);
+    expect(screen.getByTestId("scheme-swatch-standard")).toHaveAttribute("data-color-scheme", "standard");
+    expect(screen.getByTestId("scheme-swatch-sepia")).toHaveAttribute("data-color-scheme", "sepia");
+    expect(screen.getByTestId("scheme-swatch-sepia")).toHaveAttribute("data-theme-mode", "light");
   });
 
   it("returns to the workspace from the back action", async () => {
@@ -256,7 +249,6 @@ describe("SettingsPage", () => {
         onClose={onClose}
         onSaveAppearance={() => {}}
         onSaveEditor={() => {}}
-        onSavePreview={() => {}}
         onSaveFiles={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}

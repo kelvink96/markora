@@ -1,7 +1,9 @@
 export type ThemePreference = "system" | "light" | "dark";
+export type ColorScheme = "standard" | "sepia" | "high-contrast";
 
 export interface AppearanceSettings {
   theme: ThemePreference;
+  colorScheme: ColorScheme;
   editorFontSize: number;
   previewFontScale: number;
   editorLineHeight: number;
@@ -48,6 +50,7 @@ export const defaultNewDocumentTemplate =
 export const defaultSettings: MarkoraSettings = {
   appearance: {
     theme: "system",
+    colorScheme: "standard",
     editorFontSize: 15,
     previewFontScale: 1,
     editorLineHeight: 1.6,

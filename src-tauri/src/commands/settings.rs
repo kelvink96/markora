@@ -15,10 +15,20 @@ pub enum ThemePreference {
     Dark,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub enum ColorScheme {
+    Standard,
+    Sepia,
+    HighContrast,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct AppearanceSettings {
     pub theme: ThemePreference,
+    #[serde(default = "default_color_scheme")]
+    pub color_scheme: ColorScheme,
     pub editor_font_size: u16,
     pub preview_font_scale: u16,
     pub editor_line_height: u16,
@@ -91,10 +101,15 @@ fn default_reader_theme() -> PreviewReaderTheme {
     PreviewReaderTheme::Paper
 }
 
+fn default_color_scheme() -> ColorScheme {
+    ColorScheme::Standard
+}
+
 pub fn default_settings() -> MarkoraSettings {
     MarkoraSettings {
         appearance: AppearanceSettings {
             theme: ThemePreference::System,
+            color_scheme: default_color_scheme(),
             editor_font_size: 15,
             preview_font_scale: 100,
             editor_line_height: 160,
@@ -282,6 +297,51 @@ mod tests {
         let settings = load_settings_from_dir(&temp_dir).unwrap();
 
         assert_eq!(settings.preview.reader_theme, PreviewReaderTheme::Paper);
+
+        fs::remove_dir_all(temp_dir).ok();
+    }
+
+    #[test]
+    fn load_settings_defaults_missing_color_scheme_for_existing_files() {
+        let temp_dir = temp_settings_dir();
+        let path = settings_file_path(&temp_dir);
+        let legacy_settings = r##"{
+  "appearance": {
+    "theme": "system",
+    "editorFontSize": 15,
+    "previewFontScale": 100,
+    "editorLineHeight": 160,
+    "splitRatio": 50,
+    "showStatusBar": true
+  },
+  "editor": {
+    "wordWrap": true,
+    "lineNumbers": false,
+    "highlightActiveLine": true,
+    "tabSize": 2,
+    "softTabs": true
+  },
+  "preview": {
+    "syncScroll": true,
+    "openLinksExternally": true,
+    "contentWidth": "normal",
+    "readerTheme": "paper"
+  },
+  "files": {
+    "autosave": false,
+    "restorePreviousSession": false,
+    "confirmOnUnsavedClose": true
+  },
+  "authoring": {
+    "newDocumentTemplate": "# Legacy"
+  }
+}"##;
+
+        fs::write(&path, legacy_settings).unwrap();
+
+        let settings = load_settings_from_dir(&temp_dir).unwrap();
+
+        assert_eq!(settings.appearance.color_scheme, ColorScheme::Standard);
 
         fs::remove_dir_all(temp_dir).ok();
     }

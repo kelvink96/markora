@@ -1,4 +1,5 @@
 import type { ChangeEvent } from "react";
+import { RotateCcw, Save } from "lucide-react";
 import { Button } from "../shared/button";
 import { FieldLabel, SectionCard } from "./settings-page-shared";
 
@@ -30,10 +31,17 @@ export function TemplateSettingsSection({
         }
       />
       <div className="flex flex-wrap gap-3">
-        <Button onClick={() => onSave(templateDraft)}>
+        <Button
+          leftSection={<Save data-testid="settings-save-icon" className="size-4" />}
+          onClick={() => onSave(templateDraft)}
+        >
           Save template
         </Button>
-        <Button variant="ghost" onClick={onReset}>
+        <Button
+          variant="ghost"
+          leftSection={<RotateCcw data-testid="settings-reset-icon" className="size-4" />}
+          onClick={onReset}
+        >
           Reset template
         </Button>
       </div>

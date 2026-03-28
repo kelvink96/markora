@@ -1,3 +1,4 @@
+import { AlertTriangle } from "lucide-react";
 import { Button } from "../shared/button";
 import { SectionCard } from "./settings-page-shared";
 
@@ -15,6 +16,7 @@ export function AdvancedSettingsSection({
     >
       <Button
         variant="danger"
+        leftSection={<AlertTriangle data-testid="settings-danger-icon" className="size-4" />}
         onClick={() => {
           if (window.confirm("Reset all settings to their defaults?")) {
             onResetAll();

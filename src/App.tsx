@@ -9,6 +9,7 @@ import { PreviewPane } from "./components/editor-page/preview-pane";
 import { SettingsPage } from "./components/settings-page/settings-page";
 import { Workspace } from "./components/editor-page/workspace";
 import { FooterStatusBar } from "./components/editor-page/footer-status-bar";
+import { EmptyWorkspaceState } from "./components/editor-page/empty-workspace-state";
 import { Button } from "./components/shared/button";
 import { Dialog } from "./components/shared/dialog";
 import { getWordCount } from "./features/document/document-actions";
@@ -75,7 +76,11 @@ export default function App() {
 
   const handleSaveAs = useCallback(async () => {
     // getState() gives the latest store snapshot without waiting for React to re-render.
-    const { content } = useDocumentStore.getState();
+    const { activeDocumentId, content } = useDocumentStore.getState();
+    if (!activeDocumentId) {
+      return;
+    }
+
     const savePath = await save({
       filters: [{ name: "Markdown", extensions: ["md"] }],
       defaultPath: "untitled.md",
@@ -90,7 +95,10 @@ export default function App() {
 
   const handleSave = useCallback(async () => {
     // Read from the store directly so save always uses the newest content and file path.
-    const { filePath, content } = useDocumentStore.getState();
+    const { activeDocumentId, filePath, content } = useDocumentStore.getState();
+    if (!activeDocumentId) {
+      return;
+    }
 
     if (filePath) {
       await invoke("write_file", { path: filePath, content });
@@ -223,9 +231,10 @@ export default function App() {
 
   const { openDocuments, activeDocumentId } = useDocumentStore();
   const content = useDocumentStore((state) => state.content);
+  const hasOpenDocuments = openDocuments.length > 0;
   const wordCount = getWordCount(content);
 
-  const tabStrip = (
+  const tabStrip = hasOpenDocuments ? (
     <TabStrip
       tabs={openDocuments}
       activeTabId={activeDocumentId}
@@ -233,7 +242,7 @@ export default function App() {
       onCloseTab={handleCloseTab}
       onNewTab={handleNew}
     />
-  );
+  ) : null;
 
   const commandBar = (
     <TopBar
@@ -290,7 +299,11 @@ export default function App() {
         }}
       />
     ) : (
-      <Workspace left={<EditorPane theme={theme} />} right={<PreviewPane />} viewMode={viewMode} />
+      hasOpenDocuments ? (
+        <Workspace left={<EditorPane theme={theme} />} right={<PreviewPane />} viewMode={viewMode} />
+      ) : (
+        <EmptyWorkspaceState onNewDocument={handleNew} onOpenFile={() => void handleOpen()} />
+      )
     )
   );
   const statusBar = (

@@ -97,6 +97,16 @@ describe("DocumentStore", () => {
     expect(useDocumentStore.getState().openDocuments).toHaveLength(1);
   });
 
+  it("allows closing the last open tab and resets active document fields", () => {
+    useDocumentStore.getState().closeDocument("document-1");
+
+    expect(useDocumentStore.getState().openDocuments).toHaveLength(0);
+    expect(useDocumentStore.getState().activeDocumentId).toBe("");
+    expect(useDocumentStore.getState().content).toBe("");
+    expect(useDocumentStore.getState().filePath).toBeNull();
+    expect(useDocumentStore.getState().isDirty).toBe(false);
+  });
+
   it("keeps dirty state isolated per tab", () => {
     const firstId = useDocumentStore.getState().activeDocumentId;
     const secondId = useDocumentStore.getState().addDocument({

@@ -14,6 +14,13 @@ export interface DocumentTab {
   isDirty: boolean;
 }
 
+const emptyDocumentState = {
+  activeDocumentId: "",
+  content: "",
+  filePath: null,
+  isDirty: false,
+} as const;
+
 interface DocumentStore {
   // Backward-compatible active document fields used across the current app.
   content: string;
@@ -67,6 +74,10 @@ function syncActiveDocument(state: {
   openDocuments: DocumentTab[];
   activeDocumentId: string;
 }) {
+  if (state.openDocuments.length === 0) {
+    return emptyDocumentState;
+  }
+
   const activeDocument =
     state.openDocuments.find((document) => document.id === state.activeDocumentId) ??
     state.openDocuments[0];
@@ -179,6 +190,10 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => ({
   },
   selectDocument: (id) =>
     set((state) => {
+      if (!id) {
+        return state;
+      }
+
       if (!state.openDocuments.some((document) => document.id === id)) {
         return state;
       }
@@ -187,7 +202,7 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => ({
     }),
   closeDocument: (id) =>
     set((state) => {
-      if (state.openDocuments.length === 1) {
+      if (state.openDocuments.length === 0) {
         return state;
       }
 
@@ -197,6 +212,13 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => ({
       }
 
       const openDocuments = state.openDocuments.filter((document) => document.id !== id);
+      if (openDocuments.length === 0) {
+        return {
+          openDocuments,
+          ...emptyDocumentState,
+        };
+      }
+
       const fallbackDocument =
         state.activeDocumentId === id
           ? openDocuments[Math.max(0, closingIndex - 1)] ?? openDocuments[0]

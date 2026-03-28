@@ -233,10 +233,7 @@ describe("App", () => {
   it("closes a clean active tab without confirmation", async () => {
     const user = userEvent.setup();
     useDocumentStore.setState({
-      openDocuments: [
-        { id: "document-1", content: untitledStarterContent, filePath: null, isDirty: false },
-        { id: "document-2", content: "# Clean", filePath: "D:\\notes\\clean.md", isDirty: false },
-      ],
+      openDocuments: [{ id: "document-2", content: "# Clean", filePath: "D:\\notes\\clean.md", isDirty: false }],
       activeDocumentId: "document-2",
       content: "# Clean",
       filePath: "D:\\notes\\clean.md",
@@ -245,9 +242,12 @@ describe("App", () => {
     render(<App />);
     await user.click(screen.getByRole("button", { name: "close-active" }));
 
-    expect(useDocumentStore.getState().openDocuments).toHaveLength(1);
-    expect(useDocumentStore.getState().activeDocumentId).toBe("document-1");
+    expect(useDocumentStore.getState().openDocuments).toHaveLength(0);
+    expect(useDocumentStore.getState().activeDocumentId).toBe("");
     expect(screen.queryByRole("dialog", { name: "Discard unsaved changes?" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "No document open" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "New document" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Open file" })).toBeInTheDocument();
   });
 
   it("selects an already-open file when opening the same path again", async () => {
@@ -297,6 +297,54 @@ describe("App", () => {
     expect(useDocumentStore.getState().openDocuments).toHaveLength(3);
     expect(useDocumentStore.getState().activeDocumentId).not.toBe("document-2");
     expect(screen.queryByRole("dialog", { name: "Discard unsaved changes?" })).not.toBeInTheDocument();
+  });
+
+  it("creates a new document from the empty state CTA", async () => {
+    const user = userEvent.setup();
+    useDocumentStore.setState({
+      openDocuments: [],
+      activeDocumentId: "",
+      content: "",
+      filePath: null,
+      isDirty: false,
+    });
+
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "New document" }));
+
+    expect(useDocumentStore.getState().openDocuments).toHaveLength(1);
+    expect(useDocumentStore.getState().activeDocumentId).toBe("document-1");
+    expect(useDocumentStore.getState().content).toBe(untitledStarterContent);
+  });
+
+  it("opens a file from the empty state CTA", async () => {
+    const user = userEvent.setup();
+    useDocumentStore.setState({
+      openDocuments: [],
+      activeDocumentId: "",
+      content: "",
+      filePath: null,
+      isDirty: false,
+    });
+    openMock.mockResolvedValue("D:\\notes\\empty-state.md");
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === "load_settings") {
+        return createDefaultSettings();
+      }
+
+      if (command === "read_file") {
+        return "# Empty state open";
+      }
+
+      return undefined;
+    });
+
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Open file" }));
+
+    expect(useDocumentStore.getState().openDocuments).toHaveLength(1);
+    expect(useDocumentStore.getState().filePath).toBe("D:\\notes\\empty-state.md");
+    expect(useDocumentStore.getState().content).toBe("# Empty state open");
   });
 
   it("cycles to the next tab with ctrl+tab", () => {

@@ -1,3 +1,23 @@
+import {
+  CircleHelp,
+  Clipboard,
+  Copy,
+  Eye,
+  FileInput,
+  FileOutput,
+  FolderOpen,
+  Info,
+  MoonStar,
+  PanelLeftClose,
+  PanelsTopLeft,
+  Redo2,
+  Save,
+  Scissors,
+  Settings2,
+  SquarePen,
+  Type,
+  Undo2,
+} from "lucide-react";
 import { MenuBar } from "../../shared/menu-bar";
 import { IconButton } from "../../shared/icon-button";
 import { FormattingToolbar } from "../formatting-toolbar";
@@ -14,51 +34,72 @@ function getModifierLabel() {
 }
 
 interface TopBarProps {
-  onOpenSettings: () => void;
-  onThemeToggle: () => void;
-  onNew: () => void;
-  onOpen: () => void;
-  onSave: () => void;
-  onSaveAs: () => void;
+  onOpenSettings?: () => void;
+  onOpenKeyboardShortcuts?: () => void;
+  onOpenAbout?: () => void;
+  onThemeToggle?: () => void;
+  onNew?: () => void;
+  onOpen?: () => void;
+  onSave?: () => void;
+  onSaveAs?: () => void;
+  onCloseTab?: () => void;
   viewMode: WorkspaceViewMode;
   onViewModeChange: (mode: WorkspaceViewMode) => void;
 }
 
 export function TopBar({
-  onOpenSettings,
-  onThemeToggle,
-  onNew,
-  onOpen,
-  onSave,
-  onSaveAs,
+  onOpenSettings = () => {},
+  onOpenKeyboardShortcuts = () => {},
+  onOpenAbout = () => {},
+  onThemeToggle = () => {},
+  onNew = () => {},
+  onOpen = () => {},
+  onSave = () => {},
+  onSaveAs = () => {},
+  onCloseTab = () => {},
   viewMode,
   onViewModeChange,
 }: TopBarProps) {
   const runToolbarAction = useEditorCommandState((state) => state.runToolbarAction);
+  const runEditAction = useEditorCommandState((state) => state.runEditAction);
   const modifierLabel = getModifierLabel();
   const menuGroups = [
     {
       label: "File",
       items: [
-        { label: "New", shortcut: `${modifierLabel}+N`, onSelect: onNew },
-        { label: "Open", shortcut: `${modifierLabel}+O`, onSelect: onOpen },
-        { label: "Save", shortcut: `${modifierLabel}+S`, onSelect: onSave },
-        { label: "Save As", shortcut: `${modifierLabel}+Shift+S`, onSelect: onSaveAs },
+        { label: "New", icon: <SquarePen className="size-4" />, shortcut: `${modifierLabel}+N`, onSelect: onNew },
+        { label: "Open", icon: <FolderOpen className="size-4" />, shortcut: `${modifierLabel}+O`, onSelect: onOpen },
+        { label: "Save", icon: <Save className="size-4" />, shortcut: `${modifierLabel}+S`, onSelect: onSave },
+        { label: "Save As", icon: <FileOutput className="size-4" />, shortcut: `${modifierLabel}+Shift+S`, onSelect: onSaveAs },
+        { label: "Close Tab", icon: <PanelLeftClose className="size-4" />, onSelect: onCloseTab },
       ],
     },
     {
       label: "Edit",
-      items: [{ label: "Undo", disabled: true }, { label: "Redo", disabled: true }],
+      items: [
+        { label: "Undo", icon: <Undo2 className="size-4" />, shortcut: `${modifierLabel}+Z`, onSelect: () => void runEditAction("undo") },
+        { label: "Redo", icon: <Redo2 className="size-4" />, shortcut: `${modifierLabel}+Shift+Z`, onSelect: () => void runEditAction("redo") },
+        { label: "Cut", icon: <Scissors className="size-4" />, shortcut: `${modifierLabel}+X`, onSelect: () => void runEditAction("cut") },
+        { label: "Copy", icon: <Copy className="size-4" />, shortcut: `${modifierLabel}+C`, onSelect: () => void runEditAction("copy") },
+        { label: "Paste", icon: <Clipboard className="size-4" />, shortcut: `${modifierLabel}+V`, onSelect: () => void runEditAction("paste") },
+        { label: "Select All", icon: <Type className="size-4" />, shortcut: `${modifierLabel}+A`, onSelect: () => void runEditAction("selectAll") },
+      ],
     },
     {
       label: "View",
-      items: [{ label: "Theme", onSelect: onThemeToggle }, { label: "Live Preview", disabled: true }],
+      items: [
+        { label: "Edit View", icon: <FileInput className="size-4" />, onSelect: () => onViewModeChange("edit") },
+        { label: "Split View", icon: <PanelsTopLeft className="size-4" />, onSelect: () => onViewModeChange("split") },
+        { label: "Preview View", icon: <Eye className="size-4" />, onSelect: () => onViewModeChange("preview") },
+        { label: "Toggle Theme", icon: <MoonStar className="size-4" />, onSelect: onThemeToggle },
+        { label: "Open Settings", icon: <Settings2 className="size-4" />, onSelect: onOpenSettings },
+      ],
     },
     {
       label: "Help",
       items: [
-        { label: "Keyboard Shortcuts", disabled: true },
-        { label: "About Markora", disabled: true },
+        { label: "Keyboard Shortcuts", icon: <CircleHelp className="size-4" />, onSelect: onOpenKeyboardShortcuts },
+        { label: "About Markora", icon: <Info className="size-4" />, onSelect: onOpenAbout },
       ],
     },
   ];

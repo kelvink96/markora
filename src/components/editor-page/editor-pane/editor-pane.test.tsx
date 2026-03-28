@@ -53,6 +53,11 @@ const { mockState } = vi.hoisted(() => {
   };
 });
 
+const { clipboardReadTextMock, clipboardWriteTextMock } = vi.hoisted(() => ({
+  clipboardReadTextMock: vi.fn(),
+  clipboardWriteTextMock: vi.fn(),
+}));
+
 vi.mock("codemirror", () => ({
   EditorView: mockState.EditorView,
   basicSetup: [],
@@ -72,7 +77,7 @@ vi.mock("@codemirror/state", () => ({
       selection: {
         main: {
           head: doc.length,
-          from: doc.length,
+          from: 0,
           to: doc.length,
         },
       },
@@ -95,10 +100,30 @@ vi.mock("@codemirror/view", () => ({
 
 vi.mock("@codemirror/lang-markdown", () => ({ markdown: vi.fn(() => ({})) }));
 vi.mock("@codemirror/theme-one-dark", () => ({ oneDark: {} }));
+vi.mock("@codemirror/commands", () => ({
+  undo: vi.fn((view: { dispatch: (transaction: unknown) => void }) => {
+    view.dispatch({ annotation: "undo" });
+    return true;
+  }),
+  redo: vi.fn((view: { dispatch: (transaction: unknown) => void }) => {
+    view.dispatch({ annotation: "redo" });
+    return true;
+  }),
+  selectAll: vi.fn((view: { dispatch: (transaction: unknown) => void }) => {
+    view.dispatch({ selection: "all" });
+    return true;
+  }),
+}));
+vi.mock("@tauri-apps/plugin-clipboard-manager", () => ({
+  readText: clipboardReadTextMock,
+  writeText: clipboardWriteTextMock,
+}));
 import { EditorPane } from "./editor-pane";
 
 describe("EditorPane", () => {
   beforeEach(() => {
+    clipboardReadTextMock.mockReset();
+    clipboardWriteTextMock.mockReset();
     const settings = createDefaultSettings();
     useSettingsStore.setState({
       isHydrated: true,
@@ -137,6 +162,42 @@ describe("EditorPane", () => {
     });
   });
 
+  it("applies edit actions through the editor command bridge", async () => {
+    render(<EditorPane theme="light" />);
+
+    await act(async () => {
+      await useEditorCommandState.getState().runEditAction("selectAll");
+    });
+
+    expect(mockState.dispatchSpy).toHaveBeenCalled();
+  });
+
+  it("writes selected text through the tauri clipboard plugin when copying", async () => {
+    render(<EditorPane theme="light" />);
+
+    await act(async () => {
+      await useEditorCommandState.getState().runEditAction("copy");
+    });
+
+    expect(clipboardWriteTextMock).toHaveBeenCalled();
+  });
+
+  it("reads text through the tauri clipboard plugin when pasting", async () => {
+    clipboardReadTextMock.mockResolvedValue("from clipboard");
+    render(<EditorPane theme="light" />);
+
+    await act(async () => {
+      await useEditorCommandState.getState().runEditAction("paste");
+    });
+
+    expect(clipboardReadTextMock).toHaveBeenCalled();
+    expect(mockState.dispatchSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        changes: expect.objectContaining({ insert: "from clipboard" }),
+      }),
+    );
+  });
+
   it("renders a labeled editor region with a stable editing surface hook", () => {
     render(<EditorPane theme="light" />);
 
@@ -149,9 +210,9 @@ describe("EditorPane", () => {
       "pr-0",
     );
     expect(screen.getByTestId("editor-surface").parentElement?.parentElement).toHaveClass(
-      "rounded-app-sm",
-      "bg-[color:var(--glass-panel)]",
-      "backdrop-blur-[var(--glass-blur-soft)]",
+      "app-surface",
+      "editor-pane__panel",
+      "overflow-hidden",
     );
     expect(screen.getByTestId("editor-surface")).toHaveClass(
       "rounded-[calc(var(--radius-sm)-1px)]",

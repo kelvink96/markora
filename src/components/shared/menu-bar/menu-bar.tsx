@@ -1,4 +1,5 @@
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import type { ReactNode } from "react";
 import { MenuContent, MenuItem, MenuTrigger } from "../menu";
 
 export interface MenuBarItem {
@@ -6,6 +7,7 @@ export interface MenuBarItem {
   onSelect?: () => void;
   disabled?: boolean;
   shortcut?: string;
+  icon?: ReactNode;
 }
 
 export interface MenuBarGroup {
@@ -30,6 +32,7 @@ export function MenuBar({ groups }: MenuBarProps) {
                 disabled={item.disabled}
                 onSelect={item.onSelect}
                 shortcut={item.shortcut}
+                icon={item.icon}
               >
                 {item.label}
               </MenuItem>

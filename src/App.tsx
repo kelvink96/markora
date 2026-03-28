@@ -32,6 +32,8 @@ function getSystemThemePreference() {
 export default function App() {
   const [activeScreen, setActiveScreen] = useState<"workspace" | "settings">("workspace");
   const [pendingCloseDocumentId, setPendingCloseDocumentId] = useState<string | null>(null);
+  const [isKeyboardShortcutsOpen, setIsKeyboardShortcutsOpen] = useState(false);
+  const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
   const { openDocument, setFilePath, markClean, newDocument, selectDocument, closeDocument } =
     useDocumentStore();
   const theme = useThemeStore((state) => state.resolvedTheme);
@@ -172,6 +174,11 @@ export default function App() {
     void persistCurrentSettings();
   }, [persistCurrentSettings, toggleTheme, updateAppearance]);
 
+  const handleCloseCurrentTab = useCallback(() => {
+    const { activeDocumentId } = useDocumentStore.getState();
+    handleCloseTab(activeDocumentId);
+  }, [handleCloseTab]);
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       // Support both Windows/Linux Ctrl shortcuts and macOS Command shortcuts.
@@ -231,11 +238,14 @@ export default function App() {
   const commandBar = (
     <TopBar
       onOpenSettings={() => setActiveScreen("settings")}
+      onOpenKeyboardShortcuts={() => setIsKeyboardShortcutsOpen(true)}
+      onOpenAbout={() => setIsAboutDialogOpen(true)}
       onThemeToggle={handleThemeToggle}
       onNew={handleNew}
       onOpen={handleOpen}
       onSave={handleSave}
       onSaveAs={handleSaveAs}
+      onCloseTab={handleCloseCurrentTab}
       viewMode={viewMode}
       onViewModeChange={setViewMode}
     />
@@ -311,6 +321,32 @@ export default function App() {
         }
       >
         Closing this tab will remove any unsaved changes in the current document.
+      </Dialog>
+      <Dialog
+        open={isKeyboardShortcutsOpen}
+        title="Keyboard Shortcuts"
+        description="Quick shortcuts for the current editor workflow."
+        actions={<Button onClick={() => setIsKeyboardShortcutsOpen(false)}>Close</Button>}
+      >
+        <div className="space-y-2 text-sm text-app-text">
+          <p>`Ctrl/Cmd + N` creates a new document.</p>
+          <p>`Ctrl/Cmd + O` opens an existing file.</p>
+          <p>`Ctrl/Cmd + S` saves the current document.</p>
+          <p>`Ctrl/Cmd + Shift + S` opens Save As.</p>
+          <p>`Ctrl + Tab` moves to the next tab.</p>
+          <p>`Ctrl + Shift + Tab` moves to the previous tab.</p>
+        </div>
+      </Dialog>
+      <Dialog
+        open={isAboutDialogOpen}
+        title="About Markora"
+        description="A desktop-first markdown editor built with Tauri, React, and CodeMirror."
+        actions={<Button onClick={() => setIsAboutDialogOpen(false)}>Close</Button>}
+      >
+        <div className="space-y-2 text-sm text-app-text">
+          <p>Version {packageJson.version}</p>
+          <p>Markora keeps editing on the left and live preview on the right for a focused writing flow.</p>
+        </div>
       </Dialog>
     </>
   );

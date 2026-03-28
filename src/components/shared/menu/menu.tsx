@@ -41,11 +41,12 @@ export function MenuContent({ children, className }: MenuContentProps) {
 interface MenuItemProps {
   children: string;
   disabled?: boolean;
+  icon?: ReactNode;
   onSelect?: () => void;
   shortcut?: string;
 }
 
-export function MenuItem({ children, disabled, onSelect, shortcut }: MenuItemProps) {
+export function MenuItem({ children, disabled, icon, onSelect, shortcut }: MenuItemProps) {
   return (
     <DropdownMenu.Item asChild disabled={disabled}>
       <button
@@ -53,8 +54,11 @@ export function MenuItem({ children, disabled, onSelect, shortcut }: MenuItemPro
         type="button"
         onClick={onSelect}
       >
-        <span className="grid grid-cols-[1fr_auto] items-center gap-3">
-          <span className="truncate">{children}</span>
+        <span className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+          <span className="flex min-w-0 items-center gap-2">
+            {icon ? <span aria-hidden="true" className="shrink-0 text-app-text-muted">{icon}</span> : null}
+            <span className="truncate">{children}</span>
+          </span>
           {shortcut ? (
             <span aria-hidden="true" className="whitespace-nowrap text-[0.7rem] text-app-text-muted">
               {shortcut}

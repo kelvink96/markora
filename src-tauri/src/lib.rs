@@ -7,6 +7,8 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         // The dialog plugin gives the frontend access to native open/save pickers.
         .plugin(tauri_plugin_dialog::init())
+        // Clipboard access is routed through Tauri so editor actions use the native desktop clipboard.
+        .plugin(tauri_plugin_clipboard_manager::init())
         // Register the commands that the frontend is allowed to invoke by name.
         .invoke_handler(tauri::generate_handler![
             commands::markdown::parse_markdown,

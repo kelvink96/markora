@@ -165,6 +165,44 @@ describe("TopBar", () => {
     expect(screen.queryByRole("button", { name: "File actions" })).not.toBeInTheDocument();
   });
 
+  it("shows only real actions across the four menus", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <TopBar
+        onOpenSettings={vi.fn()}
+        onOpenKeyboardShortcuts={vi.fn()}
+        onOpenAbout={vi.fn()}
+        onCloseTab={vi.fn()}
+        onThemeToggle={vi.fn()}
+        onNew={vi.fn()}
+        onOpen={vi.fn()}
+        onSave={vi.fn()}
+        onSaveAs={vi.fn()}
+        viewMode="edit"
+        onViewModeChange={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "File" }));
+    expect(screen.getByRole("menuitem", { name: "Close Tab" })).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+
+    await user.click(screen.getByRole("button", { name: "Edit" }));
+    expect(screen.getByRole("menuitem", { name: "Undo" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Paste" })).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+
+    await user.click(screen.getByRole("button", { name: "View" }));
+    expect(screen.getByRole("menuitem", { name: "Open Settings" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Preview View" })).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+
+    await user.click(screen.getByRole("button", { name: "Help" }));
+    expect(screen.getByRole("menuitem", { name: "Keyboard Shortcuts" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "About Markora" })).toBeInTheDocument();
+  });
+
   it("keeps the utility zone focused on a single settings action", () => {
     const onViewModeChange = vi.fn();
 

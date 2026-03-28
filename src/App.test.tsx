@@ -62,10 +62,29 @@ vi.mock("./components/editor-page/workspace", () => ({
 }));
 
 vi.mock("./components/editor-page/top-bar", () => ({
-  TopBar: ({ onOpenSettings }: { onOpenSettings: () => void }) => (
+  TopBar: ({
+    onOpenSettings,
+    onOpenKeyboardShortcuts,
+    onOpenAbout,
+    onCloseTab,
+  }: {
+    onOpenSettings: () => void;
+    onOpenKeyboardShortcuts: () => void;
+    onOpenAbout: () => void;
+    onCloseTab: () => void;
+  }) => (
     <div>
       <button type="button" onClick={onOpenSettings}>
         open-settings
+      </button>
+      <button type="button" onClick={onOpenKeyboardShortcuts}>
+        open-shortcuts
+      </button>
+      <button type="button" onClick={onOpenAbout}>
+        open-about
+      </button>
+      <button type="button" onClick={onCloseTab}>
+        close-from-menu
       </button>
       <div>Top Bar</div>
     </div>
@@ -328,6 +347,35 @@ describe("App", () => {
     expect(screen.queryByText("Top Bar")).not.toBeInTheDocument();
     expect(screen.queryByText("Footer Status")).not.toBeInTheDocument();
     expect(screen.queryByText(/tabs$/)).not.toBeInTheDocument();
+  });
+
+  it("opens the keyboard shortcuts dialog from the help menu action", async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "open-shortcuts" }));
+
+    expect(screen.getByRole("dialog", { name: "Keyboard Shortcuts" })).toBeInTheDocument();
+    expect(screen.getByText(/Ctrl\/Cmd \+ N/i)).toBeInTheDocument();
+  });
+
+  it("opens the about dialog from the help menu action", async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "open-about" }));
+
+    expect(screen.getByRole("dialog", { name: "About Markora" })).toBeInTheDocument();
+    expect(screen.getByText(/Version 0\.1\.0/i)).toBeInTheDocument();
+  });
+
+  it("opens the discard dialog when closing the current tab from the menu", async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "close-from-menu" }));
+
+    expect(screen.getByRole("dialog", { name: "Discard unsaved changes?" })).toBeInTheDocument();
   });
 
   it("persists editor settings only after the section save action", async () => {

@@ -53,4 +53,33 @@ describe("MenuBar", () => {
     expect(screen.getByRole("menuitem", { name: "Save" })).toBeInTheDocument();
     expect(screen.getByText("Ctrl+S")).toBeInTheDocument();
   });
+
+  it("renders a leading icon for menu items when provided", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MenuBar
+        groups={[
+          {
+            label: "Help",
+            items: [
+              {
+                label: "About Markora",
+                icon: (
+                  <svg aria-hidden="true" viewBox="0 0 16 16">
+                    <path d="M1 1h14v14H1z" />
+                  </svg>
+                ),
+                onSelect: vi.fn(),
+              },
+            ],
+          },
+        ]}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Help" }));
+
+    expect(screen.getByRole("menuitem", { name: "About Markora" }).querySelector("svg")).not.toBeNull();
+  });
 });

@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
+import { redo, selectAll, undo } from "@codemirror/commands";
 import { EditorView, basicSetup } from "codemirror";
 import { EditorState } from "@codemirror/state";
 import { EditorView as CMView } from "@codemirror/view";
 import { markdown } from "@codemirror/lang-markdown";
 import { oneDark } from "@codemirror/theme-one-dark";
+import { readText, writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { useDocumentStore } from "../../../store/document";
 import { useEditorCommandState } from "../../../features/editor/editor-command-state";
 import { applyMarkdownToolbarAction, type MarkdownToolbarAction } from "../../../features/editor/markdown-toolbar-actions";
@@ -41,6 +43,7 @@ export function EditorPane({ theme }: EditorPaneProps) {
   const lineNumbers = useSettingsStore((state) => state.settings.editor.lineNumbers);
   const setCursorPosition = useEditorStatusState((state) => state.setCursorPosition);
   const setRunToolbarAction = useEditorCommandState((state) => state.setRunToolbarAction);
+  const setRunEditAction = useEditorCommandState((state) => state.setRunEditAction);
   const [slashMenu, setSlashMenu] = useState<SlashMenuState | null>(null);
 
   const applyEditResult = (text: string, selectionStart: number, selectionEnd: number) => {
@@ -155,6 +158,63 @@ export function EditorPane({ theme }: EditorPaneProps) {
     setRunToolbarAction(runAction);
     return () => setRunToolbarAction(() => {});
   }, [setRunToolbarAction]);
+
+  useEffect(() => {
+    const runEditAction = async (
+      action: "undo" | "redo" | "cut" | "copy" | "paste" | "selectAll",
+    ) => {
+      const view = viewRef.current;
+      if (!view) return;
+
+      const { from, to } = view.state.selection.main;
+      const selectedText = view.state.doc.toString().slice(from, to);
+
+      switch (action) {
+        case "undo":
+          undo(view);
+          view.focus();
+          return;
+        case "redo":
+          redo(view);
+          view.focus();
+          return;
+        case "selectAll":
+          selectAll(view);
+          view.focus();
+          return;
+        case "copy":
+          if (selectedText) {
+            await writeText(selectedText);
+          }
+          view.focus();
+          return;
+        case "cut":
+          if (selectedText) {
+            await writeText(selectedText);
+            view.dispatch({
+              changes: { from, to, insert: "" },
+              selection: { anchor: from },
+            });
+          }
+          view.focus();
+          return;
+        case "paste":
+          {
+            const clipboardText = await readText();
+            if (clipboardText) {
+              view.dispatch({
+                changes: { from, to, insert: clipboardText },
+                selection: { anchor: from + clipboardText.length },
+              });
+            }
+          }
+          view.focus();
+      }
+    };
+
+    setRunEditAction(runEditAction);
+    return () => setRunEditAction(async () => {});
+  }, [setRunEditAction]);
 
   useEffect(() => {
     const view = viewRef.current;

@@ -30,6 +30,27 @@ describe("MenuBar", () => {
     expect(screen.getByRole("menu")).toHaveClass(
       "menu-bar__content",
       "app-flyout",
+      "w-56",
     );
+  });
+
+  it("renders a visible shortcut hint without changing the menu item name", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MenuBar
+        groups={[
+          {
+            label: "File",
+            items: [{ label: "Save", shortcut: "Ctrl+S", onSelect: vi.fn() }],
+          },
+        ]}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "File" }));
+
+    expect(screen.getByRole("menuitem", { name: "Save" })).toBeInTheDocument();
+    expect(screen.getByText("Ctrl+S")).toBeInTheDocument();
   });
 });

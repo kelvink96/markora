@@ -29,7 +29,7 @@ export function MenuContent({ children, className }: MenuContentProps) {
   return (
     <DropdownMenu.Portal>
       <DropdownMenu.Content
-        className={`app-flyout z-50 min-w-48 p-2 ${className ?? ""}`}
+        className={`app-flyout z-50 w-56 p-1.5 ${className ?? ""}`}
         sideOffset={8}
       >
         {children}
@@ -42,17 +42,25 @@ interface MenuItemProps {
   children: string;
   disabled?: boolean;
   onSelect?: () => void;
+  shortcut?: string;
 }
 
-export function MenuItem({ children, disabled, onSelect }: MenuItemProps) {
+export function MenuItem({ children, disabled, onSelect, shortcut }: MenuItemProps) {
   return (
     <DropdownMenu.Item asChild disabled={disabled}>
       <button
-        className="w-full rounded-app-sm border border-transparent px-3 py-2 text-left text-app-text transition-[background-color,border-color,color] duration-150 ease-out hover:border-[color:color-mix(in_srgb,var(--glass-border)_65%,transparent)] hover:bg-[color:color-mix(in_srgb,var(--surface-panel)_96%,var(--surface-panel-strong))] focus-visible:outline-none focus-visible:border-[color:color-mix(in_srgb,var(--glass-border-strong)_60%,var(--accent)_18%)] focus-visible:bg-[color:color-mix(in_srgb,var(--surface-panel)_96%,var(--surface-panel-strong))] data-[disabled]:cursor-not-allowed data-[disabled]:text-app-text-muted data-[disabled]:hover:border-transparent data-[disabled]:hover:bg-transparent"
+        className="w-full rounded-app-sm border border-transparent px-2.5 py-1.5 text-left text-app-text transition-[background-color,border-color,color] duration-150 ease-out hover:border-[color:color-mix(in_srgb,var(--glass-border)_65%,transparent)] hover:bg-[color:color-mix(in_srgb,var(--surface-panel)_96%,var(--surface-panel-strong))] focus-visible:outline-none focus-visible:border-[color:color-mix(in_srgb,var(--glass-border-strong)_60%,var(--accent)_18%)] focus-visible:bg-[color:color-mix(in_srgb,var(--surface-panel)_96%,var(--surface-panel-strong))] data-[disabled]:cursor-not-allowed data-[disabled]:text-app-text-muted data-[disabled]:hover:border-transparent data-[disabled]:hover:bg-transparent"
         type="button"
         onClick={onSelect}
       >
-        {children}
+        <span className="grid grid-cols-[1fr_auto] items-center gap-3">
+          <span className="truncate">{children}</span>
+          {shortcut ? (
+            <span aria-hidden="true" className="whitespace-nowrap text-[0.7rem] text-app-text-muted">
+              {shortcut}
+            </span>
+          ) : null}
+        </span>
       </button>
     </DropdownMenu.Item>
   );

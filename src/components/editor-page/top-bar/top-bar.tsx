@@ -5,6 +5,14 @@ import { ViewModeSwitcher } from "../view-mode-switcher";
 import { useEditorCommandState } from "../../../features/editor/editor-command-state";
 import type { WorkspaceViewMode } from "../../../features/workspace/workspace-state";
 
+function getModifierLabel() {
+  if (typeof navigator === "undefined") {
+    return "Ctrl";
+  }
+
+  return /Mac|iPhone|iPad|iPod/i.test(navigator.platform) ? "Cmd" : "Ctrl";
+}
+
 interface TopBarProps {
   onOpenSettings: () => void;
   onThemeToggle: () => void;
@@ -27,14 +35,15 @@ export function TopBar({
   onViewModeChange,
 }: TopBarProps) {
   const runToolbarAction = useEditorCommandState((state) => state.runToolbarAction);
+  const modifierLabel = getModifierLabel();
   const menuGroups = [
     {
       label: "File",
       items: [
-        { label: "New", onSelect: onNew },
-        { label: "Open", onSelect: onOpen },
-        { label: "Save", onSelect: onSave },
-        { label: "Save As", onSelect: onSaveAs },
+        { label: "New", shortcut: `${modifierLabel}+N`, onSelect: onNew },
+        { label: "Open", shortcut: `${modifierLabel}+O`, onSelect: onOpen },
+        { label: "Save", shortcut: `${modifierLabel}+S`, onSelect: onSave },
+        { label: "Save As", shortcut: `${modifierLabel}+Shift+S`, onSelect: onSaveAs },
       ],
     },
     {

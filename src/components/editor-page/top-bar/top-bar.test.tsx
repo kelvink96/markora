@@ -4,6 +4,39 @@ import userEvent from "@testing-library/user-event";
 import { TopBar } from "./top-bar";
 
 describe("TopBar", () => {
+  it("shows mac-style shortcut labels in the File menu on macOS", async () => {
+    const user = userEvent.setup();
+    const originalPlatform = window.navigator.platform;
+
+    Object.defineProperty(window.navigator, "platform", {
+      configurable: true,
+      value: "MacIntel",
+    });
+
+    render(
+      <TopBar
+        onOpenSettings={vi.fn()}
+        onThemeToggle={vi.fn()}
+        onNew={vi.fn()}
+        onOpen={vi.fn()}
+        onSave={vi.fn()}
+        onSaveAs={vi.fn()}
+        viewMode="edit"
+        onViewModeChange={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "File" }));
+
+    expect(screen.getByText("Cmd+N")).toBeInTheDocument();
+    expect(screen.getByText("Cmd+Shift+S")).toBeInTheDocument();
+
+    Object.defineProperty(window.navigator, "platform", {
+      configurable: true,
+      value: originalPlatform,
+    });
+  });
+
   it("renders document metadata and control groups", () => {
     render(
       <TopBar

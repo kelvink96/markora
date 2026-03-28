@@ -5,6 +5,7 @@ export interface MenuBarItem {
   label: string;
   onSelect?: () => void;
   disabled?: boolean;
+  shortcut?: string;
 }
 
 export interface MenuBarGroup {
@@ -24,7 +25,12 @@ export function MenuBar({ groups }: MenuBarProps) {
           <MenuTrigger className="menu-bar__trigger">{group.label}</MenuTrigger>
           <MenuContent className="menu-bar__content">
             {group.items.map((item) => (
-              <MenuItem key={item.label} disabled={item.disabled} onSelect={item.onSelect}>
+              <MenuItem
+                key={item.label}
+                disabled={item.disabled}
+                onSelect={item.onSelect}
+                shortcut={item.shortcut}
+              >
                 {item.label}
               </MenuItem>
             ))}

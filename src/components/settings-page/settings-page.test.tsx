@@ -38,8 +38,8 @@ describe("SettingsPage", () => {
     expect(screen.getByRole("button", { name: "About" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Back to editor" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Back to editor" })).toHaveClass(
-      "transition-[background-color,border-color,color,box-shadow]",
-      "bg-[color:var(--glass-elevated)]",
+      "transition-[background-color,border-color,color,box-shadow,transform]",
+      "min-h-10",
     );
     expect(screen.getByRole("button", { name: "Back to editor" }).parentElement).toHaveClass(
       "mb-4",
@@ -213,7 +213,8 @@ describe("SettingsPage", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "Appearance" }));
-    await user.selectOptions(screen.getByLabelText(/^Color scheme/i), "sepia");
+    await user.click(screen.getByLabelText(/^Color scheme/i));
+    await user.click(screen.getByRole("menuitemradio", { name: "Sepia" }));
     expect(onSaveAppearance).not.toHaveBeenCalled();
     await user.click(screen.getByRole("button", { name: "Save color scheme" }));
 

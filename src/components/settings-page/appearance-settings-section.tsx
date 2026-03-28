@@ -4,7 +4,6 @@ import type {
   ThemePreference,
 } from "../../features/settings/settings-schema";
 import { Checkbox } from "../shared/checkbox";
-import { Field } from "../shared/field";
 import {
   SectionActions,
   SectionCard,
@@ -222,21 +221,16 @@ export function AppearanceSettingsSection({
 
       <SectionCard
         title="Status Bar"
-        description="Control whether footer metrics stay visible while you write."
+        description="Show or hide footer metrics."
       >
-        <Field
-          label="Show status bar"
-          helper="Keep the footer metrics visible while writing."
-        >
-          <Checkbox
-            id="status-bar-toggle"
-            label="Keep the footer metrics visible while writing"
-            checked={appearance.showStatusBar}
-            onChange={(event) =>
-              updateAppearance({ showStatusBar: event.target.checked })
-            }
-          />
-        </Field>
+        <Checkbox
+          id="status-bar-toggle"
+          label="Show footer metrics"
+          checked={appearance.showStatusBar}
+          onChange={(event) =>
+            updateAppearance({ showStatusBar: event.target.checked })
+          }
+        />
         <SectionActions
           canSave={hasChanges(appearance, savedAppearance)}
           label="Save status bar"

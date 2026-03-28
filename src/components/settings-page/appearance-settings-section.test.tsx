@@ -30,6 +30,7 @@ describe("AppearanceSettingsSection", () => {
     expect(screen.queryByLabelText("Theme mode")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Color scheme")).not.toBeInTheDocument();
     expect(screen.getAllByTestId(/theme-swatch-/i)).toHaveLength(3);
+    expect(screen.getByRole("checkbox", { name: "Show footer metrics" })).toBeInTheDocument();
     expect(screen.getByTestId("theme-swatch-system")).toHaveAttribute(
       "data-resolved-theme-mode",
       "light",

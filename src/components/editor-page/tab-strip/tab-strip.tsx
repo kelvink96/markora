@@ -1,6 +1,8 @@
-import { Plus, X } from "lucide-react";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { Ellipsis, Plus, X } from "lucide-react";
 import { getDisplayFileName } from "../../../features/document/document-actions";
 import type { DocumentTab } from "../../../store/document";
+import { MenuContent, MenuItem, MenuTrigger } from "../../shared/menu";
 import { Tab } from "../../shared/tab";
 
 interface TabStripProps {
@@ -8,6 +10,7 @@ interface TabStripProps {
   activeTabId: string;
   onSelectTab: (id: string) => void;
   onCloseTab: (id: string) => void;
+  onCloseAllTabs: () => void;
   onNewTab: () => void;
 }
 
@@ -16,6 +19,7 @@ export function TabStrip({
   activeTabId,
   onSelectTab,
   onCloseTab,
+  onCloseAllTabs,
   onNewTab,
 }: TabStripProps) {
   return (
@@ -56,6 +60,14 @@ export function TabStrip({
           );
         })}
       </div>
+      <DropdownMenu.Root>
+        <MenuTrigger aria-label="Tab actions" className="tab-strip__actions inline-flex size-8 shrink-0 items-center justify-center px-0">
+          <Ellipsis size={16} strokeWidth={2.1} aria-hidden="true" />
+        </MenuTrigger>
+        <MenuContent className="w-48">
+          <MenuItem onSelect={onCloseAllTabs}>Close all tabs</MenuItem>
+        </MenuContent>
+      </DropdownMenu.Root>
       <button
         type="button"
         aria-label="New tab"

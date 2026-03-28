@@ -36,6 +36,7 @@ interface DocumentStore {
   openDocument: (document?: Partial<Omit<DocumentTab, "id">>) => string;
   selectDocument: (id: string) => void;
   closeDocument: (id: string) => void;
+  closeAllDocuments: () => void;
 }
 
 function createDocumentId(existingDocuments: DocumentTab[]) {
@@ -232,4 +233,9 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => ({
         }),
       };
     }),
+  closeAllDocuments: () =>
+    set(() => ({
+      openDocuments: [],
+      ...emptyDocumentState,
+    })),
 }));

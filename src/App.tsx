@@ -32,10 +32,20 @@ function getSystemThemePreference() {
 
 export default function App() {
   const [activeScreen, setActiveScreen] = useState<"workspace" | "settings">("workspace");
-  const [pendingCloseDocumentId, setPendingCloseDocumentId] = useState<string | null>(null);
+  const [pendingCloseRequest, setPendingCloseRequest] = useState<
+    { type: "single"; documentId: string } | { type: "all" } | null
+  >(null);
   const [isKeyboardShortcutsOpen, setIsKeyboardShortcutsOpen] = useState(false);
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
-  const { openDocument, setFilePath, markClean, newDocument, selectDocument, closeDocument } =
+  const {
+    openDocument,
+    setFilePath,
+    markClean,
+    newDocument,
+    selectDocument,
+    closeDocument,
+    closeAllDocuments,
+  } =
     useDocumentStore();
   const theme = useThemeStore((state) => state.resolvedTheme);
   const toggleTheme = useThemeStore((state) => state.toggleTheme);
@@ -121,7 +131,7 @@ export default function App() {
 
       const shouldConfirm = documentId === activeDocumentId ? isDirty : targetDocument.isDirty;
       if (shouldConfirm && confirmOnUnsavedClose) {
-        setPendingCloseDocumentId(documentId);
+        setPendingCloseRequest({ type: "single", documentId });
         return;
       }
 
@@ -130,18 +140,40 @@ export default function App() {
     [closeDocument],
   );
 
-  const handleCancelPendingClose = useCallback(() => {
-    setPendingCloseDocumentId(null);
-  }, []);
-
-  const handleConfirmPendingClose = useCallback(() => {
-    if (!pendingCloseDocumentId) {
+  const handleCloseAllTabs = useCallback(() => {
+    const { openDocuments } = useDocumentStore.getState();
+    if (openDocuments.length === 0) {
       return;
     }
 
-    closeDocument(pendingCloseDocumentId);
-    setPendingCloseDocumentId(null);
-  }, [closeDocument, pendingCloseDocumentId]);
+    const confirmOnUnsavedClose = useSettingsStore.getState().settings.files.confirmOnUnsavedClose;
+    const hasDirtyDocuments = openDocuments.some((document) => document.isDirty);
+
+    if (hasDirtyDocuments && confirmOnUnsavedClose) {
+      setPendingCloseRequest({ type: "all" });
+      return;
+    }
+
+    closeAllDocuments();
+  }, [closeAllDocuments]);
+
+  const handleCancelPendingClose = useCallback(() => {
+    setPendingCloseRequest(null);
+  }, []);
+
+  const handleConfirmPendingClose = useCallback(() => {
+    if (!pendingCloseRequest) {
+      return;
+    }
+
+    if (pendingCloseRequest.type === "all") {
+      closeAllDocuments();
+    } else {
+      closeDocument(pendingCloseRequest.documentId);
+    }
+
+    setPendingCloseRequest(null);
+  }, [closeAllDocuments, closeDocument, pendingCloseRequest]);
 
   useEffect(() => {
     let isActive = true;
@@ -240,6 +272,7 @@ export default function App() {
       activeTabId={activeDocumentId}
       onSelectTab={selectDocument}
       onCloseTab={handleCloseTab}
+      onCloseAllTabs={handleCloseAllTabs}
       onNewTab={handleNew}
     />
   ) : null;
@@ -321,9 +354,13 @@ export default function App() {
         statusBar={settings.appearance.showStatusBar && activeScreen === "workspace" ? statusBar : null}
       />
       <Dialog
-        open={pendingCloseDocumentId !== null}
+        open={pendingCloseRequest !== null}
         title="Discard unsaved changes?"
-        description="This document has unsaved edits. Discard them and close the tab?"
+        description={
+          pendingCloseRequest?.type === "all"
+            ? "Some open documents have unsaved edits. Discard them and close every tab?"
+            : "This document has unsaved edits. Discard them and close the tab?"
+        }
         actions={
           <>
             <Button onClick={handleCancelPendingClose}>Cancel</Button>
@@ -333,7 +370,9 @@ export default function App() {
           </>
         }
       >
-        Closing this tab will remove any unsaved changes in the current document.
+        {pendingCloseRequest?.type === "all"
+          ? "Closing all tabs will remove any unsaved changes across your open documents."
+          : "Closing this tab will remove any unsaved changes in the current document."}
       </Dialog>
       <Dialog
         open={isKeyboardShortcutsOpen}

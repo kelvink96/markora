@@ -100,17 +100,22 @@ vi.mock("./components/editor-page/tab-strip", () => ({
     tabs,
     activeTabId,
     onCloseTab,
+    onCloseAllTabs,
     onNewTab,
   }: {
     tabs: Array<{ id: string; filePath: string | null }>;
     activeTabId: string;
     onCloseTab: (id: string) => void;
+    onCloseAllTabs: () => void;
     onNewTab: () => void;
   }) => (
     <div>
       <div>{tabs.length} tabs</div>
       <button type="button" onClick={() => onCloseTab(activeTabId)}>
         close-active
+      </button>
+      <button type="button" onClick={onCloseAllTabs}>
+        close-all
       </button>
       <button type="button" onClick={onNewTab}>
         new-tab
@@ -192,6 +197,28 @@ describe("App", () => {
     expect(useDocumentStore.getState().activeDocumentId).toBe("document-1");
   });
 
+  it("opens one discard dialog when closing all tabs with unsaved changes", async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "close-all" }));
+
+    expect(screen.getByRole("dialog", { name: "Discard unsaved changes?" })).toBeInTheDocument();
+    expect(useDocumentStore.getState().openDocuments).toHaveLength(2);
+  });
+
+  it("closes all tabs when the user confirms the bulk discard dialog", async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "close-all" }));
+    await user.click(screen.getByRole("button", { name: "Discard" }));
+
+    expect(useDocumentStore.getState().openDocuments).toHaveLength(0);
+    expect(useDocumentStore.getState().activeDocumentId).toBe("");
+    expect(screen.getByRole("heading", { name: "No document open" })).toBeInTheDocument();
+  });
+
   it("uses the saved template for newly created tabs", async () => {
     const user = userEvent.setup();
     const settings = createDefaultSettings();
@@ -227,6 +254,26 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "close-active" }));
 
     expect(useDocumentStore.getState().openDocuments).toHaveLength(1);
+    expect(screen.queryByRole("dialog", { name: "Discard unsaved changes?" })).not.toBeInTheDocument();
+  });
+
+  it("closes all tabs without confirmation when the unsaved-close setting is disabled", async () => {
+    const user = userEvent.setup();
+    const settings = createDefaultSettings();
+    settings.files.confirmOnUnsavedClose = false;
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === "load_settings") {
+        return settings;
+      }
+
+      return undefined;
+    });
+
+    render(<App />);
+    await waitFor(() => expect(useSettingsStore.getState().isHydrated).toBe(true));
+    await user.click(screen.getByRole("button", { name: "close-all" }));
+
+    expect(useDocumentStore.getState().openDocuments).toHaveLength(0);
     expect(screen.queryByRole("dialog", { name: "Discard unsaved changes?" })).not.toBeInTheDocument();
   });
 

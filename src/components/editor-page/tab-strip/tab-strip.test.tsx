@@ -14,6 +14,7 @@ describe("TabStrip", () => {
         activeTabId="one"
         onSelectTab={vi.fn()}
         onCloseTab={vi.fn()}
+        onCloseAllTabs={vi.fn()}
         onNewTab={vi.fn()}
       />,
     );
@@ -27,13 +28,13 @@ describe("TabStrip", () => {
     expect(activeTab).toHaveAttribute("aria-selected", "true");
     expect(activeTab.parentElement).toHaveClass(
       "tab-strip__tab",
-      "rounded-app-sm",
-      "bg-[color:var(--glass-elevated)]",
+      "rounded-app-md",
+      "bg-[color:color-mix(in_srgb,var(--glass-elevated)_88%,var(--surface-panel-strong))]",
     );
     expect(inactiveTab.parentElement).toHaveClass(
       "tab-strip__tab",
-      "rounded-app-sm",
-      "bg-[color:var(--glass-panel)]",
+      "rounded-app-md",
+      "bg-[color:color-mix(in_srgb,var(--surface-panel)_90%,var(--surface-subtle))]",
     );
     expect(screen.getByRole("button", { name: "New tab" })).toHaveClass(
       "tab-strip__new-tab",
@@ -53,6 +54,7 @@ describe("TabStrip", () => {
         activeTabId="one"
         onSelectTab={onSelectTab}
         onCloseTab={onCloseTab}
+        onCloseAllTabs={vi.fn()}
         onNewTab={onNewTab}
       />,
     );
@@ -77,6 +79,7 @@ describe("TabStrip", () => {
         activeTabId="one"
         onSelectTab={onSelectTab}
         onCloseTab={onCloseTab}
+        onCloseAllTabs={vi.fn()}
         onNewTab={vi.fn()}
       />,
     );
@@ -99,11 +102,36 @@ describe("TabStrip", () => {
         activeTabId="one"
         onSelectTab={vi.fn()}
         onCloseTab={vi.fn()}
+        onCloseAllTabs={vi.fn()}
         onNewTab={vi.fn()}
       />,
     );
 
     expect(screen.getByRole("button", { name: "Close one.md" }).querySelector("svg")).not.toBeNull();
     expect(screen.getByRole("button", { name: "New tab" }).querySelector("svg")).not.toBeNull();
+  });
+
+  it("offers a menu action to close all tabs", async () => {
+    const user = userEvent.setup();
+    const onCloseAllTabs = vi.fn();
+
+    render(
+      <TabStrip
+        tabs={[
+          { id: "one", content: "", filePath: "D:\\notes\\one.md", isDirty: false },
+          { id: "two", content: "", filePath: "D:\\notes\\two.md", isDirty: false },
+        ]}
+        activeTabId="one"
+        onSelectTab={vi.fn()}
+        onCloseTab={vi.fn()}
+        onCloseAllTabs={onCloseAllTabs}
+        onNewTab={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Tab actions" }));
+    await user.click(screen.getByRole("menuitem", { name: "Close all tabs" }));
+
+    expect(onCloseAllTabs).toHaveBeenCalledOnce();
   });
 });

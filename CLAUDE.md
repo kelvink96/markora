@@ -30,12 +30,21 @@ Markora is a Tauri v2 desktop markdown editor with a split-pane layout (editor l
 - `parse_markdown(markdown)` → returns HTML string
 - `read_file(path)` → returns file content string
 - `write_file(path, content)` → returns void
+- `load_settings()` / `save_settings(settings)` / `reset_settings()` → persist `MarkoraSettings` to disk
 
 **State management (Zustand stores):**
 - `src/store/document.ts` — document tabs, active doc, content, file path, dirty flag
 - `src/features/workspace/workspace-state.ts` — view mode (split/editor-only/preview-only)
 - `src/features/workspace/editor-status-state.ts` — cursor position
 - `src/features/theme/theme-store.ts` — light/dark theme
+- `src/features/settings/settings-store.ts` — persisted user settings (wraps the three settings IPC commands above)
+
+**Feature layer (`src/features/`):**
+Business logic that is independent of UI components lives here:
+- `document/` — `getDisplayFileName`, `getWordCount`
+- `editor/` — `markdown-toolbar-actions.ts` (apply formatting), `slash-commands.ts` (/ command palette), `editor-command-state.ts`
+- `settings/` — `settings-schema.ts` defines the full `MarkoraSettings` type and defaults; `settings-api.ts` wraps IPC; `settings-store.ts` is the Zustand store
+- `workspace/`, `theme/` — view-mode and theme stores
 
 **Component hierarchy:**
 ```

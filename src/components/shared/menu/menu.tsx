@@ -11,7 +11,7 @@ export function MenuTrigger({
   return (
     <DropdownMenu.Trigger asChild>
       <button
-        className={`rounded-app-sm px-2 py-1 text-sm font-medium text-app-text transition-colors duration-150 hover:bg-[color:color-mix(in_srgb,var(--glass-panel-strong)_82%,var(--surface-subtle))] focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-[color:var(--accent)] ${className ?? ""}`}
+        className={`rounded-app-sm px-2 py-1 text-sm font-medium text-app-text transition-colors duration-150 hover:bg-[color:color-mix(in_srgb,var(--glass-panel-strong)_65%,var(--surface-subtle))] focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-[color:var(--accent)] ${className ?? ""}`}
         type={type}
         {...props}
       >
@@ -58,7 +58,7 @@ export function MenuSubItem({ label, icon, children }: MenuSubItemProps) {
     <DropdownMenu.Sub>
       <DropdownMenu.SubTrigger asChild>
         <button
-          className="w-full rounded-app-sm px-2 py-1.5 text-left text-sm text-app-text transition-colors duration-150 hover:bg-[color:color-mix(in_srgb,var(--glass-panel-strong)_82%,var(--surface-subtle))] focus-visible:outline-none focus-visible:bg-[color:color-mix(in_srgb,var(--surface-panel)_75%,var(--surface-subtle))]"
+          className="w-full rounded-app-sm px-2 py-1.5 text-left text-sm text-app-text transition-colors duration-150 hover:bg-[color:color-mix(in_srgb,var(--glass-panel-strong)_65%,var(--surface-subtle))] focus-visible:outline-none focus-visible:bg-[color:color-mix(in_srgb,var(--glass-panel-strong)_65%,var(--surface-subtle))]"
           type="button"
         >
           <span className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
@@ -95,7 +95,7 @@ export function MenuItem({ children, disabled, icon, onSelect, shortcut }: MenuI
   return (
     <DropdownMenu.Item asChild disabled={disabled}>
       <button
-        className="w-full rounded-app-sm px-2 py-1.5 text-left text-sm text-app-text transition-colors duration-150 hover:bg-[color:color-mix(in_srgb,var(--glass-panel-strong)_82%,var(--surface-subtle))] focus-visible:outline-none focus-visible:bg-[color:color-mix(in_srgb,var(--surface-panel)_75%,var(--surface-subtle))] data-[disabled]:cursor-not-allowed data-[disabled]:text-app-text-muted data-[disabled]:hover:bg-transparent"
+        className="w-full rounded-app-sm px-2 py-1.5 text-left text-sm text-app-text transition-colors duration-150 hover:bg-[color:color-mix(in_srgb,var(--glass-panel-strong)_65%,var(--surface-subtle))] focus-visible:outline-none focus-visible:bg-[color:color-mix(in_srgb,var(--glass-panel-strong)_65%,var(--surface-subtle))] data-[disabled]:cursor-not-allowed data-[disabled]:text-app-text-muted data-[disabled]:hover:bg-transparent"
         type="button"
         onClick={onSelect}
       >

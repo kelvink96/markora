@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Versions — Markora MD</title>
+  <meta name="description" content="Browse the current and previous MSI releases for Markora MD.">
+  <link rel="canonical" href="https://kelvink96.github.io/markora/versions.html">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    :root {
+      --bg: #0f172a;
+      --surface: #111c31;
+      --surface-2: #17243d;
+      --border: #25324a;
+      --text: #f8fafc;
+      --muted: #9fb0c9;
+      --accent: #6366f1;
+      --accent-hover: #5458ee;
+      --success: #22c55e;
+    }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(180deg, #0b1220 0%, var(--bg) 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    a { color: inherit; }
+    .shell {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 32px 20px 72px;
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+    .brand, .back {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .hero {
+      margin-bottom: 32px;
+    }
+    .eyebrow {
+      display: inline-block;
+      padding: 6px 12px;
+      border: 1px solid #2d3d60;
+      border-radius: 999px;
+      color: #b6c3df;
+      font-size: 12px;
+      margin-bottom: 16px;
+    }
+    h1 {
+      margin: 0 0 12px;
+      font-size: clamp(32px, 5vw, 46px);
+      line-height: 1.05;
+    }
+    .sub {
+      margin: 0;
+      color: var(--muted);
+      max-width: 620px;
+      line-height: 1.6;
+      font-size: 16px;
+    }
+    .panel {
+      background: rgba(17, 28, 49, 0.9);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px;
+      margin-top: 28px;
+    }
+    .panel h2 {
+      margin: 0 0 14px;
+      font-size: 22px;
+    }
+    .release-list {
+      display: grid;
+      gap: 14px;
+    }
+    .release {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      background: rgba(23, 36, 61, 0.72);
+    }
+    .release-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .release-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      border: 1px solid #214a31;
+      color: #b7f4ca;
+      background: rgba(34, 197, 94, 0.1);
+    }
+    .release-note {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .download {
+      text-decoration: none;
+      background: var(--accent);
+      color: white;
+      border-radius: 8px;
+      padding: 11px 16px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .download:hover { background: var(--accent-hover); }
+    .empty, .loading {
+      color: var(--muted);
+      font-size: 15px;
+    }
+    @media (max-width: 700px) {
+      .release {
+        grid-template-columns: 1fr;
+      }
+      .download {
+        width: 100%;
+        text-align: center;
+      }
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="topbar">
+      <a class="brand" href="./index.html">Markora MD</a>
+      <a class="back" href="./index.html">Back to home</a>
+    </div>
+
+    <section class="hero">
+      <div class="eyebrow">Release history</div>
+      <h1>Current and previous versions.</h1>
+      <p class="sub">Direct MSI downloads for the latest release and older versions. Useful for Microsoft Store validation, manual installs, and rollback checks.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Available versions</h2>
+      <div id="release-list" class="release-list">
+        <p class="loading">Loading versions…</p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const list = document.getElementById('release-list');
+
+    const render = (items) => {
+      if (!items.length) {
+        list.innerHTML = '<p class="empty">No releases have been published yet.</p>';
+        return;
+      }
+
+      list.innerHTML = items.map((item) => {
+        const badge = item.current ? '<span class="badge">Current release</span>' : '';
+        const published = item.publishedAt ? new Date(item.publishedAt).toLocaleString() : '';
+
+        return `
+          <article class="release">
+            <div>
+              <div class="release-meta">
+                <span class="release-title">Markora MD ${item.version}</span>
+                ${badge}
+              </div>
+              <div class="release-note">
+                <div>${item.filename}</div>
+                <div>${published}</div>
+              </div>
+            </div>
+            <a class="download" href="${item.url}">Download MSI</a>
+          </article>
+        `;
+      }).join('');
+    };
+
+    fetch('./releases.json', { cache: 'no-store' })
+      .then((response) => {
+        if (!response.ok) throw new Error('Could not load release manifest.');
+        return response.json();
+      })
+      .then((items) => render(Array.isArray(items) ? items : []))
+      .catch(() => {
+        list.innerHTML = '<p class="empty">Release history is unavailable right now.</p>';
+      });
+  </script>
+</body>
+</html>

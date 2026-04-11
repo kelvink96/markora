@@ -28,6 +28,7 @@ jobs:
         run: npm ci
 
       - name: Import signing certificate
+        id: import_cert
         env:
           WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
           WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
@@ -35,13 +36,38 @@ jobs:
           $certBytes = [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE)
           $certPath = "$env:RUNNER_TEMP\certificate.pfx"
           [IO.File]::WriteAllBytes($certPath, $certBytes)
-          Import-PfxCertificate -FilePath $certPath -CertStoreLocation Cert:\CurrentUser\My -Password (ConvertTo-SecureString $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force)
+          $cert = Import-PfxCertificate -FilePath $certPath -CertStoreLocation Cert:\CurrentUser\My -Password (ConvertTo-SecureString $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force)
+          "thumbprint=$($cert.Thumbprint)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+      - name: Configure Windows signing for Tauri
+        shell: pwsh
+        run: |
+          $configPath = "src-tauri/tauri.conf.json"
+          $config = Get-Content $configPath -Raw | ConvertFrom-Json
+          $config.bundle.windows.certificateThumbprint = "${{ steps.import_cert.outputs.thumbprint }}"
+          $config.bundle.windows.timestampUrl = "http://timestamp.digicert.com"
+          $config | ConvertTo-Json -Depth 100 | Set-Content $configPath
 
       - name: Build Tauri app
         run: npm run tauri build
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+      - name: Verify MSI signature
+        shell: pwsh
+        run: |
+          $msi = Get-ChildItem "src-tauri/target/release/bundle/msi/*.msi" | Select-Object -First 1
+          if (-not $msi) {
+            throw "No MSI file found to validate."
+          }
+
+          $signature = Get-AuthenticodeSignature $msi.FullName
+          $signature | Format-List Status, StatusMessage, SignerCertificate
+
+          if ($signature.Status -ne "Valid") {
+            throw "MSI signature is invalid or missing: $($signature.Status)"
+          }
 
       - name: Upload MSI artifact
         uses: actions/upload-artifact@v4
@@ -57,7 +83,7 @@ jobs:
           files: src-tauri/target/release/bundle/msi/*.msi
           fail_on_unmatched_files: true
 
-      - name: Publish MSI to GitHub Pages downloads
+      - name: Publish MSI to docs releases and versions manifest
         shell: pwsh
         run: |
           $tag = "${{ github.ref_name }}"
@@ -74,13 +100,42 @@ jobs:
           git fetch origin main
           git checkout main
 
-          $downloadDir = Join-Path "docs/downloads" $version
-          New-Item -ItemType Directory -Force -Path $downloadDir | Out-Null
+          $releaseDir = Join-Path "docs/releases" $version
+          New-Item -ItemType Directory -Force -Path $releaseDir | Out-Null
 
           $targetName = "Markora-MD_$version.msi"
-          Copy-Item -LiteralPath $msi.FullName -Destination (Join-Path $downloadDir $targetName) -Force
+          Copy-Item -LiteralPath $msi.FullName -Destination (Join-Path $releaseDir $targetName) -Force
 
-          git add $downloadDir
+          $manifestPath = "docs/releases.json"
+          $downloadUrl = "https://kelvink96.github.io/markora/releases/$version/$targetName"
+
+          if (Test-Path $manifestPath) {
+            $manifest = Get-Content $manifestPath -Raw | ConvertFrom-Json
+          } else {
+            $manifest = @()
+          }
+
+          $manifest = @($manifest | Where-Object { $_.version -ne $version })
+          $manifest += [pscustomobject]@{
+            version = $version
+            tag = $tag
+            filename = $targetName
+            url = $downloadUrl
+            publishedAt = (Get-Date).ToUniversalTime().ToString("o")
+            current = $true
+          }
+
+          $manifest = $manifest |
+            Sort-Object { [version]$_.version } -Descending |
+            ForEach-Object -Begin { $first = $true } -Process {
+              $_.current = $first
+              $first = $false
+              $_
+            }
+
+          $manifest | ConvertTo-Json -Depth 10 | Set-Content $manifestPath
+
+          git add $releaseDir $manifestPath
           git diff --cached --quiet
           if ($LASTEXITCODE -ne 0) {
             git commit -m "chore: publish msi for $version"

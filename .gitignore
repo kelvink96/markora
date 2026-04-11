@@ -30,3 +30,6 @@ CLAUDE.md
 .superpowers/
 tauri.key
 tauri.key.pub
+
+markora-signing.pfx
+markora-signing.base64.txt

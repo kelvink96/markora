@@ -25,6 +25,7 @@ import { FormattingToolbar } from "../formatting-toolbar";
 import { ViewModeSwitcher } from "../view-mode-switcher";
 import { useEditorCommandState } from "../../../features/editor/editor-command-state";
 import type { WorkspaceViewMode } from "../../../features/workspace/workspace-state";
+import { useDocumentStore } from "../../../store/document";
 
 function getModifierLabel() {
   if (typeof navigator === "undefined") {
@@ -67,6 +68,7 @@ export function TopBar({
 }: TopBarProps) {
   const runToolbarAction = useEditorCommandState((state) => state.runToolbarAction);
   const runEditAction = useEditorCommandState((state) => state.runEditAction);
+  const hasActiveDocument = useDocumentStore((state) => Boolean(state.activeDocumentId));
   const modifierLabel = getModifierLabel();
   const menuGroups: MenuBarGroup[] = [
     {
@@ -119,20 +121,22 @@ export function TopBar({
         className="flex min-w-0 items-center justify-center"
         data-testid="top-bar-toolbar"
       >
-        <FormattingToolbar
-          onHeading={() => runToolbarAction("heading")}
-          onBold={() => runToolbarAction("bold")}
-          onItalic={() => runToolbarAction("italic")}
-          onStrike={() => runToolbarAction("strike")}
-          onBulletList={() => runToolbarAction("bulletList")}
-          onOrderedList={() => runToolbarAction("orderedList")}
-          onTaskList={() => runToolbarAction("taskList")}
-          onQuote={() => runToolbarAction("quote")}
-          onCodeBlock={() => runToolbarAction("codeBlock")}
-          onLink={() => runToolbarAction("link")}
-          onTable={() => runToolbarAction("table")}
-          onImage={() => runToolbarAction("image")}
-        />
+        {hasActiveDocument && (
+          <FormattingToolbar
+            onHeading={() => runToolbarAction("heading")}
+            onBold={() => runToolbarAction("bold")}
+            onItalic={() => runToolbarAction("italic")}
+            onStrike={() => runToolbarAction("strike")}
+            onBulletList={() => runToolbarAction("bulletList")}
+            onOrderedList={() => runToolbarAction("orderedList")}
+            onTaskList={() => runToolbarAction("taskList")}
+            onQuote={() => runToolbarAction("quote")}
+            onCodeBlock={() => runToolbarAction("codeBlock")}
+            onLink={() => runToolbarAction("link")}
+            onTable={() => runToolbarAction("table")}
+            onImage={() => runToolbarAction("image")}
+          />
+        )}
       </div>
       <div
         className="flex items-center justify-end gap-2 rounded-app-sm p-0.5"

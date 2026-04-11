@@ -115,13 +115,15 @@ export function TopBar({
     }] : []),
     {
       label: "View",
-      items: [
+      items: hasActiveDocument ? [
         { label: "Edit View", icon: <FileInput className="size-4" />, onSelect: () => onViewModeChange("edit") },
         { label: "Split View", icon: <PanelsTopLeft className="size-4" />, onSelect: () => onViewModeChange("split") },
-        hasActiveDocument ? { label: "Preview View", icon: <Eye className="size-4" />, onSelect: () => onViewModeChange("preview") } : null,
+        { label: "Preview View", icon: <Eye className="size-4" />, onSelect: () => onViewModeChange("preview") },
         { type: "separator", label: "separator-view-theme" },
         { label: "Toggle Theme", icon: <MoonStar className="size-4" />, onSelect: onThemeToggle },
-      ].filter(Boolean) as MenuBarGroup["items"],
+      ] : [
+        { label: "Toggle Theme", icon: <MoonStar className="size-4" />, onSelect: onThemeToggle },
+      ],
     },
     {
       label: "Help",

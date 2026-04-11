@@ -50,10 +50,12 @@ export function WorkspaceSidebar({
 
   const primaryActionLabel = canImportFiles ? "Import files" : "Open file";
 
+  const actionButtonCount = 2 + (canOpenFolders ? 1 : 0) + (canExportFile ? 1 : 0);
+
   return (
     <aside className="workspace-sidebar min-h-0 w-[17rem] shrink-0 pl-3 pb-3 pt-2.5" aria-label="Workspace sidebar">
       <Panel className="flex h-full flex-col overflow-hidden p-3">
-        <div className="grid gap-2">
+        <div className={`grid gap-1.5 ${actionButtonCount % 2 === 0 ? "grid-cols-2" : ""}`}>
           <Button
             size="sm"
             variant="secondary"
@@ -101,7 +103,7 @@ export function WorkspaceSidebar({
                   aria-label={`${project.name} (${project.documents.length} files)`}
                   className={`flex w-full items-center justify-between rounded-[6px] border px-2.5 py-2 text-left text-sm transition-colors ${
                     project.id === activeProjectId
-                      ? "border-[color:color-mix(in_srgb,var(--accent)_42%,var(--glass-border-strong))] bg-[color:color-mix(in_srgb,var(--accent)_12%,var(--surface-panel-strong))]"
+                      ? "border-t-transparent border-r-transparent border-b-transparent border-l-2 border-l-[color:var(--accent)] pl-[calc(0.625rem-2px)] bg-[color:color-mix(in_srgb,var(--accent)_10%,var(--surface-panel-strong))]"
                       : "border-transparent hover:border-[color:var(--glass-border)] hover:bg-[color:color-mix(in_srgb,var(--surface-subtle)_88%,transparent)]"
                   }`}
                   onClick={() => selectProject(project.id)}
@@ -129,7 +131,7 @@ export function WorkspaceSidebar({
                     aria-label={`${getDocumentLabel(document.content, document.filePath)}${document.isDirty ? " (edited)" : ""}`}
                     className={`flex w-full items-center justify-between rounded-[6px] border px-2.5 py-2 text-left text-sm transition-colors ${
                       document.id === activeDocumentId
-                        ? "border-[color:color-mix(in_srgb,var(--accent)_42%,var(--glass-border-strong))] bg-[color:color-mix(in_srgb,var(--accent)_12%,var(--surface-panel-strong))]"
+                        ? "border-t-transparent border-r-transparent border-b-transparent border-l-2 border-l-[color:var(--accent)] pl-[calc(0.625rem-2px)] bg-[color:color-mix(in_srgb,var(--accent)_10%,var(--surface-panel-strong))]"
                         : "border-transparent hover:border-[color:var(--glass-border)] hover:bg-[color:color-mix(in_srgb,var(--surface-subtle)_88%,transparent)]"
                     }`}
                     onClick={() => selectDocument(document.id)}

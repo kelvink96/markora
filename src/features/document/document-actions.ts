@@ -1,8 +1,8 @@
 export function getDisplayFileName(filePath: string | null): string {
-  if (!filePath) return "Untitled";
+  if (!filePath) return "Welcome to Markora";
 
   // Normalize Windows paths so the basename logic works on every platform.
-  return filePath.replace(/\\/g, "/").split("/").pop() ?? "Untitled";
+  return filePath.replace(/\\/g, "/").split("/").pop() ?? "Welcome to Markora";
 }
 
 export function getWordCount(content: string): number {

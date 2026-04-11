@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { getDisplayFileName, getWordCount } from "./document-actions";
 
 describe("document-actions", () => {
-  it("returns Untitled when no file path exists", () => {
-    expect(getDisplayFileName(null)).toBe("Untitled");
+  it("returns Welcome to Markora when no file path exists", () => {
+    expect(getDisplayFileName(null)).toBe("Welcome to Markora");
   });
 
   it("returns the basename for windows paths", () => {

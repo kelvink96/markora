@@ -134,7 +134,7 @@ export function TopBar({
   return (
     <header className="top-bar grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-[color:var(--glass-border)] bg-[color:var(--glass-panel-strong)] px-3 py-2 backdrop-blur-[var(--glass-blur-strong)] supports-[backdrop-filter]:bg-[color:var(--glass-panel-strong)]">
       <div className="flex min-w-0 items-center justify-start gap-2" data-testid="top-bar-menu">
-        {!hasActiveDocument && <Logo size={24} className="shrink-0" />}
+        {!hasActiveDocument && <Logo size={24} showLabel />}
         <MenuBar groups={menuGroups} />
       </div>
       <div

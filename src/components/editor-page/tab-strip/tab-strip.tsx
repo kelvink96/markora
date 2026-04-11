@@ -25,7 +25,7 @@ export function TabStrip({
 }: TabStripProps) {
   return (
     <div className="tab-strip flex items-center gap-2 bg-[color:var(--glass-panel-strong)] px-2.5 py-1.5 backdrop-blur-[var(--glass-blur-strong)]">
-      <Logo size={24} className="shrink-0" />
+      <Logo size={24} showLabel />
       <div
         className="flex min-w-0 flex-1 items-end gap-1.5 overflow-x-auto"
         role="tablist"

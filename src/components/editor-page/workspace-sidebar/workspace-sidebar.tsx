@@ -1,18 +1,8 @@
-import { Download, FilePlus2, FolderOpen, FolderTree, History, NotebookTabs } from "lucide-react";
+import { FolderTree, History, NotebookTabs } from "lucide-react";
 import { useMemo } from "react";
 import { Button } from "../../shared/button";
 import { Panel } from "../../shared/panel";
 import { useDocumentStore } from "../../../store/document";
-
-interface WorkspaceSidebarProps {
-  onNewDocument: () => void;
-  onOpenFile: () => void;
-  onOpenFolder?: () => void;
-  onExportFile?: () => void;
-  canOpenFolders?: boolean;
-  canImportFiles?: boolean;
-  canExportFile?: boolean;
-}
 
 function getDocumentLabel(content: string, filePath: string | null) {
   if (filePath) {
@@ -28,15 +18,7 @@ function getDocumentLabel(content: string, filePath: string | null) {
   return firstMeaningfulLine?.replace(/^#+\s*/, "") || "Untitled";
 }
 
-export function WorkspaceSidebar({
-  onNewDocument,
-  onOpenFile,
-  onOpenFolder,
-  onExportFile,
-  canOpenFolders = false,
-  canImportFiles = false,
-  canExportFile = false,
-}: WorkspaceSidebarProps) {
+export function WorkspaceSidebar() {
   const projects = useDocumentStore((state) => state.projects);
   const activeProjectId = useDocumentStore((state) => state.activeProjectId);
   const openDocuments = useDocumentStore((state) => state.openDocuments);
@@ -48,41 +30,10 @@ export function WorkspaceSidebar({
 
   const recentEntries = useMemo(() => recentDocuments.slice(0, 5), [recentDocuments]);
 
-  const primaryActionLabel = canImportFiles ? "Import files" : "Open file";
-
   return (
     <aside className="workspace-sidebar min-h-0 w-[17rem] shrink-0 pl-3 pb-3 pt-2.5" aria-label="Workspace sidebar">
       <Panel className="flex h-full flex-col overflow-hidden p-3">
-        <div className="grid gap-2">
-          <Button
-            size="sm"
-            variant="secondary"
-            leftSection={<FilePlus2 className="size-4" />}
-            onClick={onNewDocument}
-          >
-            New note
-          </Button>
-          <Button
-            size="sm"
-            variant="secondary"
-            leftSection={<FolderOpen className="size-4" />}
-            onClick={onOpenFile}
-          >
-            {primaryActionLabel}
-          </Button>
-          {canOpenFolders ? (
-            <Button size="sm" variant="secondary" leftSection={<FolderTree className="size-4" />} onClick={onOpenFolder}>
-              Open folder
-            </Button>
-          ) : null}
-          {canExportFile ? (
-            <Button size="sm" variant="secondary" leftSection={<Download className="size-4" />} onClick={onExportFile}>
-              Export file
-            </Button>
-          ) : null}
-        </div>
-
-        <div className="mt-3 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
           <section aria-label="Projects">
             <div className="mb-2 flex items-center justify-between">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-app-text-muted">
@@ -101,7 +52,7 @@ export function WorkspaceSidebar({
                   aria-label={`${project.name} (${project.documents.length} files)`}
                   className={`flex w-full items-center justify-between rounded-[6px] border px-2.5 py-2 text-left text-sm transition-colors ${
                     project.id === activeProjectId
-                      ? "border-[color:color-mix(in_srgb,var(--accent)_42%,var(--glass-border-strong))] bg-[color:color-mix(in_srgb,var(--accent)_12%,var(--surface-panel-strong))]"
+                      ? "border-t-transparent border-r-transparent border-b-transparent border-l-2 border-l-[color:var(--accent)] pl-[calc(0.625rem-2px)] bg-[color:color-mix(in_srgb,var(--accent)_10%,var(--surface-panel-strong))]"
                       : "border-transparent hover:border-[color:var(--glass-border)] hover:bg-[color:color-mix(in_srgb,var(--surface-subtle)_88%,transparent)]"
                   }`}
                   onClick={() => selectProject(project.id)}
@@ -129,7 +80,7 @@ export function WorkspaceSidebar({
                     aria-label={`${getDocumentLabel(document.content, document.filePath)}${document.isDirty ? " (edited)" : ""}`}
                     className={`flex w-full items-center justify-between rounded-[6px] border px-2.5 py-2 text-left text-sm transition-colors ${
                       document.id === activeDocumentId
-                        ? "border-[color:color-mix(in_srgb,var(--accent)_42%,var(--glass-border-strong))] bg-[color:color-mix(in_srgb,var(--accent)_12%,var(--surface-panel-strong))]"
+                        ? "border-t-transparent border-r-transparent border-b-transparent border-l-2 border-l-[color:var(--accent)] pl-[calc(0.625rem-2px)] bg-[color:color-mix(in_srgb,var(--accent)_10%,var(--surface-panel-strong))]"
                         : "border-transparent hover:border-[color:var(--glass-border)] hover:bg-[color:color-mix(in_srgb,var(--surface-subtle)_88%,transparent)]"
                     }`}
                     onClick={() => selectDocument(document.id)}

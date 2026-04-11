@@ -39,7 +39,7 @@ describe("theme fonts", () => {
     expect(tailwindCss).toContain("var(--bg-atmosphere-base)");
   });
 
-  it("uses soft grayscale tokens for the dark theme surfaces", () => {
+  it("uses dark surface tokens for the standard dark theme", () => {
     const tailwindCss = readFileSync(
       path.join(rootDirectory, "src", "styles", "tailwind.css"),
       "utf8",
@@ -49,7 +49,7 @@ describe("theme fonts", () => {
     expect(tailwindCss).toContain("--surface-base: #151515");
     expect(tailwindCss).toContain("--surface-subtle: #252525");
     expect(tailwindCss).toContain("--text-secondary: #c7c7c7");
-    expect(tailwindCss).toContain("--accent: #b9b9b9");
+    expect(tailwindCss).toContain("--accent: #62b09c");
   });
 
   it("defines paired light and dark tokens for every supported color scheme", () => {

@@ -29,7 +29,7 @@ describe("MenuBar", () => {
     expect(screen.getByRole("menuitem", { name: "New" })).toBeInTheDocument();
     expect(screen.getByRole("menu")).toHaveClass(
       "menu-bar__content",
-      "app-flyout",
+      "app-flyout-solid",
       "w-56",
     );
   });

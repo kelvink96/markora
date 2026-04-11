@@ -1,6 +1,7 @@
 import {
   CircleHelp,
   Clipboard,
+  Clock,
   Copy,
   Download,
   Eye,
@@ -25,6 +26,7 @@ import { FormattingToolbar } from "../formatting-toolbar";
 import { ViewModeSwitcher } from "../view-mode-switcher";
 import { useEditorCommandState } from "../../../features/editor/editor-command-state";
 import type { WorkspaceViewMode } from "../../../features/workspace/workspace-state";
+import { useDocumentStore } from "../../../store/document";
 
 function getModifierLabel() {
   if (typeof navigator === "undefined") {
@@ -44,6 +46,8 @@ interface TopBarProps {
   onSave?: () => void;
   onSaveAs?: () => void;
   onCloseTab?: () => void;
+  recentFiles?: Array<{ documentId: string; projectId: string; title: string }>;
+  onOpenRecent?: (projectId: string, documentId: string) => void;
   canInstallApp?: boolean;
   onInstallApp?: () => void;
   viewMode: WorkspaceViewMode;
@@ -60,6 +64,8 @@ export function TopBar({
   onSave = () => {},
   onSaveAs = () => {},
   onCloseTab = () => {},
+  recentFiles = [],
+  onOpenRecent = () => {},
   canInstallApp = false,
   onInstallApp = () => {},
   viewMode,
@@ -67,6 +73,7 @@ export function TopBar({
 }: TopBarProps) {
   const runToolbarAction = useEditorCommandState((state) => state.runToolbarAction);
   const runEditAction = useEditorCommandState((state) => state.runEditAction);
+  const hasActiveDocument = useDocumentStore((state) => Boolean(state.activeDocumentId));
   const modifierLabel = getModifierLabel();
   const menuGroups: MenuBarGroup[] = [
     {
@@ -74,8 +81,21 @@ export function TopBar({
       items: [
         { label: "New", icon: <SquarePen className="size-4" />, shortcut: `${modifierLabel}+N`, onSelect: onNew },
         { label: "Open", icon: <FolderOpen className="size-4" />, shortcut: `${modifierLabel}+O`, onSelect: onOpen },
+        { type: "separator", label: "separator-file-save" },
         { label: "Save", icon: <Save className="size-4" />, shortcut: `${modifierLabel}+S`, onSelect: onSave },
         { label: "Save As", icon: <FileOutput className="size-4" />, shortcut: `${modifierLabel}+Shift+S`, onSelect: onSaveAs },
+        { type: "separator", label: "separator-file-recent" },
+        {
+          label: "Open Recent",
+          icon: <Clock className="size-4" />,
+          children: recentFiles.length > 0
+            ? recentFiles.map((entry) => ({
+                label: entry.title,
+                onSelect: () => onOpenRecent(entry.projectId, entry.documentId),
+              }))
+            : [{ label: "No recent files", disabled: true }],
+        },
+        { type: "separator", label: "separator-file-close" },
         { label: "Close Tab", icon: <PanelLeftClose className="size-4" />, onSelect: onCloseTab },
         { type: "separator", label: "separator-file-settings" },
         { label: "Settings", icon: <Settings2 className="size-4" />, onSelect: onOpenSettings },
@@ -119,20 +139,22 @@ export function TopBar({
         className="flex min-w-0 items-center justify-center"
         data-testid="top-bar-toolbar"
       >
-        <FormattingToolbar
-          onHeading={() => runToolbarAction("heading")}
-          onBold={() => runToolbarAction("bold")}
-          onItalic={() => runToolbarAction("italic")}
-          onStrike={() => runToolbarAction("strike")}
-          onBulletList={() => runToolbarAction("bulletList")}
-          onOrderedList={() => runToolbarAction("orderedList")}
-          onTaskList={() => runToolbarAction("taskList")}
-          onQuote={() => runToolbarAction("quote")}
-          onCodeBlock={() => runToolbarAction("codeBlock")}
-          onLink={() => runToolbarAction("link")}
-          onTable={() => runToolbarAction("table")}
-          onImage={() => runToolbarAction("image")}
-        />
+        {hasActiveDocument && (
+          <FormattingToolbar
+            onHeading={() => runToolbarAction("heading")}
+            onBold={() => runToolbarAction("bold")}
+            onItalic={() => runToolbarAction("italic")}
+            onStrike={() => runToolbarAction("strike")}
+            onBulletList={() => runToolbarAction("bulletList")}
+            onOrderedList={() => runToolbarAction("orderedList")}
+            onTaskList={() => runToolbarAction("taskList")}
+            onQuote={() => runToolbarAction("quote")}
+            onCodeBlock={() => runToolbarAction("codeBlock")}
+            onLink={() => runToolbarAction("link")}
+            onTable={() => runToolbarAction("table")}
+            onImage={() => runToolbarAction("image")}
+          />
+        )}
       </div>
       <div
         className="flex items-center justify-end gap-2 rounded-app-sm p-0.5"

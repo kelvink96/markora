@@ -9,7 +9,6 @@ import { SettingsPage } from "./components/settings-page/settings-page";
 import { Workspace } from "./components/editor-page/workspace";
 import { FooterStatusBar } from "./components/editor-page/footer-status-bar";
 import { EmptyWorkspaceState } from "./components/editor-page/empty-workspace-state";
-import { WorkspaceSidebar } from "./components/editor-page/workspace-sidebar";
 import { Button } from "./components/shared/button";
 import { Dialog } from "./components/shared/dialog";
 import { getWordCount } from "./features/document/document-actions";
@@ -85,6 +84,7 @@ export default function App() {
     recentDocuments,
     importProject,
     hydrateWorkspace,
+    selectProject,
     selectDocument,
     closeDocument,
     closeAllDocuments,
@@ -176,32 +176,6 @@ export default function App() {
       console.error("open file failed:", error);
     }
   }, [fileAdapter, handleImportFiles, openDocument]);
-
-  const handleOpenFolder = useCallback(async () => {
-    if (!fileAdapter.openDirectory) {
-      return;
-    }
-
-    try {
-      const directory = await fileAdapter.openDirectory();
-      if (!directory) {
-        return;
-      }
-
-      importProject({
-        name: directory.name,
-        documents: directory.files.map((file) => ({
-          content: file.content,
-          filePath: file.path,
-          isDirty: false,
-          handle: file.handle,
-        })),
-      });
-    } catch (error) {
-      setFileError("Failed to open folder. Please try again.");
-      console.error("open folder failed:", error);
-    }
-  }, [fileAdapter, importProject]);
 
   const handleSaveAs = useCallback(async () => {
     const { activeDocumentId, content } = useDocumentStore.getState();
@@ -383,6 +357,11 @@ export default function App() {
     void persistCurrentSettings();
   }, [persistCurrentSettings, toggleTheme, updateAppearance]);
 
+  const handleOpenRecent = useCallback((projectId: string, documentId: string) => {
+    selectProject(projectId);
+    selectDocument(documentId);
+  }, [selectProject, selectDocument]);
+
   const handleCloseCurrentTab = useCallback(() => {
     const { activeDocumentId } = useDocumentStore.getState();
     handleCloseTab(activeDocumentId);
@@ -500,6 +479,8 @@ export default function App() {
       onSave={handleSave}
       onSaveAs={handleSaveAs}
       onCloseTab={handleCloseCurrentTab}
+      recentFiles={recentDocuments.slice(0, 8)}
+      onOpenRecent={handleOpenRecent}
       canInstallApp={isWeb && installPromptEvent !== null}
       onInstallApp={() => void handleInstallApp()}
       viewMode={viewMode}
@@ -548,17 +529,6 @@ export default function App() {
     ) : (
       hasOpenDocuments ? (
         <Workspace
-          sidebar={
-            <WorkspaceSidebar
-              onNewDocument={handleNew}
-              onOpenFile={() => void handleOpen()}
-              canImportFiles={fileAdapter.supportsFileImport()}
-              canOpenFolders={fileAdapter.supportsDirectoryAccess()}
-              onOpenFolder={() => void handleOpenFolder()}
-              canExportFile={fileAdapter.supportsFileExport()}
-              onExportFile={() => void handleSaveAs()}
-            />
-          }
           left={<EditorPane theme={theme} />}
           right={<PreviewPane />}
           viewMode={viewMode}

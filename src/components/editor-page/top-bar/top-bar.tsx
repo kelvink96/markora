@@ -113,18 +113,16 @@ export function TopBar({
         { label: "Select All", icon: <Type className="size-4" />, shortcut: `${modifierLabel}+A`, onSelect: () => void runEditAction("selectAll") },
       ],
     }] : []),
-    {
+    ...(hasActiveDocument ? [{
       label: "View",
-      items: hasActiveDocument ? [
+      items: [
         { label: "Edit View", icon: <FileInput className="size-4" />, onSelect: () => onViewModeChange("edit") },
         { label: "Split View", icon: <PanelsTopLeft className="size-4" />, onSelect: () => onViewModeChange("split") },
         { label: "Preview View", icon: <Eye className="size-4" />, onSelect: () => onViewModeChange("preview") },
-        { type: "separator", label: "separator-view-theme" },
-        { label: "Toggle Theme", icon: <MoonStar className="size-4" />, onSelect: onThemeToggle },
-      ] : [
+        { type: "separator" as const, label: "separator-view-theme" },
         { label: "Toggle Theme", icon: <MoonStar className="size-4" />, onSelect: onThemeToggle },
       ],
-    },
+    }] : []),
     {
       label: "Help",
       items: [
@@ -132,7 +130,7 @@ export function TopBar({
         { label: "About Markora", icon: <Info className="size-4" />, onSelect: onOpenAbout },
       ],
     },
-  ];
+  ] as MenuBarGroup[];
 
   return (
     <header className="top-bar grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-[color:var(--glass-border)] bg-[color:var(--glass-panel-strong)] px-3 py-2 backdrop-blur-[var(--glass-blur-strong)] supports-[backdrop-filter]:bg-[color:var(--glass-panel-strong)]">

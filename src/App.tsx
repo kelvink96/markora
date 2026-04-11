@@ -500,6 +500,8 @@ export default function App() {
       onSave={handleSave}
       onSaveAs={handleSaveAs}
       onCloseTab={handleCloseCurrentTab}
+      onOpenFolder={() => void handleOpenFolder()}
+      canOpenFolders={fileAdapter.supportsDirectoryAccess()}
       canInstallApp={isWeb && installPromptEvent !== null}
       onInstallApp={() => void handleInstallApp()}
       viewMode={viewMode}
@@ -548,17 +550,7 @@ export default function App() {
     ) : (
       hasOpenDocuments ? (
         <Workspace
-          sidebar={
-            <WorkspaceSidebar
-              onNewDocument={handleNew}
-              onOpenFile={() => void handleOpen()}
-              canImportFiles={fileAdapter.supportsFileImport()}
-              canOpenFolders={fileAdapter.supportsDirectoryAccess()}
-              onOpenFolder={() => void handleOpenFolder()}
-              canExportFile={fileAdapter.supportsFileExport()}
-              onExportFile={() => void handleSaveAs()}
-            />
-          }
+          sidebar={<WorkspaceSidebar />}
           left={<EditorPane theme={theme} />}
           right={<PreviewPane />}
           viewMode={viewMode}

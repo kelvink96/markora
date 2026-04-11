@@ -7,6 +7,7 @@ import {
   FileInput,
   FileOutput,
   FolderOpen,
+  FolderTree,
   Info,
   MoonStar,
   PanelLeftClose,
@@ -45,6 +46,8 @@ interface TopBarProps {
   onSave?: () => void;
   onSaveAs?: () => void;
   onCloseTab?: () => void;
+  onOpenFolder?: () => void;
+  canOpenFolders?: boolean;
   canInstallApp?: boolean;
   onInstallApp?: () => void;
   viewMode: WorkspaceViewMode;
@@ -61,6 +64,8 @@ export function TopBar({
   onSave = () => {},
   onSaveAs = () => {},
   onCloseTab = () => {},
+  onOpenFolder = () => {},
+  canOpenFolders = false,
   canInstallApp = false,
   onInstallApp = () => {},
   viewMode,
@@ -76,6 +81,7 @@ export function TopBar({
       items: [
         { label: "New", icon: <SquarePen className="size-4" />, shortcut: `${modifierLabel}+N`, onSelect: onNew },
         { label: "Open", icon: <FolderOpen className="size-4" />, shortcut: `${modifierLabel}+O`, onSelect: onOpen },
+        ...(canOpenFolders ? [{ label: "Open Folder", icon: <FolderTree className="size-4" />, onSelect: onOpenFolder }] : []),
         { label: "Save", icon: <Save className="size-4" />, shortcut: `${modifierLabel}+S`, onSelect: onSave },
         { label: "Save As", icon: <FileOutput className="size-4" />, shortcut: `${modifierLabel}+Shift+S`, onSelect: onSaveAs },
         { label: "Close Tab", icon: <PanelLeftClose className="size-4" />, onSelect: onCloseTab },

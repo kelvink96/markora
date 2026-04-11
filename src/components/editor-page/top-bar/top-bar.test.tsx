@@ -274,6 +274,48 @@ describe("TopBar", () => {
     expect(onOpenSettings).toHaveBeenCalled();
   });
 
+  it("shows Open Folder in the File menu only when directory access is available", async () => {
+    const user = userEvent.setup();
+    const onOpenFolder = vi.fn();
+
+    const { rerender } = render(
+      <TopBar
+        onOpenSettings={vi.fn()}
+        onThemeToggle={vi.fn()}
+        onNew={vi.fn()}
+        onOpen={vi.fn()}
+        onSave={vi.fn()}
+        onSaveAs={vi.fn()}
+        canOpenFolders
+        onOpenFolder={onOpenFolder}
+        viewMode="edit"
+        onViewModeChange={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "File" }));
+    expect(screen.getByRole("menuitem", { name: "Open Folder" })).toBeInTheDocument();
+    await user.click(screen.getByRole("menuitem", { name: "Open Folder" }));
+    expect(onOpenFolder).toHaveBeenCalled();
+
+    rerender(
+      <TopBar
+        onOpenSettings={vi.fn()}
+        onThemeToggle={vi.fn()}
+        onNew={vi.fn()}
+        onOpen={vi.fn()}
+        onSave={vi.fn()}
+        onSaveAs={vi.fn()}
+        canOpenFolders={false}
+        viewMode="edit"
+        onViewModeChange={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "File" }));
+    expect(screen.queryByRole("menuitem", { name: "Open Folder" })).not.toBeInTheDocument();
+  });
+
   it("renders an install action only when web install is available", async () => {
     const user = userEvent.setup();
     const onInstallApp = vi.fn();

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { WorkspaceSidebar } from "./workspace-sidebar";
@@ -53,20 +53,9 @@ describe("WorkspaceSidebar", () => {
   });
 
   it("renders projects, files, and recent documents", () => {
-    render(
-      <WorkspaceSidebar
-        onNewDocument={vi.fn()}
-        onOpenFile={vi.fn()}
-        canOpenFolders
-        onOpenFolder={vi.fn()}
-        canExportFile
-        onExportFile={vi.fn()}
-      />,
-    );
+    render(<WorkspaceSidebar />);
 
     expect(screen.getByRole("complementary", { name: "Workspace sidebar" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Open folder" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Export file" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Project 1 (2 files)" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Research (1 files)" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "notes.md (edited)" })).toBeInTheDocument();
@@ -75,7 +64,7 @@ describe("WorkspaceSidebar", () => {
 
   it("switches projects when a project is selected", async () => {
     const user = userEvent.setup();
-    render(<WorkspaceSidebar onNewDocument={vi.fn()} onOpenFile={vi.fn()} />);
+    render(<WorkspaceSidebar />);
 
     await user.click(screen.getByRole("button", { name: "Research (1 files)" }));
 
@@ -85,24 +74,11 @@ describe("WorkspaceSidebar", () => {
 
   it("opens a recent document across projects", async () => {
     const user = userEvent.setup();
-    render(<WorkspaceSidebar onNewDocument={vi.fn()} onOpenFile={vi.fn()} />);
+    render(<WorkspaceSidebar />);
 
     await user.click(screen.getByRole("button", { name: "research.md (Research)" }));
 
     expect(useDocumentStore.getState().activeProjectId).toBe("project-2");
     expect(useDocumentStore.getState().activeDocumentId).toBe("document-3");
-  });
-
-  it("does not show folder actions when directory access is unavailable", () => {
-    render(<WorkspaceSidebar onNewDocument={vi.fn()} onOpenFile={vi.fn()} />);
-
-    expect(screen.queryByRole("button", { name: "Open folder" })).not.toBeInTheDocument();
-  });
-
-  it("renames the open action to import files when browser import is available", () => {
-    render(<WorkspaceSidebar onNewDocument={vi.fn()} onOpenFile={vi.fn()} canImportFiles />);
-
-    expect(screen.getByRole("button", { name: "Import files" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Open file" })).not.toBeInTheDocument();
   });
 });

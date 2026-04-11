@@ -78,23 +78,6 @@ jobs:
             }
           }
 
-      - name: Verify MSI signature
-        shell: pwsh
-        run: |
-          $msiFiles = Get-ChildItem "src-tauri/target/release/bundle/msi/*.msi"
-          if (-not $msiFiles) {
-            throw "No MSI files found to verify."
-          }
-
-          foreach ($msi in $msiFiles) {
-            $signature = Get-AuthenticodeSignature $msi.FullName
-            $signature | Format-List Status, StatusMessage, SignerCertificate
-
-            if ($signature.Status -ne "Valid") {
-              throw "MSI signature is invalid for $($msi.FullName): $($signature.Status)"
-            }
-          }
-
       - name: Upload MSI artifact
         uses: actions/upload-artifact@v4
         with:

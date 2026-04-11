@@ -1,21 +1,30 @@
 {
   "name": "Markora",
   "short_name": "Markora",
+  "description": "A local-first markdown editor for notes, drafts, and project writing.",
+  "start_url": "/",
+  "scope": "/",
+  "id": "/",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     },
     {
       "src": "/web-app-manifest-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
   ],
-  "theme_color": "#ffffff",
-  "background_color": "#ffffff",
-  "display": "standalone"
+  "theme_color": "#f5f7fb",
+  "background_color": "#f5f7fb",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "categories": ["productivity", "utilities", "writing"],
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  }
 }

@@ -53,9 +53,20 @@ describe("WorkspaceSidebar", () => {
   });
 
   it("renders projects, files, and recent documents", () => {
-    render(<WorkspaceSidebar onNewDocument={vi.fn()} onOpenFile={vi.fn()} />);
+    render(
+      <WorkspaceSidebar
+        onNewDocument={vi.fn()}
+        onOpenFile={vi.fn()}
+        canOpenFolders
+        onOpenFolder={vi.fn()}
+        canExportFile
+        onExportFile={vi.fn()}
+      />,
+    );
 
     expect(screen.getByRole("complementary", { name: "Workspace sidebar" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Open folder" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Export file" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Project 1 (2 files)" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Research (1 files)" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "notes.md (edited)" })).toBeInTheDocument();
@@ -80,5 +91,18 @@ describe("WorkspaceSidebar", () => {
 
     expect(useDocumentStore.getState().activeProjectId).toBe("project-2");
     expect(useDocumentStore.getState().activeDocumentId).toBe("document-3");
+  });
+
+  it("does not show folder actions when directory access is unavailable", () => {
+    render(<WorkspaceSidebar onNewDocument={vi.fn()} onOpenFile={vi.fn()} />);
+
+    expect(screen.queryByRole("button", { name: "Open folder" })).not.toBeInTheDocument();
+  });
+
+  it("renames the open action to import files when browser import is available", () => {
+    render(<WorkspaceSidebar onNewDocument={vi.fn()} onOpenFile={vi.fn()} canImportFiles />);
+
+    expect(screen.getByRole("button", { name: "Import files" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Open file" })).not.toBeInTheDocument();
   });
 });

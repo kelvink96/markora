@@ -273,4 +273,44 @@ describe("TopBar", () => {
 
     expect(onOpenSettings).toHaveBeenCalled();
   });
+
+  it("renders an install action only when web install is available", async () => {
+    const user = userEvent.setup();
+    const onInstallApp = vi.fn();
+
+    const { rerender } = render(
+      <TopBar
+        onOpenSettings={vi.fn()}
+        onThemeToggle={vi.fn()}
+        onNew={vi.fn()}
+        onOpen={vi.fn()}
+        onSave={vi.fn()}
+        onSaveAs={vi.fn()}
+        canInstallApp
+        onInstallApp={onInstallApp}
+        viewMode="edit"
+        onViewModeChange={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Install app" }));
+    expect(onInstallApp).toHaveBeenCalled();
+
+    rerender(
+      <TopBar
+        onOpenSettings={vi.fn()}
+        onThemeToggle={vi.fn()}
+        onNew={vi.fn()}
+        onOpen={vi.fn()}
+        onSave={vi.fn()}
+        onSaveAs={vi.fn()}
+        canInstallApp={false}
+        onInstallApp={vi.fn()}
+        viewMode="edit"
+        onViewModeChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: "Install app" })).not.toBeInTheDocument();
+  });
 });

@@ -42,6 +42,10 @@ describe("AppShell", () => {
   });
 
   it("syncs the document theme for portal-based UI", () => {
+    const themeColorMeta = document.createElement("meta");
+    themeColorMeta.setAttribute("name", "theme-color");
+    document.head.appendChild(themeColorMeta);
+
     const { rerender } = render(
       <AppShell
         themeMode="light"
@@ -56,6 +60,7 @@ describe("AppShell", () => {
     expect(document.documentElement).toHaveAttribute("data-theme-mode", "light");
     expect(document.documentElement).toHaveAttribute("data-color-scheme", "standard");
     expect(document.body).not.toHaveClass("theme-dark");
+    expect(themeColorMeta).toHaveAttribute("content", "#f5f7fb");
 
     rerender(
       <AppShell
@@ -71,6 +76,7 @@ describe("AppShell", () => {
     expect(document.documentElement).toHaveAttribute("data-theme-mode", "dark");
     expect(document.documentElement).toHaveAttribute("data-color-scheme", "sepia");
     expect(document.body).toHaveClass("theme-dark");
+    expect(themeColorMeta).toHaveAttribute("content", "#111827");
   });
 
   it("renders a footer status bar below the workspace", () => {

@@ -27,7 +27,15 @@ vi.mock("./platform/files", () => ({
     pickSavePath: saveMock,
     readFile: readFileMock,
     writeFile: writeFileMock,
+    supportsDirectoryAccess: () => false,
+    supportsFileImport: () => false,
+    supportsFileExport: () => false,
   }),
+}));
+
+vi.mock("./platform/persistence/web", () => ({
+  loadWorkspaceSnapshot: vi.fn().mockResolvedValue(null),
+  saveWorkspaceSnapshot: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("./app/app-shell", () => ({
@@ -139,9 +147,13 @@ describe("App", () => {
     saveMock.mockReset();
     readFileMock.mockReset();
     writeFileMock.mockReset();
+    // @ts-expect-error test cleanup
+    delete window.__TAURI_INTERNALS__;
   });
 
   beforeEach(() => {
+    // @ts-expect-error test shim
+    window.__TAURI_INTERNALS__ = {};
     const settings = createDefaultSettings();
     useDocumentStore.setState({
       openDocuments: [

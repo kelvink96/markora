@@ -1,4 +1,4 @@
-import { FilePlus2, FolderOpen, FolderTree, History, NotebookTabs } from "lucide-react";
+import { Download, FilePlus2, FolderOpen, FolderTree, History, NotebookTabs } from "lucide-react";
 import { useMemo } from "react";
 import { Button } from "../../shared/button";
 import { Panel } from "../../shared/panel";
@@ -7,6 +7,11 @@ import { useDocumentStore } from "../../../store/document";
 interface WorkspaceSidebarProps {
   onNewDocument: () => void;
   onOpenFile: () => void;
+  onOpenFolder?: () => void;
+  onExportFile?: () => void;
+  canOpenFolders?: boolean;
+  canImportFiles?: boolean;
+  canExportFile?: boolean;
 }
 
 function getDocumentLabel(content: string, filePath: string | null) {
@@ -23,7 +28,15 @@ function getDocumentLabel(content: string, filePath: string | null) {
   return firstMeaningfulLine?.replace(/^#+\s*/, "") || "Untitled";
 }
 
-export function WorkspaceSidebar({ onNewDocument, onOpenFile }: WorkspaceSidebarProps) {
+export function WorkspaceSidebar({
+  onNewDocument,
+  onOpenFile,
+  onOpenFolder,
+  onExportFile,
+  canOpenFolders = false,
+  canImportFiles = false,
+  canExportFile = false,
+}: WorkspaceSidebarProps) {
   const projects = useDocumentStore((state) => state.projects);
   const activeProjectId = useDocumentStore((state) => state.activeProjectId);
   const openDocuments = useDocumentStore((state) => state.openDocuments);
@@ -35,10 +48,12 @@ export function WorkspaceSidebar({ onNewDocument, onOpenFile }: WorkspaceSidebar
 
   const recentEntries = useMemo(() => recentDocuments.slice(0, 5), [recentDocuments]);
 
+  const primaryActionLabel = canImportFiles ? "Import files" : "Open file";
+
   return (
     <aside className="workspace-sidebar min-h-0 w-[17rem] shrink-0 pl-3 pb-3 pt-2.5" aria-label="Workspace sidebar">
       <Panel className="flex h-full flex-col overflow-hidden p-3">
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid gap-2">
           <Button
             size="sm"
             variant="secondary"
@@ -53,8 +68,18 @@ export function WorkspaceSidebar({ onNewDocument, onOpenFile }: WorkspaceSidebar
             leftSection={<FolderOpen className="size-4" />}
             onClick={onOpenFile}
           >
-            Open file
+            {primaryActionLabel}
           </Button>
+          {canOpenFolders ? (
+            <Button size="sm" variant="secondary" leftSection={<FolderTree className="size-4" />} onClick={onOpenFolder}>
+              Open folder
+            </Button>
+          ) : null}
+          {canExportFile ? (
+            <Button size="sm" variant="secondary" leftSection={<Download className="size-4" />} onClick={onExportFile}>
+              Export file
+            </Button>
+          ) : null}
         </div>
 
         <div className="mt-3 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">

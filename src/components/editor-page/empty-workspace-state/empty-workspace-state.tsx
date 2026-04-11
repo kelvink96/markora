@@ -4,11 +4,13 @@ import { Button } from "../../shared/button";
 interface EmptyWorkspaceStateProps {
   onNewDocument: () => void;
   onOpenFile: () => void;
+  openFileLabel?: string;
 }
 
 export function EmptyWorkspaceState({
   onNewDocument,
   onOpenFile,
+  openFileLabel = "Open file",
 }: EmptyWorkspaceStateProps) {
   return (
     <section className="flex min-h-full items-center justify-center px-6 py-10" aria-label="Empty workspace">
@@ -38,7 +40,7 @@ export function EmptyWorkspaceState({
             leftSection={<FolderOpen className="size-4" />}
             onClick={onOpenFile}
           >
-            Open file
+            {openFileLabel}
           </Button>
         </div>
       </div>

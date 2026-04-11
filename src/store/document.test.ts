@@ -176,4 +176,48 @@ describe("DocumentStore", () => {
       { projectId: defaultProjectId, documentId: dailyId },
     ]);
   });
+
+  it("imports a project and makes it active", () => {
+    const projectId = useDocumentStore.getState().importProject({
+      name: "Imported",
+      documents: [
+        { content: "# Imported note", filePath: "workspace/imported.md", isDirty: false },
+        { content: "# Another", filePath: "workspace/another.md", isDirty: false },
+      ],
+    });
+
+    expect(useDocumentStore.getState().activeProjectId).toBe(projectId);
+    expect(useDocumentStore.getState().projects.find((project) => project.id === projectId)?.name).toBe(
+      "Imported",
+    );
+    expect(useDocumentStore.getState().openDocuments).toHaveLength(2);
+    expect(useDocumentStore.getState().content).toBe("# Imported note");
+  });
+
+  it("hydrates the workspace from a saved snapshot", () => {
+    useDocumentStore.getState().hydrateWorkspace({
+      projects: [
+        {
+          id: "project-9",
+          name: "Hydrated",
+          documents: [{ id: "document-3", content: "# Restored", filePath: "restored.md", isDirty: false }],
+          activeDocumentId: "document-3",
+        },
+      ],
+      activeProjectId: "project-9",
+      recentDocuments: [
+        {
+          projectId: "project-9",
+          documentId: "document-3",
+          filePath: "restored.md",
+          title: "restored.md",
+          lastOpenedAt: 123,
+        },
+      ],
+    });
+
+    expect(useDocumentStore.getState().activeProjectId).toBe("project-9");
+    expect(useDocumentStore.getState().content).toBe("# Restored");
+    expect(useDocumentStore.getState().recentDocuments).toHaveLength(1);
+  });
 });

@@ -2,6 +2,7 @@ import {
   CircleHelp,
   Clipboard,
   Copy,
+  Download,
   Eye,
   FileInput,
   FileOutput,
@@ -19,6 +20,7 @@ import {
   Undo2,
 } from "lucide-react";
 import { MenuBar, type MenuBarGroup } from "../../shared/menu-bar";
+import { Button } from "../../shared/button";
 import { FormattingToolbar } from "../formatting-toolbar";
 import { ViewModeSwitcher } from "../view-mode-switcher";
 import { useEditorCommandState } from "../../../features/editor/editor-command-state";
@@ -42,6 +44,8 @@ interface TopBarProps {
   onSave?: () => void;
   onSaveAs?: () => void;
   onCloseTab?: () => void;
+  canInstallApp?: boolean;
+  onInstallApp?: () => void;
   viewMode: WorkspaceViewMode;
   onViewModeChange: (mode: WorkspaceViewMode) => void;
 }
@@ -56,6 +60,8 @@ export function TopBar({
   onSave = () => {},
   onSaveAs = () => {},
   onCloseTab = () => {},
+  canInstallApp = false,
+  onInstallApp = () => {},
   viewMode,
   onViewModeChange,
 }: TopBarProps) {
@@ -132,6 +138,16 @@ export function TopBar({
         className="flex items-center justify-end gap-2 rounded-app-sm p-0.5"
         data-testid="top-bar-utilities"
       >
+        {canInstallApp ? (
+          <Button
+            size="sm"
+            variant="secondary"
+            leftSection={<Download className="size-4" />}
+            onClick={onInstallApp}
+          >
+            Install app
+          </Button>
+        ) : null}
         <ViewModeSwitcher value={viewMode} onValueChange={onViewModeChange} />
       </div>
     </header>

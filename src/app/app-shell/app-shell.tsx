@@ -1,6 +1,11 @@
 import { useEffect, type ReactNode } from "react";
 import type { ColorScheme } from "../../features/settings/settings-schema";
 
+const themeColorByMode = {
+  light: "#f5f7fb",
+  dark: "#111827",
+} as const;
+
 interface AppShellProps {
   themeMode: "light" | "dark";
   colorScheme: ColorScheme;
@@ -22,6 +27,7 @@ export function AppShell({
     document.documentElement.setAttribute("data-theme-mode", themeMode);
     document.documentElement.setAttribute("data-color-scheme", colorScheme);
     document.body.classList.toggle("theme-dark", themeMode === "dark");
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", themeColorByMode[themeMode]);
 
     return () => {
       document.documentElement.removeAttribute("data-theme-mode");

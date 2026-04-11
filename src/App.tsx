@@ -22,6 +22,13 @@ import { useDocumentStore } from "./store/document";
 import { useThemeStore } from "./features/theme/theme-store";
 import { ErrorBanner } from "./components/editor-page/error-banner";
 import { getFileAdapter } from "./platform/files";
+import { loadWorkspaceSnapshot, saveWorkspaceSnapshot } from "./platform/persistence/web";
+import { detectPlatform } from "./platform/runtime";
+
+interface DeferredInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+}
 
 function getSystemThemePreference() {
   if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
@@ -31,8 +38,35 @@ function getSystemThemePreference() {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
+function getDocumentExportName(filePath: string | null, content: string) {
+  if (filePath) {
+    const parts = filePath.split(/[\\/]/);
+    return parts[parts.length - 1] || "untitled.md";
+  }
+
+  const firstMeaningfulLine = content
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .find(Boolean)
+    ?.replace(/^#+\s*/, "")
+    .replace(/[<>:"/\\|?*\u0000-\u001F]/g, "")
+    .trim();
+
+  if (!firstMeaningfulLine) {
+    return "untitled.md";
+  }
+
+  const normalized = firstMeaningfulLine.replace(/\s+/g, "-").toLowerCase();
+  return `${normalized || "untitled"}.md`;
+}
+
+function getDocumentTitle(filePath: string | null, content: string) {
+  return getDocumentExportName(filePath, content).replace(/\.md$/i, "");
+}
+
 export default function App() {
   const fileAdapter = useMemo(() => getFileAdapter(), []);
+  const isWeb = detectPlatform() === "web";
   const [activeScreen, setActiveScreen] = useState<"workspace" | "settings">("workspace");
   const [pendingCloseRequest, setPendingCloseRequest] = useState<
     { type: "single"; documentId: string } | { type: "all" } | null
@@ -40,11 +74,17 @@ export default function App() {
   const [isKeyboardShortcutsOpen, setIsKeyboardShortcutsOpen] = useState(false);
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
+  const [installPromptEvent, setInstallPromptEvent] = useState<DeferredInstallPromptEvent | null>(null);
   const {
     openDocument,
     setFilePath,
     markClean,
     newDocument,
+    projects,
+    activeProjectId,
+    recentDocuments,
+    importProject,
+    hydrateWorkspace,
     selectDocument,
     closeDocument,
     closeAllDocuments,
@@ -66,6 +106,8 @@ export default function App() {
   const saveTemplateDraft = useSettingsStore((state) => state.saveTemplateDraft);
   const line = useEditorStatusState((state) => state.line);
   const column = useEditorStatusState((state) => state.column);
+  const { openDocuments, activeDocumentId } = useDocumentStore();
+  const content = useDocumentStore((state) => state.content);
 
   const persistCurrentSettings = useCallback(() => {
     return saveSettings(useSettingsStore.getState().settings).catch((error) =>
@@ -73,7 +115,56 @@ export default function App() {
     );
   }, []);
 
+  const handleImportFiles = useCallback(async () => {
+    if (!fileAdapter.importFiles) {
+      return;
+    }
+
+    try {
+      const files = await fileAdapter.importFiles();
+      if (!files || files.length === 0) {
+        return;
+      }
+
+      importProject({
+        name: files.length === 1 ? files[0].name : "Imported files",
+        documents: files.map((file) => ({
+          content: file.content,
+          filePath: file.path,
+          isDirty: false,
+          handle: file.handle,
+        })),
+      });
+    } catch (error) {
+      setFileError("Failed to import files. Please try again.");
+      console.error("import files failed:", error);
+    }
+  }, [fileAdapter, importProject]);
+
+  const exportCurrentDocument = useCallback(async () => {
+    if (!fileAdapter.exportFile) {
+      return false;
+    }
+
+    const { activeDocumentId, content, filePath, openDocuments } = useDocumentStore.getState();
+    if (!activeDocumentId) {
+      return false;
+    }
+
+    const activeDocument = openDocuments.find((document) => document.id === activeDocumentId);
+    const exportName = getDocumentExportName(activeDocument?.filePath ?? filePath, content);
+
+    await fileAdapter.exportFile(exportName, content);
+    markClean();
+    return true;
+  }, [fileAdapter, markClean]);
+
   const handleOpen = useCallback(async () => {
+    if (fileAdapter.supportsFileImport() && fileAdapter.importFiles) {
+      await handleImportFiles();
+      return;
+    }
+
     try {
       const selected = await fileAdapter.pickOpenPath();
       if (selected) {
@@ -84,13 +175,44 @@ export default function App() {
       setFileError("Failed to open file. Please try again.");
       console.error("open file failed:", error);
     }
-  }, [fileAdapter, openDocument]);
+  }, [fileAdapter, handleImportFiles, openDocument]);
+
+  const handleOpenFolder = useCallback(async () => {
+    if (!fileAdapter.openDirectory) {
+      return;
+    }
+
+    try {
+      const directory = await fileAdapter.openDirectory();
+      if (!directory) {
+        return;
+      }
+
+      importProject({
+        name: directory.name,
+        documents: directory.files.map((file) => ({
+          content: file.content,
+          filePath: file.path,
+          isDirty: false,
+          handle: file.handle,
+        })),
+      });
+    } catch (error) {
+      setFileError("Failed to open folder. Please try again.");
+      console.error("open folder failed:", error);
+    }
+  }, [fileAdapter, importProject]);
 
   const handleSaveAs = useCallback(async () => {
     const { activeDocumentId, content } = useDocumentStore.getState();
     if (!activeDocumentId) return;
 
     try {
+      if (fileAdapter.supportsFileExport() && fileAdapter.exportFile) {
+        await exportCurrentDocument();
+        return;
+      }
+
       const savePath = await fileAdapter.pickSavePath("untitled.md");
       if (savePath) {
         await fileAdapter.writeFile(savePath, content);
@@ -101,13 +223,26 @@ export default function App() {
       setFileError("Failed to save file. Please try again.");
       console.error("save file failed:", error);
     }
-  }, [fileAdapter, markClean, setFilePath]);
+  }, [exportCurrentDocument, fileAdapter, markClean, setFilePath]);
 
   const handleSave = useCallback(async () => {
-    const { activeDocumentId, filePath, content } = useDocumentStore.getState();
+    const { activeDocumentId, filePath, content, openDocuments } = useDocumentStore.getState();
     if (!activeDocumentId) return;
 
     try {
+      const activeDocument = openDocuments.find((document) => document.id === activeDocumentId);
+
+      if (activeDocument?.handle && fileAdapter.writeWorkspaceFile) {
+        await fileAdapter.writeWorkspaceFile(activeDocument.handle, content);
+        markClean();
+        return;
+      }
+
+      if (fileAdapter.supportsFileExport() && fileAdapter.exportFile) {
+        await exportCurrentDocument();
+        return;
+      }
+
       if (filePath) {
         await fileAdapter.writeFile(filePath, content);
         markClean();
@@ -118,7 +253,7 @@ export default function App() {
       setFileError("Failed to save file. Please try again.");
       console.error("save file failed:", error);
     }
-  }, [fileAdapter, handleSaveAs, markClean]);
+  }, [exportCurrentDocument, fileAdapter, handleSaveAs, markClean]);
 
   const handleNew = useCallback(() => {
     newDocument(useSettingsStore.getState().settings.authoring.newDocumentTemplate);
@@ -193,6 +328,38 @@ export default function App() {
   }, [hydrateSettings]);
 
   useEffect(() => {
+    let isActive = true;
+
+    if (!isWeb) {
+      return;
+    }
+
+    loadWorkspaceSnapshot()
+      .then((snapshot) => {
+        if (!isActive || !snapshot) return;
+        hydrateWorkspace(snapshot);
+      })
+      .catch((error) => console.error("load_workspace_snapshot failed:", error));
+
+    return () => {
+      isActive = false;
+    };
+  }, [hydrateWorkspace, isWeb]);
+
+  useEffect(() => {
+    if (!isWeb) {
+      return;
+    }
+
+    void saveWorkspaceSnapshot({
+      version: 1,
+      projects,
+      activeProjectId,
+      recentDocuments,
+    }).catch((error) => console.error("save_workspace_snapshot failed:", error));
+  }, [activeProjectId, isWeb, projects, recentDocuments]);
+
+  useEffect(() => {
     setThemePreference(settings.appearance.theme);
   }, [setThemePreference, settings.appearance.theme]);
 
@@ -220,6 +387,19 @@ export default function App() {
     const { activeDocumentId } = useDocumentStore.getState();
     handleCloseTab(activeDocumentId);
   }, [handleCloseTab]);
+
+  const handleInstallApp = useCallback(async () => {
+    if (!installPromptEvent) {
+      return;
+    }
+
+    try {
+      await installPromptEvent.prompt();
+      await installPromptEvent.userChoice;
+    } finally {
+      setInstallPromptEvent(null);
+    }
+  }, [installPromptEvent]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -263,8 +443,38 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [handleNew, handleOpen, handleSave, handleSaveAs, selectDocument]);
 
-  const { openDocuments, activeDocumentId } = useDocumentStore();
-  const content = useDocumentStore((state) => state.content);
+  useEffect(() => {
+    if (!isWeb) {
+      return;
+    }
+
+    const onBeforeInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      setInstallPromptEvent(event as DeferredInstallPromptEvent);
+    };
+
+    const onAppInstalled = () => {
+      setInstallPromptEvent(null);
+    };
+
+    window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt);
+    window.addEventListener("appinstalled", onAppInstalled);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", onBeforeInstallPrompt);
+      window.removeEventListener("appinstalled", onAppInstalled);
+    };
+  }, [isWeb]);
+
+  useEffect(() => {
+    const activeDocument = openDocuments.find((document) => document.id === activeDocumentId);
+    const titleLabel = activeDocument
+      ? getDocumentTitle(activeDocument.filePath, activeDocument.content)
+      : "Markora";
+
+    document.title = titleLabel === "Markora" ? "Markora" : `${titleLabel} • Markora`;
+  }, [activeDocumentId, openDocuments]);
+
   const hasOpenDocuments = openDocuments.length > 0;
   const wordCount = getWordCount(content);
 
@@ -290,6 +500,8 @@ export default function App() {
       onSave={handleSave}
       onSaveAs={handleSaveAs}
       onCloseTab={handleCloseCurrentTab}
+      canInstallApp={isWeb && installPromptEvent !== null}
+      onInstallApp={() => void handleInstallApp()}
       viewMode={viewMode}
       onViewModeChange={setViewMode}
     />
@@ -336,13 +548,27 @@ export default function App() {
     ) : (
       hasOpenDocuments ? (
         <Workspace
-          sidebar={<WorkspaceSidebar onNewDocument={handleNew} onOpenFile={() => void handleOpen()} />}
+          sidebar={
+            <WorkspaceSidebar
+              onNewDocument={handleNew}
+              onOpenFile={() => void handleOpen()}
+              canImportFiles={fileAdapter.supportsFileImport()}
+              canOpenFolders={fileAdapter.supportsDirectoryAccess()}
+              onOpenFolder={() => void handleOpenFolder()}
+              canExportFile={fileAdapter.supportsFileExport()}
+              onExportFile={() => void handleSaveAs()}
+            />
+          }
           left={<EditorPane theme={theme} />}
           right={<PreviewPane />}
           viewMode={viewMode}
         />
       ) : (
-        <EmptyWorkspaceState onNewDocument={handleNew} onOpenFile={() => void handleOpen()} />
+        <EmptyWorkspaceState
+          onNewDocument={handleNew}
+          onOpenFile={() => void handleOpen()}
+          openFileLabel={fileAdapter.supportsFileImport() ? "Import files" : "Open file"}
+        />
       )
     )
   );

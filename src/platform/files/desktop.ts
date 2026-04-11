@@ -27,4 +27,13 @@ export const desktopFileAdapter: FileAdapter = {
     const { invoke } = await import("@tauri-apps/api/core");
     await invoke("write_file", { path, content });
   },
+  supportsDirectoryAccess() {
+    return false;
+  },
+  supportsFileImport() {
+    return false;
+  },
+  supportsFileExport() {
+    return false;
+  },
 };

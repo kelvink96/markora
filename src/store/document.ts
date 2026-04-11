@@ -12,6 +12,7 @@ export interface DocumentTab {
   content: string;
   filePath: string | null;
   isDirty: boolean;
+  handle?: FileSystemFileHandle;
 }
 
 export interface WorkspaceProject {
@@ -27,6 +28,12 @@ export interface RecentDocumentEntry {
   filePath: string | null;
   title: string;
   lastOpenedAt: number;
+}
+
+export interface ImportedWorkspaceProject {
+  name: string;
+  documents: Array<Partial<Omit<DocumentTab, "id">>>;
+  activeDocumentId?: string;
 }
 
 const emptyDocumentState = {
@@ -58,6 +65,12 @@ interface DocumentStore {
   closeAllDocuments: () => void;
   createProject: (name?: string) => string;
   selectProject: (id: string) => void;
+  importProject: (project: ImportedWorkspaceProject) => string;
+  hydrateWorkspace: (workspace: {
+    projects: WorkspaceProject[];
+    activeProjectId: string;
+    recentDocuments: RecentDocumentEntry[];
+  }) => void;
 }
 
 function createDocumentId(existingDocuments: DocumentTab[]) {
@@ -116,6 +129,31 @@ function createProject(
     name: name?.trim() || `Project ${existingProjects.length + 1}`,
     documents: [firstDocument],
     activeDocumentId: firstDocument.id,
+  };
+}
+
+function createImportedProject(
+  existingProjects: WorkspaceProject[],
+  project: ImportedWorkspaceProject,
+): WorkspaceProject {
+  const documents =
+    project.documents.length > 0
+      ? project.documents.map((document, index) => ({
+          id: `document-${index + 1}`,
+          content: document.content ?? getUntitledStarterContent(),
+          filePath: document.filePath ?? null,
+          isDirty: document.isDirty ?? false,
+          handle: document.handle,
+        }))
+      : [createUntitledDocument()];
+  const activeDocumentId =
+    documents.find((document) => document.id === project.activeDocumentId)?.id ?? documents[0].id;
+
+  return {
+    id: createProjectId(existingProjects),
+    name: project.name.trim() || `Project ${existingProjects.length + 1}`,
+    documents,
+    activeDocumentId,
   };
 }
 
@@ -493,4 +531,31 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => ({
 
       return syncActiveProjectView(normalized.projects, id, normalized.recentDocuments);
     }),
+  importProject: (project) => {
+    const normalized = normalizeState(get());
+    const nextProject = createImportedProject(normalized.projects, project);
+
+    set((state) => {
+      const current = normalizeState(state);
+      const projects = [...current.projects, nextProject];
+      const activeDocument =
+        nextProject.documents.find((document) => document.id === nextProject.activeDocumentId) ??
+        nextProject.documents[0];
+      const recentDocuments = activeDocument
+        ? recordRecent(current.recentDocuments, nextProject.id, activeDocument)
+        : current.recentDocuments;
+
+      return syncActiveProjectView(projects, nextProject.id, recentDocuments);
+    });
+
+    return nextProject.id;
+  },
+  hydrateWorkspace: (workspace) =>
+    set(() =>
+      syncActiveProjectView(
+        workspace.projects.length > 0 ? workspace.projects : [initialProject],
+        workspace.activeProjectId,
+        workspace.recentDocuments,
+      ),
+    ),
 }));

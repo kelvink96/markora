@@ -83,7 +83,7 @@ export function TabStrip({
                 <button
                   type="button"
                   aria-label={`Close ${title}`}
-                  className="inline-flex size-5 items-center justify-center rounded-full text-app-text-muted opacity-0 transition-[background-color,color,opacity] hover:bg-[color:var(--tab-close-hover)] hover:text-app-text hover:opacity-100 focus-visible:outline-none group-hover:opacity-80"
+                  className="inline-flex size-5 items-center justify-center rounded-full text-app-text-muted opacity-0 transition-[background-color,color,opacity] hover:cursor-pointer hover:bg-[color:var(--tab-close-hover)] hover:text-app-text hover:opacity-100 focus-visible:outline-none group-hover:opacity-80"
                   onClick={(event) => {
                     event.stopPropagation();
                     onCloseTab(tab.id);
@@ -111,13 +111,13 @@ export function TabStrip({
             style={{ left: contextMenu.x, top: contextMenu.y }}
           >
             <button
-              className="w-full rounded-app-sm px-2 py-1.5 text-left text-sm text-app-text transition-colors duration-150 hover:bg-[color:color-mix(in_srgb,var(--glass-panel-strong)_65%,var(--surface-subtle))] focus-visible:outline-none"
+              className="w-full rounded-app-sm px-2 py-1.5 text-left text-sm text-app-text transition-colors duration-150 hover:cursor-pointer hover:bg-[color:color-mix(in_srgb,var(--glass-panel-strong)_65%,var(--surface-subtle))] focus-visible:outline-none"
               onClick={handleRename}
             >
               Rename
             </button>
             <button
-              className="w-full rounded-app-sm px-2 py-1.5 text-left text-sm text-app-text transition-colors duration-150 hover:bg-[color:color-mix(in_srgb,var(--glass-panel-strong)_65%,var(--surface-subtle))] focus-visible:outline-none"
+              className="w-full rounded-app-sm px-2 py-1.5 text-left text-sm text-app-text transition-colors duration-150 hover:cursor-pointer hover:bg-[color:color-mix(in_srgb,var(--glass-panel-strong)_65%,var(--surface-subtle))] focus-visible:outline-none"
               onClick={handleClose}
             >
               Close tab
@@ -126,7 +126,7 @@ export function TabStrip({
         </>
       )}
       <DropdownMenu.Root>
-        <MenuTrigger aria-label="Tab actions" className="tab-strip__actions inline-flex size-8 shrink-0 items-center justify-center px-0">
+        <MenuTrigger aria-label="Tab actions" className="tab-strip__actions inline-flex size-8 shrink-0 items-center justify-center px-0 hover:cursor-pointer">
           <Ellipsis size={16} strokeWidth={2.1} aria-hidden="true" />
         </MenuTrigger>
         <MenuContent className="w-48">
@@ -136,7 +136,7 @@ export function TabStrip({
       <button
         type="button"
         aria-label="New tab"
-        className="tab-strip__new-tab inline-flex size-8 shrink-0 items-center justify-center rounded-app-md border border-[color:var(--glass-border)] bg-[color:var(--glass-panel)] text-app-text-secondary backdrop-blur-[var(--glass-blur-soft)] transition hover:bg-[color:var(--glass-hover)] hover:text-app-text focus-visible:outline-none"
+        className="tab-strip__new-tab inline-flex size-8 shrink-0 items-center justify-center rounded-app-md border border-[color:var(--glass-border)] bg-[color:var(--glass-panel)] text-app-text-secondary backdrop-blur-[var(--glass-blur-soft)] transition hover:cursor-pointer hover:bg-[color:var(--glass-hover)] hover:text-app-text focus-visible:outline-none"
         onClick={onNewTab}
       >
         <Plus size={16} strokeWidth={2.1} aria-hidden="true" />

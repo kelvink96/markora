@@ -36,7 +36,7 @@ export function SegmentedControl<T extends string>({
             role="tab"
             aria-label={option.ariaLabel}
             aria-selected={selected}
-            className={`rounded-app-sm px-3 py-1.5 text-[0.85rem] font-medium transition-colors duration-150 ${
+            className={`rounded-app-sm px-3 py-1.5 text-[0.85rem] font-medium transition-colors duration-150 hover:cursor-pointer ${
               option.icon ? "size-10 px-0 py-1" : ""
             } ${
               selected

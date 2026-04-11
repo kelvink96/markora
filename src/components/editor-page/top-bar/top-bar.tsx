@@ -82,9 +82,9 @@ export function TopBar({
       items: [
         { label: "New", icon: <SquarePen className="size-4" />, shortcut: `${modifierLabel}+N`, onSelect: onNew },
         { label: "Open", icon: <FolderOpen className="size-4" />, shortcut: `${modifierLabel}+O`, onSelect: onOpen },
-        { type: "separator", label: "separator-file-save" },
-        { label: "Save", icon: <Save className="size-4" />, shortcut: `${modifierLabel}+S`, onSelect: onSave },
-        { label: "Save As", icon: <FileOutput className="size-4" />, shortcut: `${modifierLabel}+Shift+S`, onSelect: onSaveAs },
+        hasActiveDocument ? { type: "separator", label: "separator-file-save" } : null,
+        hasActiveDocument ? { label: "Save", icon: <Save className="size-4" />, shortcut: `${modifierLabel}+S`, onSelect: onSave } : null,
+        hasActiveDocument ? { label: "Save As", icon: <FileOutput className="size-4" />, shortcut: `${modifierLabel}+Shift+S`, onSelect: onSaveAs } : null,
         { type: "separator", label: "separator-file-recent" },
         {
           label: "Open Recent",
@@ -96,29 +96,32 @@ export function TopBar({
               }))
             : [{ label: "No recent files", disabled: true }],
         },
-        { type: "separator", label: "separator-file-close" },
-        { label: "Close Tab", icon: <PanelLeftClose className="size-4" />, onSelect: onCloseTab },
+        hasActiveDocument ? { type: "separator", label: "separator-file-close" } : null,
+        hasActiveDocument ? { label: "Close Tab", icon: <PanelLeftClose className="size-4" />, onSelect: onCloseTab } : null,
         { type: "separator", label: "separator-file-settings" },
         { label: "Settings", icon: <Settings2 className="size-4" />, onSelect: onOpenSettings },
-      ],
+      ].filter(Boolean) as MenuBarGroup["items"],
     },
     {
       label: "Edit",
-      items: [
+      items: hasActiveDocument ? [
         { label: "Undo", icon: <Undo2 className="size-4" />, shortcut: `${modifierLabel}+Z`, onSelect: () => void runEditAction("undo") },
         { label: "Redo", icon: <Redo2 className="size-4" />, shortcut: `${modifierLabel}+Shift+Z`, onSelect: () => void runEditAction("redo") },
         { label: "Cut", icon: <Scissors className="size-4" />, shortcut: `${modifierLabel}+X`, onSelect: () => void runEditAction("cut") },
         { label: "Copy", icon: <Copy className="size-4" />, shortcut: `${modifierLabel}+C`, onSelect: () => void runEditAction("copy") },
         { label: "Paste", icon: <Clipboard className="size-4" />, shortcut: `${modifierLabel}+V`, onSelect: () => void runEditAction("paste") },
         { label: "Select All", icon: <Type className="size-4" />, shortcut: `${modifierLabel}+A`, onSelect: () => void runEditAction("selectAll") },
-      ],
+      ] : [],
     },
     {
       label: "View",
-      items: [
+      items: hasActiveDocument ? [
         { label: "Edit View", icon: <FileInput className="size-4" />, onSelect: () => onViewModeChange("edit") },
         { label: "Split View", icon: <PanelsTopLeft className="size-4" />, onSelect: () => onViewModeChange("split") },
         { label: "Preview View", icon: <Eye className="size-4" />, onSelect: () => onViewModeChange("preview") },
+        { type: "separator", label: "separator-view-theme" },
+        { label: "Toggle Theme", icon: <MoonStar className="size-4" />, onSelect: onThemeToggle },
+      ] : [
         { label: "Toggle Theme", icon: <MoonStar className="size-4" />, onSelect: onThemeToggle },
       ],
     },

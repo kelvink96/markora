@@ -12,7 +12,7 @@ describe("Tab", () => {
 
     const tab = screen.getByRole("tab", { name: "Notes" });
     expect(tab).toHaveAttribute("aria-selected", "true");
-    expect(tab.parentElement).toHaveClass("rounded-app-md", "border", "shadow-[var(--shadow-crisp)]");
+    expect(tab.parentElement).toHaveClass("relative", "rounded-app-md", "border", "shadow-[var(--shadow-crisp)]");
   });
 
   it("renders optional left and right sections", () => {
@@ -33,5 +33,17 @@ describe("Tab", () => {
     expect(tab.parentElement).toContainElement(screen.getByTestId("tab-left"));
     expect(tab.parentElement).toContainElement(screen.getByTestId("tab-right"));
     expect(screen.getByText("Notes")).toHaveClass("min-w-0");
+  });
+
+  it("renders an accent indicator on the active tab and not on inactive", () => {
+    const { rerender } = render(<Tab ariaSelected isActive>Notes</Tab>);
+
+    const wrapper = screen.getByRole("tab", { name: "Notes" }).parentElement!;
+    expect(wrapper).toHaveClass("relative");
+    expect(wrapper.className).toContain("after:absolute");
+
+    rerender(<Tab ariaSelected={false} isActive={false}>Notes</Tab>);
+    const inactiveWrapper = screen.getByRole("tab", { name: "Notes" }).parentElement!;
+    expect(inactiveWrapper.className).not.toContain("after:absolute");
   });
 });

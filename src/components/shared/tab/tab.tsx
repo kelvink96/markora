@@ -21,9 +21,9 @@ export function Tab({
   return (
     <div
       data-tab-item="true"
-      className={`inline-flex min-w-0 items-center gap-2 rounded-app-md border px-3.5 py-2 text-[0.82rem] shadow-[var(--shadow-crisp)] transition-[background-color,border-color,color,box-shadow,transform] duration-150 ease-out ${
+      className={`relative inline-flex min-w-0 items-center gap-2 rounded-app-md border px-3.5 py-2 text-[0.82rem] shadow-[var(--shadow-crisp)] transition-[background-color,border-color,color,box-shadow,transform] duration-150 ease-out ${
         isActive
-          ? "border-[color:color-mix(in_srgb,var(--glass-border)_74%,var(--glass-border-strong))] bg-[color:color-mix(in_srgb,var(--glass-elevated)_88%,var(--surface-panel-strong))] text-app-text"
+          ? "after:pointer-events-none after:absolute after:bottom-1.5 after:left-2.5 after:right-2.5 after:h-[2px] after:rounded-full after:bg-[color:var(--accent)] after:opacity-75 border-[color:color-mix(in_srgb,var(--glass-border)_74%,var(--glass-border-strong))] bg-[color:color-mix(in_srgb,var(--glass-elevated)_88%,var(--surface-panel-strong))] text-app-text"
           : "border-[color:transparent] bg-[color:color-mix(in_srgb,var(--surface-panel)_90%,var(--surface-subtle))] text-app-text-secondary shadow-none hover:border-[color:color-mix(in_srgb,var(--glass-border)_66%,transparent)] hover:bg-[color:color-mix(in_srgb,var(--surface-panel)_94%,var(--surface-panel-strong))] hover:text-app-text"
       } ${className ?? ""}`}
     >

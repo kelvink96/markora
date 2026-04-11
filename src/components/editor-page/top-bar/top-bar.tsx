@@ -102,17 +102,17 @@ export function TopBar({
         { label: "Settings", icon: <Settings2 className="size-4" />, onSelect: onOpenSettings },
       ].filter(Boolean) as MenuBarGroup["items"],
     },
-    {
+    ...(hasActiveDocument ? [{
       label: "Edit",
-      items: hasActiveDocument ? [
+      items: [
         { label: "Undo", icon: <Undo2 className="size-4" />, shortcut: `${modifierLabel}+Z`, onSelect: () => void runEditAction("undo") },
         { label: "Redo", icon: <Redo2 className="size-4" />, shortcut: `${modifierLabel}+Shift+Z`, onSelect: () => void runEditAction("redo") },
         { label: "Cut", icon: <Scissors className="size-4" />, shortcut: `${modifierLabel}+X`, onSelect: () => void runEditAction("cut") },
         { label: "Copy", icon: <Copy className="size-4" />, shortcut: `${modifierLabel}+C`, onSelect: () => void runEditAction("copy") },
         { label: "Paste", icon: <Clipboard className="size-4" />, shortcut: `${modifierLabel}+V`, onSelect: () => void runEditAction("paste") },
         { label: "Select All", icon: <Type className="size-4" />, shortcut: `${modifierLabel}+A`, onSelect: () => void runEditAction("selectAll") },
-      ] : [],
-    },
+      ],
+    }] : []),
     {
       label: "View",
       items: hasActiveDocument ? [

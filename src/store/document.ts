@@ -538,12 +538,10 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => ({
     set((state) => {
       const current = normalizeState(state);
       const projects = [...current.projects, nextProject];
-      const activeDocument =
-        nextProject.documents.find((document) => document.id === nextProject.activeDocumentId) ??
-        nextProject.documents[0];
-      const recentDocuments = activeDocument
-        ? recordRecent(current.recentDocuments, nextProject.id, activeDocument)
-        : current.recentDocuments;
+      let recentDocuments = current.recentDocuments;
+      for (const document of nextProject.documents) {
+        recentDocuments = recordRecent(recentDocuments, nextProject.id, document);
+      }
 
       return syncActiveProjectView(projects, nextProject.id, recentDocuments);
     });

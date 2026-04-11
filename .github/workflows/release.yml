@@ -44,7 +44,7 @@ jobs:
       - name: Upload MSI artifact
         uses: actions/upload-artifact@v4
         with:
-          name: markora-windows
+          name: markora-windows-${{ github.ref_name }}
           path: src-tauri/target/release/bundle/msi/*.msi
           if-no-files-found: error
 

@@ -1,4 +1,5 @@
 import {
+  BookOpen,
   CircleHelp,
   Clipboard,
   Clock,
@@ -20,6 +21,7 @@ import {
   Type,
   Undo2,
 } from "lucide-react";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { MenuBar, type MenuBarGroup } from "../../shared/menu-bar";
 import { Logo } from "../../shared/logo";
 import { Button } from "../../shared/button";
@@ -41,6 +43,7 @@ interface TopBarProps {
   onOpenSettings?: () => void;
   onOpenKeyboardShortcuts?: () => void;
   onOpenAbout?: () => void;
+  onOpenReleaseNotes?: () => void;
   onThemeToggle?: () => void;
   onNew?: () => void;
   onOpen?: () => void;
@@ -59,6 +62,7 @@ export function TopBar({
   onOpenSettings = () => {},
   onOpenKeyboardShortcuts = () => {},
   onOpenAbout = () => {},
+  onOpenReleaseNotes = () => {},
   onThemeToggle = () => {},
   onNew = () => {},
   onOpen = () => {},
@@ -129,6 +133,8 @@ export function TopBar({
       label: "Help",
       items: [
         { label: "Keyboard Shortcuts", icon: <CircleHelp className="size-4" />, onSelect: onOpenKeyboardShortcuts },
+        { label: "Release Notes", icon: <BookOpen className="size-4" />, onSelect: onOpenReleaseNotes },
+        { type: "separator", label: "separator-help-about" },
         { label: "About Markora", icon: <Info className="size-4" />, onSelect: onOpenAbout },
       ],
     },

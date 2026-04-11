@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import packageJson from "../package.json";
 import { AppShell } from "./app/app-shell";
 import { EditorPane } from "./components/editor-page/editor-pane";
@@ -474,6 +475,7 @@ export default function App() {
       onOpenSettings={() => setActiveScreen("settings")}
       onOpenKeyboardShortcuts={() => setIsKeyboardShortcutsOpen(true)}
       onOpenAbout={() => setIsAboutDialogOpen(true)}
+      onOpenReleaseNotes={() => void openUrl("https://kelvink96.github.io/markora/versions")}
       onThemeToggle={handleThemeToggle}
       onNew={handleNew}
       onOpen={handleOpen}

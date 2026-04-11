@@ -113,16 +113,16 @@ export function TopBar({
         { label: "Select All", icon: <Type className="size-4" />, shortcut: `${modifierLabel}+A`, onSelect: () => void runEditAction("selectAll") },
       ],
     }] : []),
-    ...(hasActiveDocument ? [{
+    {
       label: "View",
       items: [
         { label: "Edit View", icon: <FileInput className="size-4" />, onSelect: () => onViewModeChange("edit") },
         { label: "Split View", icon: <PanelsTopLeft className="size-4" />, onSelect: () => onViewModeChange("split") },
         { label: "Preview View", icon: <Eye className="size-4" />, onSelect: () => onViewModeChange("preview") },
-        { type: "separator" as const, label: "separator-view-theme" },
+        { type: "separator", label: "separator-view-theme" },
         { label: "Toggle Theme", icon: <MoonStar className="size-4" />, onSelect: onThemeToggle },
       ],
-    }] : []),
+    },
     {
       label: "Help",
       items: [
@@ -173,7 +173,7 @@ export function TopBar({
             Install app
           </Button>
         ) : null}
-        <ViewModeSwitcher value={viewMode} onValueChange={onViewModeChange} />
+        {hasActiveDocument && <ViewModeSwitcher value={viewMode} onValueChange={onViewModeChange} />}
       </div>
     </header>
   );

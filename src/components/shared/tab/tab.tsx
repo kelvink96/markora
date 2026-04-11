@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, PropsWithChildren, ReactNode } from "react";
+import type { ButtonHTMLAttributes, HTMLAttributes, PropsWithChildren, ReactNode } from "react";
 
 interface TabProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "className"> {
   ariaSelected?: boolean;
@@ -6,6 +6,7 @@ interface TabProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "classN
   isActive?: boolean;
   leftSection?: ReactNode;
   rightSection?: ReactNode;
+  wrapperProps?: HTMLAttributes<HTMLDivElement>;
 }
 
 export function Tab({
@@ -16,6 +17,7 @@ export function Tab({
   leftSection,
   rightSection,
   type = "button",
+  wrapperProps,
   ...props
 }: PropsWithChildren<TabProps>) {
   return (
@@ -26,6 +28,7 @@ export function Tab({
           ? "after:pointer-events-none after:absolute after:bottom-1.5 after:left-2.5 after:right-2.5 after:h-[2px] after:rounded-full after:bg-[color:var(--accent)] after:opacity-75 border-[color:color-mix(in_srgb,var(--glass-border)_74%,var(--glass-border-strong))] bg-[color:color-mix(in_srgb,var(--glass-elevated)_88%,var(--surface-panel-strong))] text-app-text"
           : "border-[color:transparent] bg-[color:color-mix(in_srgb,var(--surface-panel)_90%,var(--surface-subtle))] text-app-text-secondary shadow-none hover:border-[color:color-mix(in_srgb,var(--glass-border)_66%,transparent)] hover:bg-[color:color-mix(in_srgb,var(--surface-panel)_94%,var(--surface-panel-strong))] hover:text-app-text"
       } ${className ?? ""}`}
+      {...wrapperProps}
     >
       {leftSection ? <span className="shrink-0">{leftSection}</span> : null}
       <button

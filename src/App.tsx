@@ -465,6 +465,7 @@ export default function App() {
       onCloseTab={handleCloseTab}
       onCloseAllTabs={handleCloseAllTabs}
       onNewTab={handleNew}
+      onRenameTab={(id) => console.log("rename tab:", id)}
     />
   ) : null;
 

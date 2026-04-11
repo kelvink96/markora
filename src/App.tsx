@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { openUrl } from "@tauri-apps/plugin-opener";
 import packageJson from "../package.json";
 import { AppShell } from "./app/app-shell";
 import { EditorPane } from "./components/editor-page/editor-pane";
@@ -73,6 +72,7 @@ export default function App() {
   >(null);
   const [isKeyboardShortcutsOpen, setIsKeyboardShortcutsOpen] = useState(false);
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
+  const [isReleaseNotesOpen, setIsReleaseNotesOpen] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const [installPromptEvent, setInstallPromptEvent] = useState<DeferredInstallPromptEvent | null>(null);
   const {
@@ -475,7 +475,7 @@ export default function App() {
       onOpenSettings={() => setActiveScreen("settings")}
       onOpenKeyboardShortcuts={() => setIsKeyboardShortcutsOpen(true)}
       onOpenAbout={() => setIsAboutDialogOpen(true)}
-      onOpenReleaseNotes={() => void openUrl("https://kelvink96.github.io/markora/versions")}
+      onOpenReleaseNotes={() => setIsReleaseNotesOpen(true)}
       onThemeToggle={handleThemeToggle}
       onNew={handleNew}
       onOpen={handleOpen}
@@ -612,6 +612,24 @@ export default function App() {
             className="text-app-accent underline"
           >
             Privacy Policy
+          </a>
+        </div>
+      </Dialog>
+      <Dialog
+        open={isReleaseNotesOpen}
+        title="Release Notes"
+        description={`Version ${packageJson.version}`}
+        actions={<Button onClick={() => setIsReleaseNotesOpen(false)}>Close</Button>}
+      >
+        <div className="text-sm text-app-text">
+          <p>Release notes are available on the releases page.</p>
+          <a
+            href="https://kelvink96.github.io/markora/versions"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 inline-block text-app-accent underline"
+          >
+            View all releases
           </a>
         </div>
       </Dialog>

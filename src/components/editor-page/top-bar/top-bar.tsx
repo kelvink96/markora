@@ -21,7 +21,6 @@ import {
   Type,
   Undo2,
 } from "lucide-react";
-import { openUrl } from "@tauri-apps/plugin-opener";
 import { MenuBar, type MenuBarGroup } from "../../shared/menu-bar";
 import { Logo } from "../../shared/logo";
 import { Button } from "../../shared/button";

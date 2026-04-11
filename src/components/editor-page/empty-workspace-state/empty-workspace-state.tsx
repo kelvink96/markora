@@ -29,7 +29,7 @@ export function EmptyWorkspaceState({
         </p>
         <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
           <Button
-            variant="secondary"
+            variant="primary"
             leftSection={<FilePlus2 className="size-4" />}
             onClick={onNewDocument}
           >

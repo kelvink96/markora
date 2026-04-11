@@ -15,7 +15,7 @@ const baseClassName =
 
 const variantClassNames: Record<ButtonVariant, string> = {
   primary:
-    "border-[color:color-mix(in_srgb,var(--accent)_55%,var(--glass-border-strong))] bg-[color:var(--accent-strong)] text-app-text hover:border-[color:var(--accent-strong)] hover:brightness-[1.05]",
+    "border-[color:color-mix(in_srgb,var(--accent)_55%,var(--glass-border-strong))] bg-[color:var(--accent-strong)] text-black dark:text-white hover:border-[color:var(--accent-strong)] hover:brightness-[1.05]",
   secondary:
     "border-[color:color-mix(in_srgb,var(--glass-border)_70%,var(--glass-border-strong))] bg-[color:color-mix(in_srgb,var(--glass-elevated)_88%,var(--surface-panel-strong))] hover:border-[color:color-mix(in_srgb,var(--glass-border-strong)_60%,var(--accent)_18%)] hover:bg-[color:color-mix(in_srgb,var(--glass-elevated)_76%,var(--surface-panel-strong))]",
   ghost:

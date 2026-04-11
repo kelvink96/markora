@@ -2,12 +2,13 @@ import { type KeyboardEvent, type ReactNode, useCallback, useEffect, useRef, use
 import type { WorkspaceViewMode } from "../../../features/workspace/workspace-state";
 
 interface WorkspaceProps {
+  sidebar?: ReactNode;
   left: ReactNode;
   right: ReactNode;
   viewMode: WorkspaceViewMode;
 }
 
-export function Workspace({ left, right, viewMode }: WorkspaceProps) {
+export function Workspace({ sidebar, left, right, viewMode }: WorkspaceProps) {
   const [splitPct, setSplitPct] = useState(50);
   const containerRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
@@ -58,6 +59,7 @@ export function Workspace({ left, right, viewMode }: WorkspaceProps) {
   if (viewMode === "edit") {
     return (
       <div className="workspace flex min-h-0 flex-1 overflow-hidden px-3 pb-3 pt-2.5">
+        {sidebar ? <div className="min-h-0 shrink-0 overflow-hidden">{sidebar}</div> : null}
         <section className="min-h-0 flex-1 overflow-hidden" role="region" aria-label="Editor workspace">
           {left}
         </section>
@@ -86,6 +88,7 @@ export function Workspace({ left, right, viewMode }: WorkspaceProps) {
         dragging.current = false;
       }}
     >
+      {sidebar ? <div className="min-h-0 shrink-0 overflow-hidden">{sidebar}</div> : null}
       <section
         className="min-h-0 overflow-hidden"
         style={primaryStyle}

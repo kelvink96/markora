@@ -5,12 +5,14 @@ import { useDocumentStore } from "../../../store/document";
 import { createDefaultSettings } from "../../../features/settings/settings-schema";
 import { useSettingsStore } from "../../../features/settings/settings-store";
 
-const { invokeMock } = vi.hoisted(() => ({
-  invokeMock: vi.fn(),
+const { renderMock } = vi.hoisted(() => ({
+  renderMock: vi.fn(),
 }));
 
-vi.mock("@tauri-apps/api/core", () => ({
-  invoke: invokeMock,
+vi.mock("../../../platform/markdown", () => ({
+  getMarkdownAdapter: () => ({
+    render: renderMock,
+  }),
 }));
 
 describe("PreviewPane", () => {
@@ -28,7 +30,7 @@ describe("PreviewPane", () => {
       settings,
       templateDraft: settings.authoring.newDocumentTemplate,
     });
-    invokeMock.mockResolvedValue("<h1>Preview</h1>");
+    renderMock.mockResolvedValue("<h1>Preview</h1>");
   });
 
   it("renders the preview as a full-width acrylic surface", async () => {
@@ -54,7 +56,7 @@ describe("PreviewPane", () => {
   });
 
   it("strips script tags from rendered HTML", async () => {
-    invokeMock.mockResolvedValue('<p>Hello</p><script>alert("xss")</script>');
+    renderMock.mockResolvedValue('<p>Hello</p><script>alert("xss")</script>');
     render(<PreviewPane />);
     await waitFor(() => {
       const content = screen.getByTestId("preview-content");
@@ -62,5 +64,11 @@ describe("PreviewPane", () => {
       expect(content.innerHTML).not.toContain("<script>");
       expect(content.innerHTML).not.toContain("alert");
     });
+  });
+
+  it("renders markdown through the platform adapter instead of calling Tauri directly", async () => {
+    render(<PreviewPane />);
+
+    await waitFor(() => expect(renderMock).toHaveBeenCalledWith("# Preview"));
   });
 });

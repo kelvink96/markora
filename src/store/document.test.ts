@@ -123,4 +123,57 @@ describe("DocumentStore", () => {
     expect(useDocumentStore.getState().isDirty).toBe(true);
     expect(useDocumentStore.getState().content).toBe("# Updated second");
   });
+
+  it("supports multiple projects and switches the active project view", () => {
+    const { createProject, addDocument, selectProject } = useDocumentStore.getState();
+
+    const defaultProjectId = useDocumentStore.getState().activeProjectId;
+    addDocument({ content: "# Default project doc", filePath: "D:\\notes\\default.md" });
+
+    const secondProjectId = createProject("Work");
+    addDocument({ content: "# Work doc", filePath: "D:\\notes\\work.md" });
+
+    expect(useDocumentStore.getState().activeProjectId).toBe(secondProjectId);
+    expect(useDocumentStore.getState().openDocuments).toHaveLength(2);
+    expect(useDocumentStore.getState().content).toBe("# Work doc");
+
+    selectProject(defaultProjectId);
+
+    expect(useDocumentStore.getState().activeProjectId).toBe(defaultProjectId);
+    expect(useDocumentStore.getState().openDocuments).toHaveLength(2);
+    expect(useDocumentStore.getState().content).toBe("# Default project doc");
+  });
+
+  it("tracks recents across projects with the newest selection first", () => {
+    const { createProject, addDocument, openDocument, selectProject } = useDocumentStore.getState();
+
+    const defaultProjectId = useDocumentStore.getState().activeProjectId;
+    const dailyId = openDocument({
+      content: "# Daily",
+      filePath: "D:\\notes\\daily.md",
+      isDirty: false,
+    });
+
+    const workProjectId = createProject("Work");
+    const specId = addDocument({
+      content: "# Spec",
+      filePath: "D:\\notes\\work-spec.md",
+      isDirty: false,
+    });
+
+    selectProject(defaultProjectId);
+    useDocumentStore.getState().selectDocument(dailyId);
+    selectProject(workProjectId);
+    useDocumentStore.getState().selectDocument(specId);
+
+    expect(
+      useDocumentStore
+        .getState()
+        .recentDocuments.slice(0, 2)
+        .map((entry) => ({ projectId: entry.projectId, documentId: entry.documentId })),
+    ).toEqual([
+      { projectId: workProjectId, documentId: specId },
+      { projectId: defaultProjectId, documentId: dailyId },
+    ]);
+  });
 });

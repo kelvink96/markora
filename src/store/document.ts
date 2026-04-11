@@ -14,11 +14,27 @@ export interface DocumentTab {
   isDirty: boolean;
 }
 
+export interface WorkspaceProject {
+  id: string;
+  name: string;
+  documents: DocumentTab[];
+  activeDocumentId: string;
+}
+
+export interface RecentDocumentEntry {
+  projectId: string;
+  documentId: string;
+  filePath: string | null;
+  title: string;
+  lastOpenedAt: number;
+}
+
 const emptyDocumentState = {
   activeDocumentId: "",
   content: "",
   filePath: null,
   isDirty: false,
+  openDocuments: [] as DocumentTab[],
 } as const;
 
 interface DocumentStore {
@@ -28,6 +44,9 @@ interface DocumentStore {
   isDirty: boolean;
   openDocuments: DocumentTab[];
   activeDocumentId: string;
+  projects: WorkspaceProject[];
+  activeProjectId: string;
+  recentDocuments: RecentDocumentEntry[];
   setContent: (content: string) => void;
   setFilePath: (path: string | null) => void;
   markClean: () => void;
@@ -37,6 +56,8 @@ interface DocumentStore {
   selectDocument: (id: string) => void;
   closeDocument: (id: string) => void;
   closeAllDocuments: () => void;
+  createProject: (name?: string) => string;
+  selectProject: (id: string) => void;
 }
 
 function createDocumentId(existingDocuments: DocumentTab[]) {
@@ -48,6 +69,17 @@ function createDocumentId(existingDocuments: DocumentTab[]) {
   }, 0);
 
   return `document-${highestId + 1}`;
+}
+
+function createProjectId(existingProjects: WorkspaceProject[]) {
+  const highestId = existingProjects.reduce((maxId, project) => {
+    const match = /^project-(\d+)$/.exec(project.id);
+    if (!match) return maxId;
+
+    return Math.max(maxId, Number(match[1]));
+  }, 0);
+
+  return `project-${highestId + 1}`;
 }
 
 function createUntitledDocument(): DocumentTab {
@@ -71,19 +103,106 @@ function createDocumentTab(
   };
 }
 
-function syncActiveDocument(state: {
-  openDocuments: DocumentTab[];
-  activeDocumentId: string;
-}) {
-  if (state.openDocuments.length === 0) {
-    return emptyDocumentState;
+function createProject(
+  existingProjects: WorkspaceProject[],
+  name?: string,
+  initialDocument?: DocumentTab,
+): WorkspaceProject {
+  const firstDocument = initialDocument ?? createDocumentTab([]);
+  const projectId = createProjectId(existingProjects);
+
+  return {
+    id: projectId,
+    name: name?.trim() || `Project ${existingProjects.length + 1}`,
+    documents: [firstDocument],
+    activeDocumentId: firstDocument.id,
+  };
+}
+
+function sameDocuments(left: DocumentTab[], right: DocumentTab[]) {
+  return (
+    left.length === right.length &&
+    left.every((document, index) => {
+      const other = right[index];
+      return (
+        document.id === other?.id &&
+        document.content === other.content &&
+        document.filePath === other.filePath &&
+        document.isDirty === other.isDirty
+      );
+    })
+  );
+}
+
+function deriveDocumentTitle(document: Pick<DocumentTab, "filePath" | "content">) {
+  if (document.filePath) {
+    const parts = document.filePath.split(/[\\/]/);
+    return parts[parts.length - 1] || "Untitled";
+  }
+
+  const firstMeaningfulLine = document.content
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .find(Boolean);
+
+  return firstMeaningfulLine?.replace(/^#+\s*/, "") || "Untitled";
+}
+
+function recordRecent(
+  recentDocuments: RecentDocumentEntry[],
+  projectId: string,
+  document: DocumentTab,
+) {
+  const nextEntry: RecentDocumentEntry = {
+    projectId,
+    documentId: document.id,
+    filePath: document.filePath,
+    title: deriveDocumentTitle(document),
+    lastOpenedAt: Date.now(),
+  };
+
+  return [
+    nextEntry,
+    ...recentDocuments.filter(
+      (entry) => !(entry.projectId === projectId && entry.documentId === document.id),
+    ),
+  ];
+}
+
+function syncActiveProjectView(
+  projects: WorkspaceProject[],
+  activeProjectId: string,
+  recentDocuments: RecentDocumentEntry[],
+) {
+  const activeProject = projects.find((project) => project.id === activeProjectId) ?? projects[0];
+
+  if (!activeProject) {
+    return {
+      projects,
+      activeProjectId,
+      recentDocuments,
+      ...emptyDocumentState,
+    };
   }
 
   const activeDocument =
-    state.openDocuments.find((document) => document.id === state.activeDocumentId) ??
-    state.openDocuments[0];
+    activeProject.documents.find((document) => document.id === activeProject.activeDocumentId) ??
+    activeProject.documents[0];
+
+  if (!activeDocument) {
+    return {
+      projects,
+      activeProjectId: activeProject.id,
+      recentDocuments,
+      ...emptyDocumentState,
+    };
+  }
 
   return {
+    projects,
+    activeProjectId: activeProject.id,
+    recentDocuments,
+    openDocuments: activeProject.documents,
     activeDocumentId: activeDocument.id,
     content: activeDocument.content,
     filePath: activeDocument.filePath,
@@ -91,7 +210,66 @@ function syncActiveDocument(state: {
   };
 }
 
+function normalizeState(state: DocumentStore) {
+  let projects = state.projects;
+  let activeProjectId = state.activeProjectId;
+
+  if (projects.length === 0) {
+    const initialDocument =
+      state.openDocuments[0] ??
+      (state.activeDocumentId || state.content || state.filePath || state.isDirty
+        ? {
+            id: state.activeDocumentId || "document-1",
+            content: state.content || getUntitledStarterContent(),
+            filePath: state.filePath,
+            isDirty: state.isDirty,
+          }
+        : createUntitledDocument());
+
+    const initialProject = createProject([], "Project 1", initialDocument);
+    projects = [initialProject];
+    activeProjectId = initialProject.id;
+  }
+
+  const activeProject = projects.find((project) => project.id === activeProjectId) ?? projects[0];
+  if (!activeProject) {
+    return syncActiveProjectView(projects, activeProjectId, state.recentDocuments);
+  }
+
+  const nextDocuments = state.openDocuments;
+  const shouldSyncDocuments =
+    nextDocuments.length === 0 ? activeProject.documents.length > 0 : !sameDocuments(activeProject.documents, nextDocuments);
+  const shouldSyncActiveDocument =
+    state.activeDocumentId !== activeProject.activeDocumentId &&
+    (nextDocuments.length === 0 || nextDocuments.some((document) => document.id === state.activeDocumentId));
+
+  if (shouldSyncDocuments || shouldSyncActiveDocument) {
+    projects = projects.map((project) =>
+      project.id === activeProject.id
+        ? {
+            ...project,
+            documents: nextDocuments,
+            activeDocumentId:
+              nextDocuments.length === 0
+                ? ""
+                : nextDocuments.some((document) => document.id === state.activeDocumentId)
+                  ? state.activeDocumentId
+                  : nextDocuments[0].id,
+          }
+        : project,
+    );
+  }
+
+  return syncActiveProjectView(projects, activeProject.id, state.recentDocuments);
+}
+
 const initialDocument = createUntitledDocument();
+const initialProject: WorkspaceProject = {
+  id: "project-1",
+  name: "Project 1",
+  documents: [initialDocument],
+  activeDocumentId: initialDocument.id,
+};
 
 export const useDocumentStore = create<DocumentStore>()((set, get) => ({
   content: initialDocument.content,
@@ -99,89 +277,128 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => ({
   isDirty: initialDocument.isDirty,
   openDocuments: [initialDocument],
   activeDocumentId: initialDocument.id,
+  projects: [initialProject],
+  activeProjectId: initialProject.id,
+  recentDocuments: [],
   setContent: (content) =>
     set((state) => {
-      const openDocuments = state.openDocuments.map((document) =>
-        document.id === state.activeDocumentId ? { ...document, content, isDirty: true } : document,
+      const normalized = normalizeState(state);
+      const openDocuments = normalized.openDocuments.map((document) =>
+        document.id === normalized.activeDocumentId ? { ...document, content, isDirty: true } : document,
+      );
+      const projects = normalized.projects.map((project) =>
+        project.id === normalized.activeProjectId
+          ? { ...project, documents: openDocuments, activeDocumentId: normalized.activeDocumentId }
+          : project,
       );
 
-      return {
-        openDocuments,
-        ...syncActiveDocument({ openDocuments, activeDocumentId: state.activeDocumentId }),
-      };
+      return syncActiveProjectView(projects, normalized.activeProjectId, normalized.recentDocuments);
     }),
   setFilePath: (filePath) =>
     set((state) => {
-      const openDocuments = state.openDocuments.map((document) =>
-        document.id === state.activeDocumentId ? { ...document, filePath } : document,
+      const normalized = normalizeState(state);
+      const openDocuments = normalized.openDocuments.map((document) =>
+        document.id === normalized.activeDocumentId ? { ...document, filePath } : document,
+      );
+      const projects = normalized.projects.map((project) =>
+        project.id === normalized.activeProjectId
+          ? { ...project, documents: openDocuments, activeDocumentId: normalized.activeDocumentId }
+          : project,
       );
 
-      return {
-        openDocuments,
-        ...syncActiveDocument({ openDocuments, activeDocumentId: state.activeDocumentId }),
-      };
+      return syncActiveProjectView(projects, normalized.activeProjectId, normalized.recentDocuments);
     }),
   markClean: () =>
     set((state) => {
-      const openDocuments = state.openDocuments.map((document) =>
-        document.id === state.activeDocumentId ? { ...document, isDirty: false } : document,
+      const normalized = normalizeState(state);
+      const openDocuments = normalized.openDocuments.map((document) =>
+        document.id === normalized.activeDocumentId ? { ...document, isDirty: false } : document,
+      );
+      const projects = normalized.projects.map((project) =>
+        project.id === normalized.activeProjectId
+          ? { ...project, documents: openDocuments, activeDocumentId: normalized.activeDocumentId }
+          : project,
       );
 
-      return {
-        openDocuments,
-        ...syncActiveDocument({ openDocuments, activeDocumentId: state.activeDocumentId }),
-      };
+      return syncActiveProjectView(projects, normalized.activeProjectId, normalized.recentDocuments);
     }),
   newDocument: (content) =>
     set((state) => {
-      const newDocument = createDocumentTab(state.openDocuments, { content });
-      const openDocuments = [...state.openDocuments, newDocument];
+      const normalized = normalizeState(state);
+      const newDocument = createDocumentTab(normalized.openDocuments, { content });
+      const openDocuments = [...normalized.openDocuments, newDocument];
+      const projects = normalized.projects.map((project) =>
+        project.id === normalized.activeProjectId
+          ? { ...project, documents: openDocuments, activeDocumentId: newDocument.id }
+          : project,
+      );
+      const recentDocuments = recordRecent(normalized.recentDocuments, normalized.activeProjectId, newDocument);
 
-      return {
-        openDocuments,
-        ...syncActiveDocument({ openDocuments, activeDocumentId: newDocument.id }),
-      };
+      return syncActiveProjectView(projects, normalized.activeProjectId, recentDocuments);
     }),
   addDocument: (document = {}) => {
-    const newDocument = createDocumentTab(get().openDocuments, document);
+    const normalized = normalizeState(get());
+    const newDocument = createDocumentTab(normalized.openDocuments, document);
 
     set((state) => {
-      const openDocuments = [...state.openDocuments, newDocument];
+      const current = normalizeState(state);
+      const openDocuments = [...current.openDocuments, newDocument];
+      const projects = current.projects.map((project) =>
+        project.id === current.activeProjectId
+          ? { ...project, documents: openDocuments, activeDocumentId: newDocument.id }
+          : project,
+      );
+      const recentDocuments = recordRecent(current.recentDocuments, current.activeProjectId, newDocument);
 
-      return {
-        openDocuments,
-        ...syncActiveDocument({ openDocuments, activeDocumentId: newDocument.id }),
-      };
+      return syncActiveProjectView(projects, current.activeProjectId, recentDocuments);
     });
 
     return newDocument.id;
   },
   openDocument: (document = {}): string => {
+    const normalized = normalizeState(get());
     const targetPath = document.filePath ?? null;
+
     if (!targetPath) {
       return get().addDocument(document);
     }
 
-    const existingDocument = get().openDocuments.find(
-      (openDocument: DocumentTab) => openDocument.filePath === targetPath,
-    );
+    for (const project of normalized.projects) {
+      const existingDocument = project.documents.find((openDocument) => openDocument.filePath === targetPath);
+      if (!existingDocument) {
+        continue;
+      }
 
-    if (existingDocument) {
       set((state) => {
-        const openDocuments = state.openDocuments.map((openDocument) =>
-          openDocument.id === existingDocument.id
-            ? {
-                ...openDocument,
-                content: document.content ?? openDocument.content,
-                isDirty: document.isDirty ?? openDocument.isDirty,
-              }
-            : openDocument,
-        );
+        const current = normalizeState(state);
+        const projects = current.projects.map((candidateProject) => {
+          if (candidateProject.id !== project.id) {
+            return candidateProject;
+          }
 
-        return {
-          openDocuments,
-          ...syncActiveDocument({ openDocuments, activeDocumentId: existingDocument.id }),
-        };
+          const documents = candidateProject.documents.map((openDocument) =>
+            openDocument.id === existingDocument.id
+              ? {
+                  ...openDocument,
+                  content: document.content ?? openDocument.content,
+                  isDirty: document.isDirty ?? openDocument.isDirty,
+                }
+              : openDocument,
+          );
+
+          return {
+            ...candidateProject,
+            documents,
+            activeDocumentId: existingDocument.id,
+          };
+        });
+
+        const updatedProject = projects.find((candidateProject) => candidateProject.id === project.id);
+        const updatedDocument =
+          updatedProject?.documents.find((openDocument) => openDocument.id === existingDocument.id) ?? existingDocument;
+        const recentDocuments = recordRecent(current.recentDocuments, project.id, updatedDocument);
+
+        return syncActiveProjectView(projects, project.id, recentDocuments);
       });
 
       return existingDocument.id;
@@ -191,51 +408,89 @@ export const useDocumentStore = create<DocumentStore>()((set, get) => ({
   },
   selectDocument: (id) =>
     set((state) => {
+      const normalized = normalizeState(state);
       if (!id) {
-        return state;
+        return normalized;
       }
 
-      if (!state.openDocuments.some((document) => document.id === id)) {
-        return state;
+      const document = normalized.openDocuments.find((candidate) => candidate.id === id);
+      if (!document) {
+        return normalized;
       }
 
-      return syncActiveDocument({ openDocuments: state.openDocuments, activeDocumentId: id });
+      const projects = normalized.projects.map((project) =>
+        project.id === normalized.activeProjectId ? { ...project, activeDocumentId: id } : project,
+      );
+      const recentDocuments = recordRecent(normalized.recentDocuments, normalized.activeProjectId, document);
+
+      return syncActiveProjectView(projects, normalized.activeProjectId, recentDocuments);
     }),
   closeDocument: (id) =>
     set((state) => {
-      if (state.openDocuments.length === 0) {
-        return state;
+      const normalized = normalizeState(state);
+      if (normalized.openDocuments.length === 0) {
+        return normalized;
       }
 
-      const closingIndex = state.openDocuments.findIndex((document) => document.id === id);
+      const closingIndex = normalized.openDocuments.findIndex((document) => document.id === id);
       if (closingIndex === -1) {
-        return state;
+        return normalized;
       }
 
-      const openDocuments = state.openDocuments.filter((document) => document.id !== id);
-      if (openDocuments.length === 0) {
-        return {
-          openDocuments,
-          ...emptyDocumentState,
-        };
-      }
+      const openDocuments = normalized.openDocuments.filter((document) => document.id !== id);
+      const nextActiveDocumentId =
+        openDocuments.length === 0
+          ? ""
+          : normalized.activeDocumentId === id
+            ? (openDocuments[Math.max(0, closingIndex - 1)] ?? openDocuments[0]).id
+            : normalized.activeDocumentId;
 
-      const fallbackDocument =
-        state.activeDocumentId === id
-          ? openDocuments[Math.max(0, closingIndex - 1)] ?? openDocuments[0]
-          : openDocuments.find((document) => document.id === state.activeDocumentId) ?? openDocuments[0];
+      const projects = normalized.projects.map((project) =>
+        project.id === normalized.activeProjectId
+          ? { ...project, documents: openDocuments, activeDocumentId: nextActiveDocumentId }
+          : project,
+      );
+      const recentDocuments = normalized.recentDocuments.filter(
+        (entry) => !(entry.projectId === normalized.activeProjectId && entry.documentId === id),
+      );
 
-      return {
-        openDocuments,
-        ...syncActiveDocument({
-          openDocuments,
-          activeDocumentId: fallbackDocument.id,
-        }),
-      };
+      return syncActiveProjectView(projects, normalized.activeProjectId, recentDocuments);
     }),
   closeAllDocuments: () =>
-    set(() => ({
-      openDocuments: [],
-      ...emptyDocumentState,
-    })),
+    set((state) => {
+      const normalized = normalizeState(state);
+      const projects = normalized.projects.map((project) =>
+        project.id === normalized.activeProjectId
+          ? { ...project, documents: [], activeDocumentId: "" }
+          : project,
+      );
+      const recentDocuments = normalized.recentDocuments.filter(
+        (entry) => entry.projectId !== normalized.activeProjectId,
+      );
+
+      return syncActiveProjectView(projects, normalized.activeProjectId, recentDocuments);
+    }),
+  createProject: (name) => {
+    const normalized = normalizeState(get());
+    const nextProject = createProject(normalized.projects, name);
+
+    set((state) => {
+      const current = normalizeState(state);
+      const projects = [...current.projects, nextProject];
+      const recentDocuments = recordRecent(current.recentDocuments, nextProject.id, nextProject.documents[0]);
+
+      return syncActiveProjectView(projects, nextProject.id, recentDocuments);
+    });
+
+    return nextProject.id;
+  },
+  selectProject: (id) =>
+    set((state) => {
+      const normalized = normalizeState(state);
+      if (!normalized.projects.some((project) => project.id === id)) {
+        return normalized;
+      }
+
+      return syncActiveProjectView(normalized.projects, id, normalized.recentDocuments);
+    }),
 }));

@@ -1,20 +1,21 @@
-import { useEffect, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
+import { useEffect, useMemo, useState } from "react";
 import DOMPurify from "dompurify";
 import { useDocumentStore } from "../../../store/document";
 import { Panel } from "../../shared/panel";
+import { getMarkdownAdapter } from "../../../platform/markdown";
 
 export function PreviewPane() {
   // Subscribe only to the content field so this component updates when markdown text changes.
   const content = useDocumentStore((state) => state.content);
   const [html, setHtml] = useState("");
+  const markdownAdapter = useMemo(() => getMarkdownAdapter(), []);
 
   useEffect(() => {
-    // Call the Rust command by its registered name and pass the markdown argument object.
-    invoke<string>("parse_markdown", { markdown: content })
+    markdownAdapter
+      .render(content)
       .then((raw) => setHtml(DOMPurify.sanitize(raw)))
-      .catch((error) => console.error("parse_markdown failed:", error));
-  }, [content]);
+      .catch((error) => console.error("render preview failed:", error));
+  }, [content, markdownAdapter]);
 
   return (
     <section className="preview-pane h-full min-h-0 pl-0 pr-0" aria-label="Preview">

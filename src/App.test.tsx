@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import packageJson from "../package.json";
 import App from "./App";
 import { untitledStarterContent, useDocumentStore } from "./store/document";
 import { createDefaultSettings } from "./features/settings/settings-schema";
@@ -8,19 +9,25 @@ import { useSettingsStore } from "./features/settings/settings-store";
 import { useWorkspaceState } from "./features/workspace/workspace-state";
 import { useThemeStore } from "./features/theme/theme-store";
 
-const { invokeMock, openMock, saveMock } = vi.hoisted(() => ({
+const { invokeMock, openMock, saveMock, readFileMock, writeFileMock } = vi.hoisted(() => ({
   invokeMock: vi.fn(),
   openMock: vi.fn(),
   saveMock: vi.fn(),
+  readFileMock: vi.fn(),
+  writeFileMock: vi.fn(),
 }));
 
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: invokeMock,
 }));
 
-vi.mock("@tauri-apps/plugin-dialog", () => ({
-  open: openMock,
-  save: saveMock,
+vi.mock("./platform/files", () => ({
+  getFileAdapter: () => ({
+    pickOpenPath: openMock,
+    pickSavePath: saveMock,
+    readFile: readFileMock,
+    writeFile: writeFileMock,
+  }),
 }));
 
 vi.mock("./app/app-shell", () => ({
@@ -130,6 +137,8 @@ describe("App", () => {
     invokeMock.mockReset();
     openMock.mockReset();
     saveMock.mockReset();
+    readFileMock.mockReset();
+    writeFileMock.mockReset();
   });
 
   beforeEach(() => {
@@ -162,6 +171,7 @@ describe("App", () => {
 
       return undefined;
     });
+    readFileMock.mockResolvedValue("# Preview");
   });
 
   it("opens a custom discard dialog for dirty active tabs", async () => {
@@ -315,13 +325,10 @@ describe("App", () => {
       isDirty: false,
     });
     openMock.mockResolvedValue("D:\\notes\\daily.md");
+    readFileMock.mockResolvedValue("# Fresh from disk");
     invokeMock.mockImplementation(async (command: string) => {
       if (command === "load_settings") {
         return createDefaultSettings();
-      }
-
-      if (command === "read_file") {
-        return "# Fresh from disk";
       }
 
       return undefined;
@@ -374,13 +381,10 @@ describe("App", () => {
       isDirty: false,
     });
     openMock.mockResolvedValue("D:\\notes\\empty-state.md");
+    readFileMock.mockResolvedValue("# Empty state open");
     invokeMock.mockImplementation(async (command: string) => {
       if (command === "load_settings") {
         return createDefaultSettings();
-      }
-
-      if (command === "read_file") {
-        return "# Empty state open";
       }
 
       return undefined;
@@ -461,7 +465,7 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "open-about" }));
 
     expect(screen.getByRole("dialog", { name: "About Markora" })).toBeInTheDocument();
-    expect(screen.getByText(/Version 1\.0\.0/i)).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(`Version ${packageJson.version.replace(".", "\\.")}`, "i"))).toBeInTheDocument();
   });
 
   it("opens the discard dialog when closing the current tab from the menu", async () => {

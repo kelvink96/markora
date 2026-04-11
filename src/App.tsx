@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import packageJson from "../package.json";
-import { open, save } from "@tauri-apps/plugin-dialog";
 import { AppShell } from "./app/app-shell";
 import { EditorPane } from "./components/editor-page/editor-pane";
 import { TabStrip } from "./components/editor-page/tab-strip";
@@ -10,6 +9,7 @@ import { SettingsPage } from "./components/settings-page/settings-page";
 import { Workspace } from "./components/editor-page/workspace";
 import { FooterStatusBar } from "./components/editor-page/footer-status-bar";
 import { EmptyWorkspaceState } from "./components/editor-page/empty-workspace-state";
+import { WorkspaceSidebar } from "./components/editor-page/workspace-sidebar";
 import { Button } from "./components/shared/button";
 import { Dialog } from "./components/shared/dialog";
 import { getWordCount } from "./features/document/document-actions";
@@ -20,8 +20,8 @@ import { useEditorStatusState } from "./features/workspace/editor-status-state";
 import { useWorkspaceState } from "./features/workspace/workspace-state";
 import { useDocumentStore } from "./store/document";
 import { useThemeStore } from "./features/theme/theme-store";
-import { invoke } from "@tauri-apps/api/core";
 import { ErrorBanner } from "./components/editor-page/error-banner";
+import { getFileAdapter } from "./platform/files";
 
 function getSystemThemePreference() {
   if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
@@ -32,6 +32,7 @@ function getSystemThemePreference() {
 }
 
 export default function App() {
+  const fileAdapter = useMemo(() => getFileAdapter(), []);
   const [activeScreen, setActiveScreen] = useState<"workspace" | "settings">("workspace");
   const [pendingCloseRequest, setPendingCloseRequest] = useState<
     { type: "single"; documentId: string } | { type: "all" } | null
@@ -74,39 +75,33 @@ export default function App() {
 
   const handleOpen = useCallback(async () => {
     try {
-      const selected = await open({
-        multiple: false,
-        filters: [{ name: "Markdown", extensions: ["md", "markdown", "txt"] }],
-      });
-      if (typeof selected === "string") {
-        const text = await invoke<string>("read_file", { path: selected });
+      const selected = await fileAdapter.pickOpenPath();
+      if (selected) {
+        const text = await fileAdapter.readFile(selected);
         openDocument({ content: text, filePath: selected, isDirty: false });
       }
     } catch (error) {
       setFileError("Failed to open file. Please try again.");
-      console.error("read_file failed:", error);
+      console.error("open file failed:", error);
     }
-  }, [openDocument]);
+  }, [fileAdapter, openDocument]);
 
   const handleSaveAs = useCallback(async () => {
     const { activeDocumentId, content } = useDocumentStore.getState();
     if (!activeDocumentId) return;
 
     try {
-      const savePath = await save({
-        filters: [{ name: "Markdown", extensions: ["md"] }],
-        defaultPath: "untitled.md",
-      });
+      const savePath = await fileAdapter.pickSavePath("untitled.md");
       if (savePath) {
-        await invoke("write_file", { path: savePath, content });
+        await fileAdapter.writeFile(savePath, content);
         setFilePath(savePath);
         markClean();
       }
     } catch (error) {
       setFileError("Failed to save file. Please try again.");
-      console.error("write_file failed:", error);
+      console.error("save file failed:", error);
     }
-  }, [markClean, setFilePath]);
+  }, [fileAdapter, markClean, setFilePath]);
 
   const handleSave = useCallback(async () => {
     const { activeDocumentId, filePath, content } = useDocumentStore.getState();
@@ -114,16 +109,16 @@ export default function App() {
 
     try {
       if (filePath) {
-        await invoke("write_file", { path: filePath, content });
+        await fileAdapter.writeFile(filePath, content);
         markClean();
       } else {
         await handleSaveAs();
       }
     } catch (error) {
       setFileError("Failed to save file. Please try again.");
-      console.error("write_file failed:", error);
+      console.error("save file failed:", error);
     }
-  }, [handleSaveAs, markClean]);
+  }, [fileAdapter, handleSaveAs, markClean]);
 
   const handleNew = useCallback(() => {
     newDocument(useSettingsStore.getState().settings.authoring.newDocumentTemplate);
@@ -340,7 +335,12 @@ export default function App() {
       />
     ) : (
       hasOpenDocuments ? (
-        <Workspace left={<EditorPane theme={theme} />} right={<PreviewPane />} viewMode={viewMode} />
+        <Workspace
+          sidebar={<WorkspaceSidebar onNewDocument={handleNew} onOpenFile={() => void handleOpen()} />}
+          left={<EditorPane theme={theme} />}
+          right={<PreviewPane />}
+          viewMode={viewMode}
+        />
       ) : (
         <EmptyWorkspaceState onNewDocument={handleNew} onOpenFile={() => void handleOpen()} />
       )

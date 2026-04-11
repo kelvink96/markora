@@ -58,7 +58,7 @@ export function MenuSubItem({ label, icon, children }: MenuSubItemProps) {
     <DropdownMenu.Sub>
       <DropdownMenu.SubTrigger asChild>
         <button
-          className="w-full rounded-app-sm border border-transparent px-2.5 py-1.5 text-left text-app-text transition-[background-color,border-color,color] duration-150 ease-out hover:border-[color:color-mix(in_srgb,var(--glass-border)_65%,transparent)] hover:bg-[color:color-mix(in_srgb,var(--surface-menu)_88%,var(--surface-subtle))] focus-visible:outline-none focus-visible:border-[color:color-mix(in_srgb,var(--glass-border-strong)_60%,var(--accent)_18%)] focus-visible:bg-[color:color-mix(in_srgb,var(--surface-menu)_88%,var(--surface-subtle))]"
+          className="w-full rounded-app-sm px-2 py-1.5 text-left text-sm text-app-text transition-colors duration-150 hover:bg-[color:color-mix(in_srgb,var(--surface-panel)_75%,var(--surface-subtle))] focus-visible:outline-none focus-visible:bg-[color:color-mix(in_srgb,var(--surface-panel)_75%,var(--surface-subtle))]"
           type="button"
         >
           <span className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
@@ -95,7 +95,7 @@ export function MenuItem({ children, disabled, icon, onSelect, shortcut }: MenuI
   return (
     <DropdownMenu.Item asChild disabled={disabled}>
       <button
-        className="w-full rounded-app-sm border border-transparent px-2.5 py-1.5 text-left text-app-text transition-[background-color,border-color,color] duration-150 ease-out hover:border-[color:color-mix(in_srgb,var(--glass-border)_65%,transparent)] hover:bg-[color:color-mix(in_srgb,var(--surface-menu)_88%,var(--surface-subtle))] focus-visible:outline-none focus-visible:border-[color:color-mix(in_srgb,var(--glass-border-strong)_60%,var(--accent)_18%)] focus-visible:bg-[color:color-mix(in_srgb,var(--surface-menu)_88%,var(--surface-subtle))] data-[disabled]:cursor-not-allowed data-[disabled]:text-app-text-muted data-[disabled]:hover:border-transparent data-[disabled]:hover:bg-transparent"
+        className="w-full rounded-app-sm px-2 py-1.5 text-left text-sm text-app-text transition-colors duration-150 hover:bg-[color:color-mix(in_srgb,var(--surface-panel)_75%,var(--surface-subtle))] focus-visible:outline-none focus-visible:bg-[color:color-mix(in_srgb,var(--surface-panel)_75%,var(--surface-subtle))] data-[disabled]:cursor-not-allowed data-[disabled]:text-app-text-muted data-[disabled]:hover:bg-transparent"
         type="button"
         onClick={onSelect}
       >

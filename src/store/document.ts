@@ -301,20 +301,19 @@ function normalizeState(state: DocumentStore) {
   return syncActiveProjectView(projects, activeProject.id, state.recentDocuments);
 }
 
-const initialDocument = createUntitledDocument();
 const initialProject: WorkspaceProject = {
   id: "project-1",
   name: "Project 1",
-  documents: [initialDocument],
-  activeDocumentId: initialDocument.id,
+  documents: [],
+  activeDocumentId: "",
 };
 
 export const useDocumentStore = create<DocumentStore>()((set, get) => ({
-  content: initialDocument.content,
-  filePath: initialDocument.filePath,
-  isDirty: initialDocument.isDirty,
-  openDocuments: [initialDocument],
-  activeDocumentId: initialDocument.id,
+  content: "",
+  filePath: null,
+  isDirty: false,
+  openDocuments: [],
+  activeDocumentId: "",
   projects: [initialProject],
   activeProjectId: initialProject.id,
   recentDocuments: [],

@@ -11,7 +11,7 @@ export function MenuTrigger({
   return (
     <DropdownMenu.Trigger asChild>
       <button
-        className={`rounded-app-sm px-2 py-1 text-sm font-medium text-app-text transition-colors duration-150 hover:bg-[color:var(--surface-subtle)] focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-[color:var(--accent)] ${className ?? ""}`}
+        className={`rounded-app-sm px-2 py-1 text-sm font-medium text-app-text transition-colors duration-150 hover:bg-[color:color-mix(in_srgb,var(--surface-panel)_75%,var(--surface-subtle))] focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-[color:var(--accent)] ${className ?? ""}`}
         type={type}
         {...props}
       >

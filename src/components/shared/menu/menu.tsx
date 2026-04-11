@@ -1,4 +1,5 @@
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { ChevronRight } from "lucide-react";
 import type { ButtonHTMLAttributes, PropsWithChildren, ReactNode } from "react";
 
 export function MenuTrigger({
@@ -43,6 +44,42 @@ export function MenuSeparator() {
     <DropdownMenu.Separator
       className="my-1.5 h-px border-0 bg-[color:color-mix(in_srgb,var(--glass-border)_85%,transparent)]"
     />
+  );
+}
+
+interface MenuSubItemProps {
+  label: string;
+  icon?: ReactNode;
+  children: ReactNode;
+}
+
+export function MenuSubItem({ label, icon, children }: MenuSubItemProps) {
+  return (
+    <DropdownMenu.Sub>
+      <DropdownMenu.SubTrigger asChild>
+        <button
+          className="w-full rounded-app-sm border border-transparent px-2.5 py-1.5 text-left text-app-text transition-[background-color,border-color,color] duration-150 ease-out hover:border-[color:color-mix(in_srgb,var(--glass-border)_65%,transparent)] hover:bg-[color:color-mix(in_srgb,var(--surface-panel)_96%,var(--surface-panel-strong))] focus-visible:outline-none focus-visible:border-[color:color-mix(in_srgb,var(--glass-border-strong)_60%,var(--accent)_18%)] focus-visible:bg-[color:color-mix(in_srgb,var(--surface-panel)_96%,var(--surface-panel-strong))]"
+          type="button"
+        >
+          <span className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+            <span className="flex min-w-0 items-center gap-2">
+              {icon ? <span aria-hidden="true" className="shrink-0 text-app-text-muted">{icon}</span> : null}
+              <span className="truncate">{label}</span>
+            </span>
+            <ChevronRight className="size-4 text-app-text-muted" aria-hidden="true" />
+          </span>
+        </button>
+      </DropdownMenu.SubTrigger>
+      <DropdownMenu.Portal>
+        <DropdownMenu.SubContent
+          className="app-flyout z-50 w-56 p-1.5"
+          sideOffset={4}
+          alignOffset={-6}
+        >
+          {children}
+        </DropdownMenu.SubContent>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Sub>
   );
 }
 

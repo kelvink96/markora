@@ -1,6 +1,6 @@
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import type { ReactNode } from "react";
-import { MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "../menu";
+import { MenuContent, MenuItem, MenuSeparator, MenuSubItem, MenuTrigger } from "../menu";
 
 export interface MenuBarItem {
   type?: "item" | "separator";
@@ -9,6 +9,7 @@ export interface MenuBarItem {
   disabled?: boolean;
   shortcut?: string;
   icon?: ReactNode;
+  children?: MenuBarItem[];
 }
 
 export interface MenuBarGroup {
@@ -30,6 +31,24 @@ export function MenuBar({ groups }: MenuBarProps) {
             {group.items.map((item, index) =>
               item.type === "separator" ? (
                 <MenuSeparator key={`${group.label}-separator-${index}`} />
+              ) : item.children ? (
+                <MenuSubItem key={item.label} label={item.label} icon={item.icon}>
+                  {item.children.map((child, childIndex) =>
+                    child.type === "separator" ? (
+                      <MenuSeparator key={`${item.label}-separator-${childIndex}`} />
+                    ) : (
+                      <MenuItem
+                        key={`${item.label}-${child.label}`}
+                        disabled={child.disabled}
+                        onSelect={child.onSelect}
+                        shortcut={child.shortcut}
+                        icon={child.icon}
+                      >
+                        {child.label}
+                      </MenuItem>
+                    ),
+                  )}
+                </MenuSubItem>
               ) : (
                 <MenuItem
                   key={item.label}

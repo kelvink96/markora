@@ -123,7 +123,7 @@ describe("TopBar", () => {
 
     await user.click(screen.getByRole("button", { name: "File" }));
 
-    expect(screen.getByRole("separator")).toBeInTheDocument();
+    expect(screen.getAllByRole("separator").length).toBeGreaterThanOrEqual(1);
     await user.click(screen.getByRole("menuitem", { name: "Settings" }));
     expect(onOpenSettings).toHaveBeenCalled();
   });
@@ -194,7 +194,8 @@ describe("TopBar", () => {
     await user.click(screen.getByRole("button", { name: "File" }));
     expect(screen.getByRole("menuitem", { name: "Close Tab" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Settings" })).toBeInTheDocument();
-    expect(screen.getByRole("separator")).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Open Recent" })).toBeInTheDocument();
+    expect(screen.getAllByRole("separator").length).toBeGreaterThanOrEqual(1);
     await user.keyboard("{Escape}");
 
     await user.click(screen.getByRole("button", { name: "Edit" }));
@@ -274,11 +275,10 @@ describe("TopBar", () => {
     expect(onOpenSettings).toHaveBeenCalled();
   });
 
-  it("shows Open Folder in the File menu only when directory access is available", async () => {
+  it("shows Open Recent trigger in the File menu", async () => {
     const user = userEvent.setup();
-    const onOpenFolder = vi.fn();
 
-    const { rerender } = render(
+    render(
       <TopBar
         onOpenSettings={vi.fn()}
         onThemeToggle={vi.fn()}
@@ -286,34 +286,18 @@ describe("TopBar", () => {
         onOpen={vi.fn()}
         onSave={vi.fn()}
         onSaveAs={vi.fn()}
-        canOpenFolders
-        onOpenFolder={onOpenFolder}
+        recentFiles={[
+          { documentId: "doc-1", projectId: "proj-1", title: "notes.md" },
+          { documentId: "doc-2", projectId: "proj-1", title: "readme.md" },
+        ]}
+        onOpenRecent={vi.fn()}
         viewMode="edit"
         onViewModeChange={vi.fn()}
       />,
     );
 
     await user.click(screen.getByRole("button", { name: "File" }));
-    expect(screen.getByRole("menuitem", { name: "Open Folder" })).toBeInTheDocument();
-    await user.click(screen.getByRole("menuitem", { name: "Open Folder" }));
-    expect(onOpenFolder).toHaveBeenCalled();
-
-    rerender(
-      <TopBar
-        onOpenSettings={vi.fn()}
-        onThemeToggle={vi.fn()}
-        onNew={vi.fn()}
-        onOpen={vi.fn()}
-        onSave={vi.fn()}
-        onSaveAs={vi.fn()}
-        canOpenFolders={false}
-        viewMode="edit"
-        onViewModeChange={vi.fn()}
-      />,
-    );
-
-    await user.click(screen.getByRole("button", { name: "File" }));
-    expect(screen.queryByRole("menuitem", { name: "Open Folder" })).not.toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Open Recent" })).toBeInTheDocument();
   });
 
   it("renders an install action only when web install is available", async () => {

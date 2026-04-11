@@ -1,13 +1,13 @@
 import {
   CircleHelp,
   Clipboard,
+  Clock,
   Copy,
   Download,
   Eye,
   FileInput,
   FileOutput,
   FolderOpen,
-  FolderTree,
   Info,
   MoonStar,
   PanelLeftClose,
@@ -46,8 +46,8 @@ interface TopBarProps {
   onSave?: () => void;
   onSaveAs?: () => void;
   onCloseTab?: () => void;
-  onOpenFolder?: () => void;
-  canOpenFolders?: boolean;
+  recentFiles?: Array<{ documentId: string; projectId: string; title: string }>;
+  onOpenRecent?: (projectId: string, documentId: string) => void;
   canInstallApp?: boolean;
   onInstallApp?: () => void;
   viewMode: WorkspaceViewMode;
@@ -64,8 +64,8 @@ export function TopBar({
   onSave = () => {},
   onSaveAs = () => {},
   onCloseTab = () => {},
-  onOpenFolder = () => {},
-  canOpenFolders = false,
+  recentFiles = [],
+  onOpenRecent = () => {},
   canInstallApp = false,
   onInstallApp = () => {},
   viewMode,
@@ -81,9 +81,21 @@ export function TopBar({
       items: [
         { label: "New", icon: <SquarePen className="size-4" />, shortcut: `${modifierLabel}+N`, onSelect: onNew },
         { label: "Open", icon: <FolderOpen className="size-4" />, shortcut: `${modifierLabel}+O`, onSelect: onOpen },
-        ...(canOpenFolders ? [{ label: "Open Folder", icon: <FolderTree className="size-4" />, onSelect: onOpenFolder }] : []),
+        { type: "separator", label: "separator-file-save" },
         { label: "Save", icon: <Save className="size-4" />, shortcut: `${modifierLabel}+S`, onSelect: onSave },
         { label: "Save As", icon: <FileOutput className="size-4" />, shortcut: `${modifierLabel}+Shift+S`, onSelect: onSaveAs },
+        { type: "separator", label: "separator-file-recent" },
+        {
+          label: "Open Recent",
+          icon: <Clock className="size-4" />,
+          children: recentFiles.length > 0
+            ? recentFiles.map((entry) => ({
+                label: entry.title,
+                onSelect: () => onOpenRecent(entry.projectId, entry.documentId),
+              }))
+            : [{ label: "No recent files", disabled: true }],
+        },
+        { type: "separator", label: "separator-file-close" },
         { label: "Close Tab", icon: <PanelLeftClose className="size-4" />, onSelect: onCloseTab },
         { type: "separator", label: "separator-file-settings" },
         { label: "Settings", icon: <Settings2 className="size-4" />, onSelect: onOpenSettings },

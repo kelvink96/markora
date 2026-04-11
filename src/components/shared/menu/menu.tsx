@@ -11,7 +11,7 @@ export function MenuTrigger({
   return (
     <DropdownMenu.Trigger asChild>
       <button
-        className={`rounded-app-md border border-[color:color-mix(in_srgb,var(--glass-border)_70%,var(--glass-border-strong))] bg-[color:var(--surface-menu)] px-3 py-1.5 text-[0.95rem] font-medium text-app-text shadow-[var(--shadow-crisp)] transition-[background-color,border-color,color,box-shadow] duration-150 ease-out hover:border-[color:color-mix(in_srgb,var(--glass-border-strong)_60%,var(--accent)_18%)] hover:bg-[color:color-mix(in_srgb,var(--surface-menu)_88%,var(--surface-subtle))] focus-visible:outline-none focus-visible:ring-0 focus-visible:shadow-[var(--shadow-crisp),0_0_0_3px_color-mix(in_srgb,var(--accent)_22%,transparent)] ${className ?? ""}`}
+        className={`rounded-app-sm px-2 py-1 text-sm font-medium text-app-text transition-colors duration-150 hover:bg-[color:var(--surface-subtle)] focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-[color:var(--accent)] ${className ?? ""}`}
         type={type}
         {...props}
       >

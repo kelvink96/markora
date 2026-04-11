@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   build-windows:
@@ -27,32 +28,31 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Import signing certificate
-        id: import_cert
-        env:
-          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
-          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
-        run: |
-          $certBytes = [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE)
-          $certPath = "$env:RUNNER_TEMP\certificate.pfx"
-          [IO.File]::WriteAllBytes($certPath, $certBytes)
-          $cert = Import-PfxCertificate -FilePath $certPath -CertStoreLocation Cert:\CurrentUser\My -Password (ConvertTo-SecureString $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force)
-          "thumbprint=$($cert.Thumbprint)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-
-      - name: Configure Windows signing for Tauri
-        shell: pwsh
-        run: |
-          $configPath = "src-tauri/tauri.conf.json"
-          $config = Get-Content $configPath -Raw | ConvertFrom-Json
-          $config.bundle.windows.certificateThumbprint = "${{ steps.import_cert.outputs.thumbprint }}"
-          $config.bundle.windows.timestampUrl = "http://timestamp.digicert.com"
-          $config | ConvertTo-Json -Depth 100 | Set-Content $configPath
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Build Tauri app
         run: npm run tauri build
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+      - name: Sign MSI with Azure Artifact Signing
+        uses: azure/trusted-signing-action@v0
+        with:
+          endpoint: ${{ vars.AZURE_CODESIGN_ENDPOINT }}
+          signing-account-name: ${{ vars.AZURE_CODESIGN_ACCOUNT_NAME }}
+          certificate-profile-name: ${{ vars.AZURE_CODESIGN_CERT_PROFILE }}
+          files-folder: ${{ github.workspace }}\src-tauri\target\release\bundle\msi
+          files-folder-filter: "*.msi"
+          files-folder-recurse: false
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
 
       - name: Verify MSI signature
         shell: pwsh

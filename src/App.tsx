@@ -555,7 +555,7 @@ export default function App() {
         tabStrip={activeScreen === "workspace" ? tabStrip : null}
         commandBar={activeScreen === "workspace" ? commandBar : null}
         workspace={workspace}
-        statusBar={settings.appearance.showStatusBar && activeScreen === "workspace" ? statusBar : null}
+        statusBar={settings.appearance.showStatusBar && activeScreen === "workspace" && hasOpenDocuments ? statusBar : null}
       />
       <Dialog
         open={pendingCloseRequest !== null}

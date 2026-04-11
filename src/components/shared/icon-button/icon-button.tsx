@@ -33,7 +33,7 @@ export function IconButton({
         </Tooltip.Trigger>
         <Tooltip.Portal>
           <Tooltip.Content
-            className="app-flyout z-50 px-2 py-1 text-sm text-app-text"
+            className="app-flyout-solid z-50 px-2 py-1 text-sm text-app-text"
             sideOffset={8}
           >
             {label}

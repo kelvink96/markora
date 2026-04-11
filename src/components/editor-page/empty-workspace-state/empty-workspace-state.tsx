@@ -18,9 +18,6 @@ export function EmptyWorkspaceState({
         <div className="mb-5 inline-flex size-14 items-center justify-center rounded-full border border-[color:var(--glass-border)] bg-[color:color-mix(in_srgb,var(--accent)_14%,var(--surface-panel-strong))] text-[color:var(--accent-strong)]">
           <FilePlus2 className="size-6" aria-hidden="true" />
         </div>
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-app-text-muted">
-          Workspace cleared
-        </p>
         <h1 className="mt-3 text-3xl font-semibold tracking-[-0.02em] text-app-text">
           No document open
         </h1>

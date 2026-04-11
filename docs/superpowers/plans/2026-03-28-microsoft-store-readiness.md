@@ -135,6 +135,7 @@ Expected: FAIL — the script tag is currently not stripped.
 
 - [ ] **Step 4: Update `preview-pane.tsx` to sanitize with DOMPurify**
 
+{% raw %}
 ```tsx
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
@@ -165,6 +166,7 @@ export function PreviewPane() {
   );
 }
 ```
+{% endraw %}
 
 - [ ] **Step 5: Run the test and confirm it passes**
 
@@ -676,6 +678,7 @@ This workflow builds a signed MSIX on every version tag push (e.g. `v1.0.0`) and
 
 - [ ] **Step 1: Create `.github/workflows/release.yml`**
 
+{% raw %}
 ```yaml
 name: Release
 
@@ -724,6 +727,7 @@ jobs:
           path: src-tauri/target/release/bundle/msi/*.msi
           if-no-files-found: error
 ```
+{% endraw %}
 
 - [ ] **Step 2: Add required secrets to the GitHub repository**
 

@@ -1250,6 +1250,7 @@ export { EditorPane, type EditorPaneHandle } from "./editor-pane";
 
 Replace `src/components/editor-page/preview-pane/preview-pane.tsx`:
 
+{% raw %}
 ```tsx
 import { forwardRef, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
@@ -1281,6 +1282,7 @@ export const PreviewPane = forwardRef<HTMLDivElement, object>(function PreviewPa
   );
 });
 ```
+{% endraw %}
 
 - [ ] **Step 4: Add refs and scroll sync effect in App.tsx**
 

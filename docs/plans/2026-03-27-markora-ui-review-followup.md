@@ -189,6 +189,7 @@ Expected: FAIL because the current panes are anonymous `div`s.
 
 **Step 3: Write minimal implementation**
 
+{% raw %}
 ```tsx
 export function Workspace({ left, right }: WorkspaceProps) {
   return (
@@ -212,6 +213,7 @@ export function Workspace({ left, right }: WorkspaceProps) {
   );
 }
 ```
+{% endraw %}
 
 Then update CSS so:
 - `app-shell__workspace` stretches edge-to-edge with less wasted lower whitespace

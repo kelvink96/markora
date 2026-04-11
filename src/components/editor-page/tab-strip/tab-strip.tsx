@@ -107,7 +107,7 @@ export function TabStrip({
             onClick={closeContextMenu}
           />
           <div
-            className="app-flyout-solid absolute z-50 w-40 p-1"
+            className="app-flyout-solid fixed z-[60] w-40 p-1"
             style={{ left: contextMenu.x, top: contextMenu.y }}
           >
             <button

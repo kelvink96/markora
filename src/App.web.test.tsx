@@ -108,15 +108,20 @@ vi.mock("./components/editor-page/workspace", () => ({
 
 vi.mock("./components/editor-page/top-bar", () => ({
   TopBar: ({
+    onOpen,
     onSave,
     canInstallApp,
     onInstallApp,
   }: {
+    onOpen: () => void;
     onSave: () => void;
     canInstallApp?: boolean;
     onInstallApp?: () => void;
   }) => (
     <div>
+      <button type="button" onClick={onOpen}>
+        open
+      </button>
       <button type="button" onClick={onSave}>
         save
       </button>
@@ -202,55 +207,13 @@ describe("App web mode", () => {
     expect(useDocumentStore.getState().content).toBe("# Restored");
   });
 
-  it("imports a folder as a project when the user opens a directory", async () => {
+  it("imports files when the user opens from the File menu", async () => {
     const user = userEvent.setup();
-    openDirectoryMock.mockResolvedValue({
-      name: "Workspace",
-      files: [
-        { name: "notes.md", path: "notes.md", content: "# Notes" },
-        { name: "todo.md", path: "nested/todo.md", content: "- [ ] Ship" },
-      ],
-    });
-
-    render(<App />);
-    await user.click(screen.getByRole("button", { name: "Open folder" }));
-
-    await waitFor(() =>
-      expect(useDocumentStore.getState().projects.some((project) => project.name === "Workspace")).toBe(true),
-    );
-    expect(useDocumentStore.getState().openDocuments).toHaveLength(2);
-  });
-
-  it("saves a folder-backed document through its file handle", async () => {
-    const user = userEvent.setup();
-    const handle = {
-      kind: "file",
-      name: "notes.md",
-      getFile: vi.fn(),
-      createWritable: vi.fn(),
-    } as unknown as FileSystemFileHandle;
-    openDirectoryMock.mockResolvedValue({
-      name: "Workspace",
-      files: [{ name: "notes.md", path: "notes.md", content: "# Notes", handle }],
-    });
-
-    render(<App />);
-    await user.click(screen.getByRole("button", { name: "Open folder" }));
-    await waitFor(() => expect(useDocumentStore.getState().openDocuments).toHaveLength(1));
-
-    useDocumentStore.getState().setContent("# Updated");
-    await user.click(screen.getByRole("button", { name: "save" }));
-
-    await waitFor(() => expect(writeWorkspaceFileMock).toHaveBeenCalledWith(handle, "# Updated"));
-  });
-
-  it("imports files when directory access is unavailable", async () => {
-    const user = userEvent.setup();
-    supportsDirectoryAccessMock.mockReturnValue(false);
+    supportsFileImportMock.mockReturnValue(true);
     importFilesMock.mockResolvedValue([{ name: "draft.md", path: "draft.md", content: "# Draft" }]);
 
     render(<App />);
-    await user.click(screen.getByRole("button", { name: "Import files" }));
+    await user.click(screen.getByRole("button", { name: "open" }));
 
     await waitFor(() =>
       expect(useDocumentStore.getState().projects.some((project) => project.name === "draft.md")).toBe(true),

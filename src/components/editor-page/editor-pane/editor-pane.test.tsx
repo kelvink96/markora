@@ -25,6 +25,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useEditorCommandState } from "../../../features/editor/editor-command-state";
 import { createDefaultSettings } from "../../../features/settings/settings-schema";
+import { useDocumentStore } from "../../../store/document";
 import { useSettingsStore } from "../../../features/settings/settings-store";
 
 const { mockState } = vi.hoisted(() => {
@@ -177,6 +178,8 @@ describe("EditorPane", () => {
   });
 
   it("writes selected text through the tauri clipboard plugin when copying", async () => {
+    // The app now launches with no document, so seed content for the editor to select.
+    useDocumentStore.setState({ content: "copy me" });
     render(<EditorPane theme="light" />);
 
     await act(async () => {

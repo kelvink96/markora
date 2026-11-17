@@ -24,7 +24,7 @@ describe("TabStrip", () => {
       "bg-[color:var(--glass-panel-strong)]",
     );
     const activeTab = screen.getByRole("tab", { name: "one.md" });
-    const inactiveTab = screen.getByRole("tab", { name: "Untitled *" });
+    const inactiveTab = screen.getByRole("tab", { name: "Welcome to Markora *" });
     expect(activeTab).toHaveAttribute("aria-selected", "true");
     expect(activeTab.parentElement).toHaveClass(
       "tab-strip__tab",

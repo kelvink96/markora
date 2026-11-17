@@ -1,9 +1,15 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TopBar } from "./top-bar";
+import { useDocumentStore } from "../../../store/document";
 
 describe("TopBar", () => {
+  beforeEach(() => {
+    // Formatting, Edit and view controls only show while a document is open.
+    useDocumentStore.setState({ activeDocumentId: "doc-1" });
+  });
+
   it("shows mac-style shortcut labels in the File menu on macOS", async () => {
     const user = userEvent.setup();
     const originalPlatform = window.navigator.platform;
@@ -35,6 +41,23 @@ describe("TopBar", () => {
       configurable: true,
       value: originalPlatform,
     });
+  });
+
+  it("hides document controls when no document is open", () => {
+    useDocumentStore.setState({ activeDocumentId: "" });
+
+    render(
+      <TopBar
+        onOpenSettings={vi.fn()}
+        onThemeToggle={vi.fn()}
+        viewMode="edit"
+        onViewModeChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByLabelText("Formatting")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Split view" })).not.toBeInTheDocument();
   });
 
   it("renders document metadata and control groups", () => {

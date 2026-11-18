@@ -66,6 +66,7 @@ export function EditorPane({ theme }: EditorPaneProps) {
   const setCursorPosition = useEditorStatusState((state) => state.setCursorPosition);
   const setRunToolbarAction = useEditorCommandState((state) => state.setRunToolbarAction);
   const setRunEditAction = useEditorCommandState((state) => state.setRunEditAction);
+  const setGoToLine = useEditorCommandState((state) => state.setGoToLine);
   const [slashMenu, setSlashMenu] = useState<SlashMenuState | null>(null);
   const [inlineMenu, setInlineMenu] = useState<InlineMenuState | null>(null);
   const [find, setFind] = useState<FindState | null>(null);
@@ -235,6 +236,22 @@ export function EditorPane({ theme }: EditorPaneProps) {
       ),
     });
   }, [editorFontSize, editorLineHeight, editorSettings, settingsCompartment, theme]);
+
+  useEffect(() => {
+    setGoToLine((line) => {
+      const view = viewRef.current;
+      if (!view) return;
+
+      const { doc } = view.state;
+      const position = doc.line(Math.min(Math.max(1, line), doc.lines)).from;
+      view.dispatch({
+        selection: { anchor: position },
+        effects: CMView.scrollIntoView(position, { y: "start", yMargin: 24 }),
+      });
+      view.focus();
+    });
+    return () => setGoToLine(() => {});
+  }, [setGoToLine]);
 
   useEffect(() => {
     setRunToolbarAction(runMarkdownAction);

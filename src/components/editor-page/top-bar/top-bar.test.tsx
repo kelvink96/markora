@@ -20,6 +20,7 @@ function renderBar(props: Partial<Parameters<typeof TopBar>[0]> = {}) {
     onCloseTab: vi.fn(),
     onExportHtml: vi.fn(),
     onExportPdf: vi.fn(),
+    onToggleOutline: vi.fn(),
     onOpenRecent: vi.fn(),
     onViewModeChange: vi.fn(),
   };
@@ -191,6 +192,25 @@ describe("TopBar", () => {
       expect(handlers.onViewModeChange).toHaveBeenCalledWith(mode);
     });
 
+    it("shows and hides the outline from the View menu, and says which it will do", async () => {
+      const user = userEvent.setup();
+      const handlers = renderBar({ showOutline: false });
+
+      await user.click(screen.getByRole("menuitem", { name: "View" }));
+      await user.click(await screen.findByRole("menuitem", { name: "Show Outline" }));
+
+      expect(handlers.onToggleOutline).toHaveBeenCalledTimes(1);
+    });
+
+    it("offers Hide Outline while it is open", async () => {
+      const user = userEvent.setup();
+      renderBar({ showOutline: true });
+
+      await user.click(screen.getByRole("menuitem", { name: "View" }));
+
+      expect(await screen.findByRole("menuitem", { name: "Hide Outline" })).toBeInTheDocument();
+    });
+
     it("keeps Toggle Theme available with no document open, without the view options", async () => {
       const user = userEvent.setup();
       useDocumentStore.setState({ activeDocumentId: "" });
@@ -239,6 +259,24 @@ describe("TopBar", () => {
       await user.click(screen.getByRole("button", { name: "Toggle theme" }));
 
       expect(handlers.onThemeToggle).toHaveBeenCalledTimes(1);
+    });
+
+    it("has an Outline toggle that reflects whether it is open", async () => {
+      const user = userEvent.setup();
+      const handlers = renderBar({ showOutline: true });
+      const toggle = screen.getByRole("button", { name: "Outline" });
+
+      expect(toggle).toHaveAttribute("aria-pressed", "true");
+      await user.click(toggle);
+
+      expect(handlers.onToggleOutline).toHaveBeenCalledTimes(1);
+    });
+
+    it("has no Outline toggle with nothing open", () => {
+      useDocumentStore.setState({ activeDocumentId: "" });
+      renderBar();
+
+      expect(screen.queryByRole("button", { name: "Outline" })).not.toBeInTheDocument();
     });
 
     it("switches the view from the view mode control", async () => {

@@ -11,6 +11,7 @@ import {
   FileOutput,
   FolderOpen,
   Info,
+  ListTree,
   Moon,
   PanelLeftClose,
   PanelsTopLeft,
@@ -40,6 +41,7 @@ import {
   MenubarSubTrigger,
   MenubarTrigger,
 } from "@/components/ui/menubar";
+import { Toggle } from "@/components/ui/toggle";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Logo } from "../../logo";
 import { ViewModeSwitcher } from "../view-mode-switcher";
@@ -64,6 +66,8 @@ interface TopBarProps {
   onCloseTab?: () => void;
   onExportHtml?: () => void;
   onExportPdf?: () => void;
+  showOutline?: boolean;
+  onToggleOutline?: () => void;
   recentFiles?: Array<{ documentId: string; projectId: string; title: string }>;
   onOpenRecent?: (projectId: string, documentId: string) => void;
   canInstallApp?: boolean;
@@ -86,6 +90,8 @@ export function TopBar({
   onCloseTab = () => {},
   onExportHtml = () => {},
   onExportPdf = () => {},
+  showOutline = false,
+  onToggleOutline = () => {},
   recentFiles = [],
   onOpenRecent = () => {},
   canInstallApp = false,
@@ -217,6 +223,10 @@ export function TopBar({
                     <Eye className={iconClass} /> Preview View
                   </MenubarItem>
                   <MenubarSeparator />
+                  <MenubarItem onSelect={onToggleOutline}>
+                    <ListTree className={iconClass} /> {showOutline ? "Hide Outline" : "Show Outline"}
+                  </MenubarItem>
+                  <MenubarSeparator />
                 </>
               ) : null}
               <MenubarItem onSelect={onThemeToggle}>
@@ -259,6 +269,22 @@ export function TopBar({
           </TooltipTrigger>
           <TooltipContent>Toggle theme</TooltipContent>
         </Tooltip>
+        {hasActiveDocument ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Toggle
+                size="sm"
+                variant="outline"
+                aria-label="Outline"
+                pressed={showOutline}
+                onPressedChange={onToggleOutline}
+              >
+                <ListTree aria-hidden="true" />
+              </Toggle>
+            </TooltipTrigger>
+            <TooltipContent>Outline</TooltipContent>
+          </Tooltip>
+        ) : null}
         {hasActiveDocument ? <ViewModeSwitcher value={viewMode} onValueChange={onViewModeChange} /> : null}
       </div>
     </header>

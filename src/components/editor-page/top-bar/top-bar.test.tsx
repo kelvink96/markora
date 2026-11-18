@@ -156,6 +156,8 @@ describe("TopBar", () => {
       ["Copy", "copy"],
       ["Paste", "paste"],
       ["Select All", "selectAll"],
+      ["Find", "find"],
+      ["Replace", "replace"],
     ] as const)("%s runs the %s editor action", async (label, action) => {
       const user = userEvent.setup();
       const runEditAction = vi.fn().mockResolvedValue(undefined);

@@ -55,6 +55,7 @@ const { mockState } = vi.hoisted(() => {
       updateListener: null as ((update: MockUpdate) => void) | null,
       EditorView: HoistedMockEditorView,
       dispatchSpy: vi.fn(),
+      keybindings: [] as Array<{ key: string; run: () => boolean }>,
     },
   };
 });
@@ -70,6 +71,7 @@ vi.mock("codemirror", () => ({
 }));
 
 vi.mock("@codemirror/state", () => ({
+  Prec: { highest: (extension: unknown) => extension },
   Compartment: class {
     of(extension: unknown) {
       return extension;
@@ -101,6 +103,12 @@ vi.mock("@codemirror/state", () => ({
 }));
 
 vi.mock("@codemirror/view", () => ({
+  keymap: {
+    of: vi.fn((bindings: unknown[]) => {
+      mockState.keybindings = bindings as typeof mockState.keybindings;
+      return bindings;
+    }),
+  },
   EditorView: {
     theme: vi.fn((config: unknown) => config),
     updateListener: {
@@ -134,6 +142,16 @@ vi.mock("@codemirror/commands", () => ({
 vi.mock("@tauri-apps/plugin-clipboard-manager", () => ({
   readText: clipboardReadTextMock,
   writeText: clipboardWriteTextMock,
+}));
+vi.mock("../../../features/editor/find-replace", () => ({ findExtensions: [] }));
+vi.mock("../find-bar", () => ({
+  FindBar: ({ initialMode, initialSearch, onClose }: { initialMode: string; initialSearch: string; onClose: () => void }) => (
+    <div role="search" data-mode={initialMode} data-search={initialSearch}>
+      <button type="button" onClick={onClose}>
+        close-find
+      </button>
+    </div>
+  ),
 }));
 import { EditorPane } from "./editor-pane";
 
@@ -389,6 +407,57 @@ describe("EditorPane", () => {
       changes: expect.objectContaining({
         insert: expect.stringContaining("**"),
       }),
+    });
+  });
+
+  describe("find and replace (#14)", () => {
+    it("opens the find bar from the Edit menu action", () => {
+      render(<EditorPane theme="light" />);
+      expect(screen.queryByRole("search")).not.toBeInTheDocument();
+
+      act(() => {
+        void useEditorCommandState.getState().runEditAction("find");
+      });
+
+      expect(screen.getByRole("search")).toHaveAttribute("data-mode", "find");
+    });
+
+    it("opens it with the replace row from the Replace action", () => {
+      render(<EditorPane theme="light" />);
+
+      act(() => {
+        void useEditorCommandState.getState().runEditAction("replace");
+      });
+
+      expect(screen.getByRole("search")).toHaveAttribute("data-mode", "replace");
+    });
+
+    it("binds Ctrl+F and Ctrl+H, ahead of CodeMirror's own search panel", () => {
+      render(<EditorPane theme="light" />);
+      const bindings = Object.fromEntries(mockState.keybindings.map((binding) => [binding.key, binding.run]));
+
+      expect(Object.keys(bindings)).toEqual(expect.arrayContaining(["Mod-f", "Mod-h"]));
+      act(() => {
+        bindings["Mod-h"]();
+      });
+      expect(screen.getByRole("search")).toHaveAttribute("data-mode", "replace");
+
+      act(() => {
+        bindings["Mod-f"]();
+      });
+      expect(screen.getByRole("search")).toHaveAttribute("data-mode", "find");
+    });
+
+    it("closes the bar from its close action", async () => {
+      const user = userEvent.setup();
+      render(<EditorPane theme="light" />);
+      act(() => {
+        void useEditorCommandState.getState().runEditAction("find");
+      });
+
+      await user.click(screen.getByRole("button", { name: "close-find" }));
+
+      expect(screen.queryByRole("search")).not.toBeInTheDocument();
     });
   });
 });

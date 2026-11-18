@@ -92,13 +92,14 @@ export function TopBar({
   const iconClass = "size-4";
 
   return (
-    <header className="top-bar flex h-12 items-center gap-2 border-b bg-card/70 px-2 backdrop-blur-md">
+    // On narrow screens the tabs wrap onto their own row (order-last + full width) instead of being squeezed out.
+    <header className="top-bar flex min-h-12 flex-wrap items-center gap-x-2 gap-y-1 border-b bg-card/70 px-2 py-1.5 backdrop-blur-md md:flex-nowrap md:py-0">
       <div className="flex shrink-0 items-center gap-1.5" data-testid="top-bar-menu">
         <Logo size={24} showLabel={!hasActiveDocument} className="mx-1" />
         <Menubar className="h-auto gap-0.5 border-0 bg-transparent p-0 shadow-none">
           <MenubarMenu>
             <MenubarTrigger>File</MenubarTrigger>
-            <MenubarContent>
+            <MenubarContent className="min-w-60">
               <MenubarItem onSelect={onNew}>
                 <SquarePen className={iconClass} /> New <MenubarShortcut>{mod}+N</MenubarShortcut>
               </MenubarItem>
@@ -220,9 +221,9 @@ export function TopBar({
         </Menubar>
       </div>
 
-      <div className="flex min-w-0 flex-1 items-center">{tabs}</div>
+      <div className="order-last flex w-full min-w-0 items-center md:order-none md:w-auto md:flex-1">{tabs}</div>
 
-      <div className="flex shrink-0 items-center gap-1.5" data-testid="top-bar-utilities">
+      <div className="ml-auto flex shrink-0 items-center gap-1.5 md:ml-0" data-testid="top-bar-utilities">
         {canInstallApp ? (
           <Button size="sm" variant="outline" onClick={onInstallApp}>
             <Download aria-hidden="true" /> Install app

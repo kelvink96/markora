@@ -318,7 +318,7 @@ export function EditorPane({ theme }: EditorPaneProps) {
         }
       }}
     >
-      <div className="editor-pane__panel flex h-full flex-col overflow-hidden rounded-xl border bg-editor shadow-sm">
+      <div className="editor-pane__panel flex h-full flex-col overflow-hidden rounded-xl border bg-editor shadow-sm transition-shadow focus-within:ring-2 focus-within:ring-ring/40">
         <div className="relative min-h-0 flex-1">
           <div
             ref={containerRef}

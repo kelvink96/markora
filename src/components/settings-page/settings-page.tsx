@@ -126,7 +126,7 @@ export function SettingsPage({
           onSectionChange={setActiveSection}
         />
         <div className="min-h-0 overflow-auto">
-          <div className="mx-auto w-full max-w-3xl pb-6">{sectionContent[activeSection]}</div>
+          <div className="w-full max-w-3xl pb-6">{sectionContent[activeSection]}</div>
         </div>
       </div>
     </section>

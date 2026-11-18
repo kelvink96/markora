@@ -6,7 +6,8 @@ export function FormattingBar() {
   const runToolbarAction = useEditorCommandState((state) => state.runToolbarAction);
 
   return (
-    <div className="flex h-10 items-center border-b bg-card/40 px-2" data-testid="formatting-bar">
+    // Scrolls sideways on narrow screens so every button stays reachable.
+    <div className="flex h-10 items-center overflow-x-auto border-b bg-card/40 px-2 [scrollbar-width:none]" data-testid="formatting-bar">
       <FormattingToolbar
         onHeading={() => runToolbarAction("heading")}
         onBold={() => runToolbarAction("bold")}

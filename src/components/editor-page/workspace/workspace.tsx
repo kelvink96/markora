@@ -3,6 +3,11 @@ import { useSettingsStore } from "../../../features/settings/settings-store";
 import { useScrollSync } from "../../../features/workspace/use-scroll-sync";
 import type { WorkspaceViewMode } from "../../../features/workspace/workspace-state";
 
+// A 16rem sidebar leaves a phone-width editor a few characters wide, so below the md breakpoint it
+// floats over the panes (positioned against the `relative` workspace box) instead of sitting beside them.
+const SIDEBAR_SLOT =
+  "min-h-0 shrink-0 overflow-hidden max-md:absolute max-md:inset-y-2.5 max-md:left-3 max-md:z-20 max-md:max-w-[calc(100%-1.5rem)] max-md:shadow-2xl";
+
 interface WorkspaceProps {
   sidebar?: ReactNode;
   left: ReactNode;
@@ -63,8 +68,8 @@ export function Workspace({ sidebar, left, right, viewMode }: WorkspaceProps) {
 
   if (viewMode === "edit") {
     return (
-      <div className="workspace flex min-h-0 flex-1 overflow-hidden px-3 pb-3 pt-2.5">
-        {sidebar ? <div className="min-h-0 shrink-0 overflow-hidden">{sidebar}</div> : null}
+      <div className="workspace relative flex min-h-0 flex-1 overflow-hidden px-3 pb-3 pt-2.5">
+        {sidebar ? <div className={SIDEBAR_SLOT}>{sidebar}</div> : null}
         <section className="min-h-0 flex-1 overflow-hidden" role="region" aria-label="Editor workspace">
           {left}
         </section>
@@ -83,7 +88,7 @@ export function Workspace({ sidebar, left, right, viewMode }: WorkspaceProps) {
 
   return (
     <div
-      className="workspace flex min-h-0 flex-1 gap-2 overflow-hidden px-3 pb-3 pt-2.5"
+      className="workspace relative flex min-h-0 flex-1 gap-2 overflow-hidden px-3 pb-3 pt-2.5"
       onMouseMove={onMouseMove}
       onMouseUp={() => {
         dragging.current = false;
@@ -92,7 +97,7 @@ export function Workspace({ sidebar, left, right, viewMode }: WorkspaceProps) {
         dragging.current = false;
       }}
     >
-      {sidebar ? <div className="min-h-0 shrink-0 overflow-hidden">{sidebar}</div> : null}
+      {sidebar ? <div className={SIDEBAR_SLOT}>{sidebar}</div> : null}
       {/* The panes' percentage widths (and the divider drag) are measured against this box, so a
           sidebar beside it takes its width off the panes instead of pushing them out of the window. */}
       <div ref={containerRef} className="flex min-h-0 min-w-0 flex-1 gap-2">

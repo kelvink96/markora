@@ -70,6 +70,19 @@ describe("Workspace with a sidebar (#16)", () => {
 
     expect(screen.getByText("Outline")).toBeInTheDocument();
   });
+
+  // On a phone a 16rem column leaves the editor a few characters wide, so below the md breakpoint
+  // the sidebar floats over the panes instead of taking space from them.
+  it.each(["edit", "split"] as const)("floats the sidebar over the panes on narrow screens in %s view", (viewMode) => {
+    const { container } = render(
+      <Workspace viewMode={viewMode} sidebar={<div>Outline</div>} left={<div>Left</div>} right={<div>Right</div>} />,
+    );
+
+    const sidebar = screen.getByText("Outline").parentElement!;
+    expect(sidebar).toHaveClass("max-md:absolute", "max-md:z-20");
+    // The overlay is positioned against the workspace box.
+    expect(container.querySelector(".workspace")).toHaveClass("relative");
+  });
 });
 
 describe("Workspace scroll sync (#12)", () => {

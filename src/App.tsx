@@ -37,6 +37,9 @@ import { useWorkspaceState } from "./features/workspace/workspace-state";
 import { useDocumentStore } from "./store/document";
 import { useThemeStore } from "./features/theme/theme-store";
 import { ErrorBanner } from "./components/editor-page/error-banner";
+import { CommandPalette } from "./components/editor-page/command-palette";
+import { buildPaletteCommands } from "./features/commands/palette-commands";
+import { getModifierLabel } from "./features/shortcuts/modifier-label";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { getFileAdapter } from "./platform/files";
@@ -49,6 +52,7 @@ export default function App() {
   const [isKeyboardShortcutsOpen, setIsKeyboardShortcutsOpen] = useState(false);
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
   const [isReleaseNotesOpen, setIsReleaseNotesOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const newDocument = useDocumentStore((state) => state.newDocument);
   const recentDocuments = useDocumentStore((state) => state.recentDocuments);
   const selectProject = useDocumentStore((state) => state.selectProject);
@@ -63,6 +67,8 @@ export default function App() {
   const showOutline = useWorkspaceState((state) => state.showOutline);
   const toggleOutline = useWorkspaceState((state) => state.toggleOutline);
   const goToLine = useEditorCommandState((state) => state.goToLine);
+  const runToolbarAction = useEditorCommandState((state) => state.runToolbarAction);
+  const runEditAction = useEditorCommandState((state) => state.runEditAction);
   const settings = useSettingsStore((state) => state.settings);
   const hydrateSettings = useSettingsStore((state) => state.hydrate);
   const updateAppearance = useSettingsStore((state) => state.updateAppearance);
@@ -104,6 +110,10 @@ export default function App() {
     onOpen: handleOpen,
     onSave: handleSave,
     onSaveAs: handleSaveAs,
+    // The palette acts on the workspace, so it is not offered from the settings screen.
+    onCommandPalette: () => {
+      if (activeScreen === "workspace") setIsCommandPaletteOpen(true);
+    },
   });
 
   const persistCurrentSettings = useCallback(() => {
@@ -145,6 +155,7 @@ export default function App() {
     <TopBar
       tabs={activeScreen === "workspace" ? tabStrip : null}
       onOpenSettings={() => setActiveScreen("settings")}
+      onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
       onOpenKeyboardShortcuts={() => setIsKeyboardShortcutsOpen(true)}
       onOpenAbout={() => setIsAboutDialogOpen(true)}
       onOpenReleaseNotes={() => setIsReleaseNotesOpen(true)}
@@ -270,6 +281,39 @@ export default function App() {
         onAboutOpenChange={setIsAboutDialogOpen}
         releaseNotesOpen={isReleaseNotesOpen}
         onReleaseNotesOpenChange={setIsReleaseNotesOpen}
+      />
+      <CommandPalette
+        open={isCommandPaletteOpen}
+        onOpenChange={setIsCommandPaletteOpen}
+        commands={
+          // Built only while open, so it always reflects the current document, view mode and outline state.
+          isCommandPaletteOpen
+            ? buildPaletteCommands({
+                modifier: getModifierLabel(),
+                hasActiveDocument: hasOpenDocuments,
+                viewMode,
+                showOutline,
+                handlers: {
+                  onNew: handleNew,
+                  onOpen: () => void handleOpen(),
+                  onSave: () => void handleSave(),
+                  onSaveAs: () => void handleSaveAs(),
+                  onCloseTab: requestCloseCurrentTab,
+                  onExportHtml: () => void exportHtml(),
+                  onExportPdf: () => void exportPdf(),
+                  onOpenSettings: () => setActiveScreen("settings"),
+                  onToggleTheme: handleThemeToggle,
+                  onToggleOutline: toggleOutline,
+                  onViewModeChange: setViewMode,
+                  onFormat: runToolbarAction,
+                  onEditAction: (action) => void runEditAction(action),
+                  onOpenShortcuts: () => setIsKeyboardShortcutsOpen(true),
+                  onOpenReleaseNotes: () => setIsReleaseNotesOpen(true),
+                  onOpenAbout: () => setIsAboutDialogOpen(true),
+                },
+              })
+            : []
+        }
       />
       <Toaster position="bottom-right" />
     </TooltipProvider>

@@ -55,6 +55,9 @@ export function AppDialogs({
     ["Open an existing file", [`${mod}+O`]],
     ["Save the current document", [`${mod}+S`]],
     ["Save As", [`${mod}+Shift+S`]],
+    ["Open the command palette", [`${mod}+K`, `${mod}+Shift+P`]],
+    ["Find in the document", [`${mod}+F`]],
+    ["Find and replace", [`${mod}+H`]],
     ["Next tab", ["Ctrl+Tab"]],
     ["Previous tab", ["Ctrl+Shift+Tab"]],
   ];

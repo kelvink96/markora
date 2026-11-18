@@ -40,7 +40,7 @@ export function EmptyWorkspaceState({
           </Button>
         </div>
         <p className="relative mt-6 flex items-center gap-2 text-xs text-muted-foreground">
-          <Kbd>{mod}+N</Kbd> new <span aria-hidden="true">·</span> <Kbd>{mod}+O</Kbd> open
+          <Kbd>{mod}+N</Kbd> new <span aria-hidden="true">·</span> <Kbd>{mod}+O</Kbd> open <span aria-hidden="true">·</span> <Kbd>{mod}+K</Kbd> commands
         </p>
       </div>
     </section>

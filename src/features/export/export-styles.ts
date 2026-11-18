@@ -40,6 +40,12 @@ ${s} th, ${s} td { padding: 0.5rem 0.7rem; border-bottom: 1px solid #e2e0ee; tex
 ${s} th { background: #f4f3ff; font-weight: 600; }
 ${s} img { max-width: 100%; height: auto; border-radius: 6px; }
 ${s} hr { border: 0; border-top: 1px solid #e2e0ee; margin: 2rem 0; }
+${s} .hljs-keyword, ${s} .hljs-selector-tag, ${s} .hljs-section { color: #4f46e5; font-weight: 600; }
+${s} .hljs-string, ${s} .hljs-regexp, ${s} .hljs-addition { color: #0f766e; }
+${s} .hljs-comment, ${s} .hljs-quote, ${s} .hljs-doctag { color: #6b6a80; font-style: italic; }
+${s} .hljs-number, ${s} .hljs-literal, ${s} .hljs-symbol, ${s} .hljs-bullet, ${s} .hljs-deletion { color: #b4236b; }
+${s} .hljs-title, ${s} .hljs-built_in, ${s} .hljs-type, ${s} .hljs-attr, ${s} .hljs-attribute, ${s} .hljs-name, ${s} .hljs-property, ${s} .hljs-selector-class, ${s} .hljs-selector-id { color: #0b6bb5; }
+${s} .hljs-meta, ${s} .hljs-punctuation, ${s} .hljs-operator { color: #5d5c73; }
 @media print {
   ${s} { font-size: 11pt; }
   ${s} .markora-document { max-width: none; padding: 0; }

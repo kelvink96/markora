@@ -14,6 +14,7 @@ describe("webMarkdownAdapter", () => {
 
     expect(html).toContain("<pre><code");
     expect(html).toContain("const answer = 42;");
+    expect(html).toContain(`class="language-ts"`);
   });
 
   it("renders GitHub-flavored tables and task lists", async () => {

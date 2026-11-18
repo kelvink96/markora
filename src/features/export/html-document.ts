@@ -1,5 +1,6 @@
 import DOMPurify from "dompurify";
 import type { MarkdownAdapter } from "../../platform/markdown/types";
+import { highlightCodeBlocks } from "../preview/highlight-code";
 import { exportCss } from "./export-styles";
 
 /**
@@ -9,7 +10,7 @@ import { exportCss } from "./export-styles";
  */
 export async function renderExportBody(markdown: string, adapter: MarkdownAdapter): Promise<string> {
   const rendered = await adapter.render(markdown, { documentPath: null });
-  return DOMPurify.sanitize(rendered);
+  return DOMPurify.sanitize(highlightCodeBlocks(rendered));
 }
 
 function escapeHtml(text: string) {

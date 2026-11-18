@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent } from "react";
 import DOMPurify from "dompurify";
 import { useDocumentStore } from "../../../store/document";
 import { Panel } from "../../shared/panel";
 import { getMarkdownAdapter } from "../../../platform/markdown";
+import { getLinkAdapter } from "../../../platform/links";
+import { classifyLink } from "../../../features/preview/preview-links";
 import { useSettingsStore } from "../../../features/settings/settings-store";
 
 // DOMPurify's default URL allowlist plus Tauri's asset:// scheme, which the desktop
@@ -34,9 +36,14 @@ export function PreviewPane() {
   const documentPath = useDocumentStore((state) => state.filePath);
   const previewFontScale = useSettingsStore((state) => state.settings.appearance.previewFontScale);
   const contentWidth = useSettingsStore((state) => state.settings.preview.contentWidth);
+  const openLinksExternally = useSettingsStore((state) => state.settings.preview.openLinksExternally);
+  const linkAdapter = useMemo(() => getLinkAdapter(), []);
   const [html, setHtml] = useState("");
   const markdownAdapter = useMemo(() => getMarkdownAdapter(), []);
   const contentRef = useRef<HTMLDivElement>(null);
+  // Same object until the HTML changes: React 19 rewrites innerHTML whenever this object's
+  // identity changes, even if the string is the same.
+  const innerHtml = useMemo(() => ({ __html: html }), [html]);
 
   useEffect(() => {
     markdownAdapter
@@ -59,6 +66,31 @@ export function PreviewPane() {
     return () => container.removeEventListener("error", handleError, true);
   }, []);
 
+  // The preview lives inside the app window, so following a link would replace the editor.
+  // Every link click is stopped; only web, mail and in-page links then do anything.
+  const handleLinkClick = (event: MouseEvent<HTMLDivElement>) => {
+    if (!(event.target instanceof Element)) return;
+
+    const link = event.target.closest("a[href]");
+    if (!link) return;
+
+    event.preventDefault();
+    const target = classifyLink(link.getAttribute("href"));
+
+    if (target.kind === "external" && openLinksExternally) {
+      linkAdapter
+        .openExternal(target.url)
+        .catch((error) => console.error("open link failed:", error));
+    }
+
+    if (target.kind === "anchor") {
+      const destination = Array.from(event.currentTarget.querySelectorAll("[id]")).find(
+        (element) => element.id === target.id,
+      );
+      destination?.scrollIntoView({ block: "start" });
+    }
+  };
+
   return (
     <section className="preview-pane h-full min-h-0 pl-0 pr-0" aria-label="Preview">
       <Panel className="preview-pane__surface h-full overflow-auto shadow-[0_1px_0_rgba(255,255,255,0.22)_inset,0_14px_36px_rgba(0,0,0,0.14)]">
@@ -66,6 +98,8 @@ export function PreviewPane() {
           ref={contentRef}
           className="preview-pane__content prose min-h-full w-full rounded-[calc(var(--radius-sm)-1px)] bg-app-preview p-[calc(var(--space-6)-0.1rem)]"
           data-testid="preview-content"
+          onClick={handleLinkClick}
+          onAuxClick={handleLinkClick}
           style={
             {
               "--preview-font-scale": previewFontScale,
@@ -73,7 +107,7 @@ export function PreviewPane() {
             } as CSSProperties
           }
           // Sanitized with DOMPurify above, whichever platform renderer produced it.
-          dangerouslySetInnerHTML={{ __html: html }}
+          dangerouslySetInnerHTML={innerHtml}
         />
       </Panel>
     </section>

@@ -31,15 +31,15 @@ describe("PreviewSettingsSection", () => {
   it("shows the current values", () => {
     renderSection();
 
-    expect(screen.getByRole("button", { name: "Line width" })).toHaveTextContent("Normal (72 characters)");
-    expect(screen.getByRole("checkbox", { name: "Scroll the editor and preview together" })).toBeChecked();
-    expect(screen.getByRole("checkbox", { name: "Open links in your browser" })).toBeChecked();
+    expect(screen.getByRole("combobox", { name: "Line width" })).toHaveTextContent("Normal (72 characters)");
+    expect(screen.getByRole("switch", { name: "Scroll the editor and preview together" })).toBeChecked();
+    expect(screen.getByRole("switch", { name: "Open links in your browser" })).toBeChecked();
   });
 
   it("explains what turning link opening off does", () => {
     renderSection();
 
-    expect(screen.getByRole("checkbox", { name: "Open links in your browser" })).toHaveAccessibleDescription(
+    expect(screen.getByRole("switch", { name: "Open links in your browser" })).toHaveAccessibleDescription(
       /links in the preview do nothing/,
     );
   });
@@ -53,10 +53,10 @@ describe("PreviewSettingsSection", () => {
   it("saves every changed option", async () => {
     const { user, onSave, defaults } = renderSection();
 
-    await user.click(screen.getByRole("button", { name: "Line width" }));
-    await user.click(screen.getByRole("menuitemradio", { name: "Wide (90 characters)" }));
-    await user.click(screen.getByRole("checkbox", { name: "Scroll the editor and preview together" }));
-    await user.click(screen.getByRole("checkbox", { name: "Open links in your browser" }));
+    await user.click(screen.getByRole("combobox", { name: "Line width" }));
+    await user.click(await screen.findByRole("option", { name: "Wide (90 characters)" }));
+    await user.click(screen.getByRole("switch", { name: "Scroll the editor and preview together" }));
+    await user.click(screen.getByRole("switch", { name: "Open links in your browser" }));
     await user.click(screen.getByRole("button", { name: /save/i }));
 
     expect(onSave).toHaveBeenCalledWith({

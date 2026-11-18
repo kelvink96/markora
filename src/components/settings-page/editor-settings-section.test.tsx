@@ -31,16 +31,16 @@ describe("EditorSettingsSection", () => {
   it("shows every editor setting that has an effect", () => {
     renderSection();
 
-    expect(screen.getByRole("checkbox", { name: "Show line numbers" })).not.toBeChecked();
-    expect(screen.getByRole("checkbox", { name: "Wrap long lines" })).toBeChecked();
-    expect(screen.getByRole("checkbox", { name: "Highlight the current line" })).toBeChecked();
+    expect(screen.getByRole("switch", { name: "Show line numbers" })).not.toBeChecked();
+    expect(screen.getByRole("switch", { name: "Wrap long lines" })).toBeChecked();
+    expect(screen.getByRole("switch", { name: "Highlight the current line" })).toBeChecked();
   });
 
   it("saves the toggled options", async () => {
     const { user, onSave, defaults } = renderSection();
 
-    await user.click(screen.getByRole("checkbox", { name: "Wrap long lines" }));
-    await user.click(screen.getByRole("checkbox", { name: "Highlight the current line" }));
+    await user.click(screen.getByRole("switch", { name: "Wrap long lines" }));
+    await user.click(screen.getByRole("switch", { name: "Highlight the current line" }));
     await user.click(screen.getByRole("button", { name: /save/i }));
 
     expect(onSave).toHaveBeenCalledWith({

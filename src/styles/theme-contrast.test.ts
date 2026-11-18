@@ -14,7 +14,8 @@ function parseBlocks() {
     for (const [, name, value] of body.matchAll(/--([a-z-]+)\s*:\s*([^;]+);/g)) {
       tokens.set(name, value.trim());
     }
-    blocks.set(selector.trim(), tokens);
+    // A block can serve several selectors (:root and a scoped swatch), so register each one.
+    for (const single of selector.split(",")) blocks.set(single.trim(), tokens);
   }
   return blocks;
 }
@@ -72,6 +73,14 @@ const PAIRS: Array<[string, string, number]> = [
 ];
 
 describe("theme palettes", () => {
+  it("lets any element preview a scheme through data-swatch attributes (used by the settings swatches)", () => {
+    for (const scheme of ["standard", "sepia", "high-contrast"]) {
+      for (const mode of ["light", "dark"]) {
+        expect(blocks.has(`[data-swatch-scheme="${scheme}"][data-swatch-mode="${mode}"]`)).toBe(true);
+      }
+    }
+  });
+
   it.each(THEMES)("%s is defined in themes.css", (_name, selector) => {
     expect(blocks.has(selector)).toBe(true);
   });

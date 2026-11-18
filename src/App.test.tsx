@@ -529,7 +529,7 @@ describe("App", () => {
     render(<App />);
     await user.click(screen.getByRole("button", { name: "open-settings" }));
     await user.click(screen.getByRole("button", { name: "Preview" }));
-    await user.click(screen.getByRole("checkbox", { name: "Open links in your browser" }));
+    await user.click(screen.getByRole("switch", { name: "Open links in your browser" }));
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
     expect(invokeMock).toHaveBeenCalledWith(

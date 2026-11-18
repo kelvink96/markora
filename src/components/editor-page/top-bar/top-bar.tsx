@@ -37,7 +37,7 @@ import {
   MenubarTrigger,
 } from "@/components/ui/menubar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Logo } from "../../shared/logo";
+import { Logo } from "../../logo";
 import { ViewModeSwitcher } from "../view-mode-switcher";
 import { useEditorCommandState } from "../../../features/editor/editor-command-state";
 import { getModifierLabel } from "../../../features/shortcuts/modifier-label";

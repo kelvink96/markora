@@ -1,7 +1,9 @@
 import type { ChangeEvent } from "react";
 import { RotateCcw, Save } from "lucide-react";
-import { Button } from "../shared/button";
-import { FieldLabel, SectionCard } from "./settings-page-shared";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { SectionCard } from "./settings-page-shared";
 
 interface TemplateSettingsSectionProps {
   templateDraft: string;
@@ -21,27 +23,22 @@ export function TemplateSettingsSection({
       title="New Document Template"
       description="This content is used only for newly created documents."
     >
-      <FieldLabel htmlFor="template-content">Template content</FieldLabel>
-      <textarea
-        id="template-content"
-        className="min-h-64 w-full rounded-app-sm border border-[color:var(--glass-border)] bg-[color:var(--glass-elevated)] px-4 py-3 font-mono text-sm text-app-text backdrop-blur-[var(--glass-blur-soft)]"
-        value={templateDraft}
-        onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
-          onTemplateChange(event.target.value)
-        }
-      />
+      <div className="space-y-2">
+        <Label htmlFor="template-content">Template content</Label>
+        <Textarea
+          id="template-content"
+          className="min-h-64 font-mono"
+          value={templateDraft}
+          onChange={(event: ChangeEvent<HTMLTextAreaElement>) => onTemplateChange(event.target.value)}
+        />
+      </div>
       <div className="flex flex-wrap gap-3">
-        <Button
-          leftSection={<Save data-testid="settings-save-icon" className="size-4" />}
-          onClick={() => onSave(templateDraft)}
-        >
+        <Button onClick={() => onSave(templateDraft)}>
+          <Save data-testid="settings-save-icon" aria-hidden="true" />
           Save template
         </Button>
-        <Button
-          variant="ghost"
-          leftSection={<RotateCcw data-testid="settings-reset-icon" className="size-4" />}
-          onClick={onReset}
-        >
+        <Button variant="ghost" onClick={onReset}>
+          <RotateCcw data-testid="settings-reset-icon" aria-hidden="true" />
           Reset template
         </Button>
       </div>

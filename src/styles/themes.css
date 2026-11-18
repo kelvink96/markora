@@ -1,5 +1,12 @@
+/*
+ * Theme palettes, one block per colour scheme and mode (OKLCH). The selectors also match any element
+ * carrying data-swatch-scheme + data-swatch-mode, which the settings page uses to draw live previews
+ * of a scheme without switching the whole app. theme-contrast.test.ts checks every block.
+ */
+
 /* Aurora (standard), light: cool indigo on a pale lavender canvas */
-:root {
+:root,
+[data-swatch-scheme="standard"][data-swatch-mode="light"] {
   --background: oklch(0.985 0.006 275);
   --foreground: oklch(0.2 0.04 275);
   --card: oklch(1 0 0);
@@ -32,7 +39,8 @@
 }
 
 /* Aurora (standard), dark: deep indigo ink, violet to cyan brand */
-:root.theme-dark {
+:root.theme-dark,
+[data-swatch-scheme="standard"][data-swatch-mode="dark"] {
   --background: oklch(0.155 0.022 275);
   --foreground: oklch(0.96 0.012 275);
   --card: oklch(0.195 0.026 275);
@@ -65,7 +73,8 @@
 }
 
 /* Ember (sepia), light: cream paper with a burnt-orange accent */
-:root[data-color-scheme="sepia"] {
+:root[data-color-scheme="sepia"],
+[data-swatch-scheme="sepia"][data-swatch-mode="light"] {
   --background: oklch(0.965 0.02 85);
   --foreground: oklch(0.25 0.03 55);
   --card: oklch(0.985 0.012 85);
@@ -98,7 +107,8 @@
 }
 
 /* Ember (sepia), dark: warm graphite with an amber glow */
-:root[data-color-scheme="sepia"].theme-dark {
+:root[data-color-scheme="sepia"].theme-dark,
+[data-swatch-scheme="sepia"][data-swatch-mode="dark"] {
   --background: oklch(0.165 0.014 55);
   --foreground: oklch(0.95 0.018 80);
   --card: oklch(0.205 0.018 55);
@@ -131,7 +141,8 @@
 }
 
 /* High contrast, light: black on white, deep-blue focus */
-:root[data-color-scheme="high-contrast"] {
+:root[data-color-scheme="high-contrast"],
+[data-swatch-scheme="high-contrast"][data-swatch-mode="light"] {
   --background: oklch(1 0 0);
   --foreground: oklch(0 0 0);
   --card: oklch(1 0 0);
@@ -164,7 +175,8 @@
 }
 
 /* High contrast, dark: white on black, yellow and cyan accents */
-:root[data-color-scheme="high-contrast"].theme-dark {
+:root[data-color-scheme="high-contrast"].theme-dark,
+[data-swatch-scheme="high-contrast"][data-swatch-mode="dark"] {
   --background: oklch(0 0 0);
   --foreground: oklch(1 0 0);
   --card: oklch(0.08 0 0);

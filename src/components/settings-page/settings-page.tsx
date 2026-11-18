@@ -119,14 +119,15 @@ export function SettingsPage({
 
   return (
     <section className="h-full min-h-0 p-4" aria-label="Settings">
-      <div className="grid h-full min-h-0 grid-cols-[18rem_minmax(0,1fr)] gap-4">
+      <div className="grid h-full min-h-0 grid-cols-1 grid-rows-[auto_minmax(0,1fr)] gap-4 md:grid-cols-[16rem_minmax(0,1fr)] md:grid-rows-1">
         <SettingsSidebar
           activeSection={activeSection}
-          colorScheme={appearanceDraft.colorScheme}
           onClose={onClose}
           onSectionChange={setActiveSection}
         />
-        <div className="min-h-0 overflow-auto">{sectionContent[activeSection]}</div>
+        <div className="min-h-0 overflow-auto">
+          <div className="mx-auto w-full max-w-3xl pb-6">{sectionContent[activeSection]}</div>
+        </div>
       </div>
     </section>
   );

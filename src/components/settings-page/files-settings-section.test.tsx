@@ -32,7 +32,7 @@ describe("FilesSettingsSection", () => {
   it("offers autosave and explains what it skips", () => {
     renderSection();
 
-    const autosave = screen.getByRole("checkbox", { name: "Save changes automatically" });
+    const autosave = screen.getByRole("switch", { name: "Save changes automatically" });
     expect(autosave).not.toBeChecked();
     expect(autosave).toHaveAccessibleDescription(/Untitled documents are skipped/);
   });
@@ -41,14 +41,14 @@ describe("FilesSettingsSection", () => {
     renderSection({ canRestoreSession: false });
 
     expect(
-      screen.queryByRole("checkbox", { name: "Reopen last session's files on launch" }),
+      screen.queryByRole("switch", { name: "Reopen last session's files on launch" }),
     ).not.toBeInTheDocument();
   });
 
   it("shows the restore-session option on desktop", () => {
     renderSection({ canRestoreSession: true });
 
-    const restore = screen.getByRole("checkbox", { name: "Reopen last session's files on launch" });
+    const restore = screen.getByRole("switch", { name: "Reopen last session's files on launch" });
     expect(restore).not.toBeChecked();
     expect(restore).toHaveAccessibleDescription(/saved files you had open/);
   });
@@ -56,8 +56,8 @@ describe("FilesSettingsSection", () => {
   it("saves the toggled options", async () => {
     const { user, onSave, defaults } = renderSection({ canRestoreSession: true });
 
-    await user.click(screen.getByRole("checkbox", { name: "Save changes automatically" }));
-    await user.click(screen.getByRole("checkbox", { name: "Reopen last session's files on launch" }));
+    await user.click(screen.getByRole("switch", { name: "Save changes automatically" }));
+    await user.click(screen.getByRole("switch", { name: "Reopen last session's files on launch" }));
     await user.click(screen.getByRole("button", { name: /save/i }));
 
     expect(onSave).toHaveBeenCalledWith({

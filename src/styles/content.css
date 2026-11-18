@@ -214,3 +214,66 @@
   content: "Image unavailable:";
   font-weight: 600;
 }
+
+/*
+ * Syntax highlighting in fenced code blocks (highlight.js token classes). Colours are the same
+ * --syntax-* tokens the editor uses, so code reads the same in both panes and follows the scheme.
+ * theme-contrast.test.ts checks each of them against the code block background.
+ */
+.preview-pane__content.prose .hljs {
+  color: var(--foreground);
+}
+
+.preview-pane__content.prose .hljs-keyword,
+.preview-pane__content.prose .hljs-selector-tag,
+.preview-pane__content.prose .hljs-section {
+  color: var(--syntax-heading);
+  font-weight: 600;
+}
+
+.preview-pane__content.prose .hljs-string,
+.preview-pane__content.prose .hljs-regexp,
+.preview-pane__content.prose .hljs-addition {
+  color: var(--syntax-code);
+}
+
+.preview-pane__content.prose .hljs-comment,
+.preview-pane__content.prose .hljs-quote,
+.preview-pane__content.prose .hljs-doctag {
+  color: var(--syntax-quote);
+  font-style: italic;
+}
+
+.preview-pane__content.prose .hljs-number,
+.preview-pane__content.prose .hljs-literal,
+.preview-pane__content.prose .hljs-symbol,
+.preview-pane__content.prose .hljs-bullet,
+.preview-pane__content.prose .hljs-deletion {
+  color: var(--syntax-emphasis);
+}
+
+.preview-pane__content.prose .hljs-title,
+.preview-pane__content.prose .hljs-built_in,
+.preview-pane__content.prose .hljs-type,
+.preview-pane__content.prose .hljs-attr,
+.preview-pane__content.prose .hljs-attribute,
+.preview-pane__content.prose .hljs-name,
+.preview-pane__content.prose .hljs-property,
+.preview-pane__content.prose .hljs-selector-class,
+.preview-pane__content.prose .hljs-selector-id {
+  color: var(--syntax-link);
+}
+
+.preview-pane__content.prose .hljs-meta,
+.preview-pane__content.prose .hljs-punctuation,
+.preview-pane__content.prose .hljs-operator {
+  color: var(--muted-foreground);
+}
+
+.preview-pane__content.prose .hljs-emphasis {
+  font-style: italic;
+}
+
+.preview-pane__content.prose .hljs-strong {
+  font-weight: 700;
+}

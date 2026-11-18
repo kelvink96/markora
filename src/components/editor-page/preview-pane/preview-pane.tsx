@@ -4,6 +4,7 @@ import { useDocumentStore } from "../../../store/document";
 import { getMarkdownAdapter } from "../../../platform/markdown";
 import { getLinkAdapter } from "../../../platform/links";
 import { classifyLink } from "../../../features/preview/preview-links";
+import { highlightCodeBlocks } from "../../../features/preview/highlight-code";
 import { useSettingsStore } from "../../../features/settings/settings-store";
 
 // DOMPurify's default URL allowlist plus Tauri's asset:// scheme, which the desktop
@@ -47,7 +48,7 @@ export function PreviewPane() {
   useEffect(() => {
     markdownAdapter
       .render(content, { documentPath })
-      .then((raw) => setHtml(sanitize(raw)))
+      .then((raw) => setHtml(sanitize(highlightCodeBlocks(raw))))
       .catch((error) => console.error("render preview failed:", error));
   }, [content, documentPath, markdownAdapter]);
 

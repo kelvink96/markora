@@ -168,4 +168,10 @@ mod tests {
         assert_eq!(encode_uri_component("a b/c?d"), "a%20b%2Fc%3Fd");
         assert_eq!(encode_uri_component("é"), "%C3%A9");
     }
+
+    #[test]
+    fn test_fenced_code_keeps_its_language_class_for_highlighting() {
+        let result = parse_markdown("```ts\nconst a = 1;\n```", None);
+        assert!(result.contains(r#"<code class="language-ts">"#));
+    }
 }

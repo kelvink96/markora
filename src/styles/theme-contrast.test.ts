@@ -68,6 +68,13 @@ const PAIRS: Array<[string, string, number]> = [
   ["syntax-code", "editor", TEXT],
   ["syntax-quote", "editor", TEXT],
   ["syntax-marker", "editor", UI], // markdown punctuation: dimmer on purpose, still visible
+  // Code blocks in the preview sit on the muted surface, so the code colours must read there too.
+  ["syntax-heading", "muted", TEXT],
+  ["syntax-emphasis", "muted", TEXT],
+  ["syntax-link", "muted", TEXT],
+  ["syntax-code", "muted", TEXT],
+  ["syntax-quote", "muted", TEXT],
+  ["foreground", "muted", TEXT],
   ["ring", "background", UI],
   ["ring", "card", UI],
 ];

@@ -31,6 +31,17 @@ describe("preview styles", () => {
     ).toMatch(/list-style-type:\s*none/);
   });
 
+  it.each([
+    [".hljs-keyword", "--syntax-heading"],
+    [".hljs-string", "--syntax-code"],
+    [".hljs-comment", "--syntax-quote"],
+    [".hljs-number", "--syntax-emphasis"],
+    [".hljs-title", "--syntax-link"],
+    [".hljs-punctuation", "--muted-foreground"],
+  ])("colours %s from the %s theme token, so code follows the scheme (#17)", (token, variable) => {
+    expect(declarationsFor(`.preview-pane__content.prose ${token}`)).toContain(`var(${variable})`);
+  });
+
   it("scales the preview font with the user's setting (#13)", () => {
     expect(declarationsFor(".preview-pane__content.prose")).toMatch(
       /font-size:\s*calc\(1\.05rem\s*\*\s*var\(--preview-font-scale,\s*1\)\)/,

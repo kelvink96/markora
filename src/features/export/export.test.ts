@@ -24,6 +24,14 @@ describe("exportCss", () => {
     }
   });
 
+  it("colours the code tokens the highlighter produces, with the scope applied", () => {
+    const css = exportCss("#print-root");
+
+    for (const token of ["hljs-keyword", "hljs-string", "hljs-comment", "hljs-number", "hljs-title"]) {
+      expect(css).toContain(`#print-root .${token}`);
+    }
+  });
+
   it("is always a light, print-friendly look whatever theme the app is in", () => {
     expect(exportCss("body")).toContain("background: #ffffff");
   });
@@ -64,6 +72,16 @@ describe("renderExportBody", () => {
     expect(body).toContain("<p>ok</p>");
     expect(body).not.toContain("<script");
     expect(body).not.toContain("javascript:");
+  });
+
+  it("highlights fenced code, and still strips anything dangerous", async () => {
+    const body = await renderExportBody(
+      "x",
+      adapter('<pre><code class="language-js">const a = 1;</code></pre><script>alert(1)</script>'),
+    );
+
+    expect(body).toContain("hljs-keyword");
+    expect(body).not.toContain("<script");
   });
 
   it("leaves relative image links as written", async () => {

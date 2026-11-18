@@ -160,6 +160,42 @@ describe("PreviewPane", () => {
     expect(screen.getByRole("link", { name: "a link" })).toBe(link);
   });
 
+  describe("syntax highlighting (#17)", () => {
+    it("highlights fenced code in a known language", async () => {
+      renderMock.mockResolvedValue('<pre><code class="language-ts">const answer = 42;</code></pre>');
+      render(<PreviewPane />);
+
+      await waitFor(() => {
+        const code = screen.getByTestId("preview-content").querySelector("pre code");
+        expect(code?.querySelector(".hljs-keyword")?.textContent).toBe("const");
+        expect(code?.querySelector(".hljs-number")?.textContent).toBe("42");
+      });
+    });
+
+    it("leaves code with no language, or an unknown one, as plain text", async () => {
+      renderMock.mockResolvedValue(
+        '<pre><code>const a = 1;</code></pre><pre><code class="language-klingon">qapla</code></pre>',
+      );
+      render(<PreviewPane />);
+
+      await waitFor(() => expect(screen.getByTestId("preview-content").querySelectorAll("pre code")).toHaveLength(2));
+      expect(screen.getByTestId("preview-content").querySelector(".hljs-keyword")).toBeNull();
+    });
+
+    it("still sanitizes: markup inside a code block stays text, and scripts outside it are removed", async () => {
+      renderMock.mockResolvedValue(
+        '<script>alert(1)</script><pre><code class="language-html">&lt;img src=x onerror=alert(1)&gt;</code></pre>',
+      );
+      render(<PreviewPane />);
+
+      await waitFor(() => expect(screen.getByTestId("preview-content").querySelector("pre code")).not.toBeNull());
+      const content = screen.getByTestId("preview-content");
+      expect(content.querySelector("script")).toBeNull();
+      expect(content.querySelector("img")).toBeNull();
+      expect(content.querySelector("pre code")?.textContent).toContain("<img src=x onerror=alert(1)>");
+    });
+  });
+
   describe("links (#12)", () => {
     async function renderWithLink(href: string, text = "a link") {
       renderMock.mockResolvedValue(`<p><a href="${href}">${text}</a></p>`);

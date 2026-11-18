@@ -95,9 +95,9 @@ pub fn default_settings() -> MarkoraSettings {
         appearance: AppearanceSettings {
             theme: ThemePreference::System,
             color_scheme: default_color_scheme(),
-            editor_font_size: 15,
+            editor_font_size: 16,
             preview_font_scale: 1.0,
-            editor_line_height: 1.6,
+            editor_line_height: 1.7,
             show_status_bar: true,
         },
         editor: EditorSettings {

@@ -78,7 +78,7 @@ describe("createEditorSettingsExtensions", () => {
     const css = injectedCss();
     expect(css).toMatch(/font-size:\s*21px/);
     expect(css).toMatch(/line-height:\s*2\.1/);
-    expect(appearance.editorFontSize).toBe(15);
+    expect(appearance.editorFontSize).toBe(16);
   });
 
   it("only neutralises the active line highlight when the setting is off", () => {

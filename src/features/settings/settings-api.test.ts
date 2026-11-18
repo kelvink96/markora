@@ -58,7 +58,7 @@ describe("settings-api", () => {
     const loaded = await loadSettings();
 
     expect(loaded.appearance.theme).toBe("dark");
-    expect(loaded.appearance.editorFontSize).toBe(15);
+    expect(loaded.appearance.editorFontSize).toBe(16);
     expect(loaded.editor.lineNumbers).toBe(true);
     expect(loaded.editor.wordWrap).toBe(true);
     expect(loaded.editor).not.toHaveProperty("tabSize");

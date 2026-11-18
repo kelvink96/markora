@@ -47,9 +47,10 @@ export const defaultSettings: MarkoraSettings = {
   appearance: {
     theme: "system",
     colorScheme: "standard",
-    editorFontSize: 15,
+    // 16px / 1.7 is what the editor has always rendered at.
+    editorFontSize: 16,
     previewFontScale: 1,
-    editorLineHeight: 1.6,
+    editorLineHeight: 1.7,
     showStatusBar: true,
   },
   editor: {
@@ -118,6 +119,14 @@ export function normalizeSettings(raw: unknown): MarkoraSettings {
   const legacyScale = Number(rawAppearance.previewFontScale);
   if (legacyLineHeight > 10) appearance.editorLineHeight = legacyLineHeight / 100;
   if (legacyScale > 10) appearance.previewFontScale = legacyScale / 100;
+
+  // Earlier versions saved 15px / 1.6 as defaults but never applied them (the editor
+  // rendered at 16px / 1.72) and had no control to change them, so that exact pair is
+  // the old default, not a choice. Move it to the new default so nothing shrinks.
+  if (appearance.editorFontSize === 15 && appearance.editorLineHeight === 1.6) {
+    appearance.editorFontSize = defaults.appearance.editorFontSize;
+    appearance.editorLineHeight = defaults.appearance.editorLineHeight;
+  }
 
   appearance.theme = pick(appearance.theme, ["system", "light", "dark"], defaults.appearance.theme);
   appearance.colorScheme = pick(

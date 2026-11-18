@@ -78,7 +78,7 @@ describe("AppearanceSettingsSection text settings (#13)", () => {
   it("shows the current editor font size, line spacing and preview text size", () => {
     renderSection();
 
-    expect(screen.getByRole("button", { name: "Editor font size" })).toHaveTextContent("15 px");
+    expect(screen.getByRole("button", { name: "Editor font size" })).toHaveTextContent("16 px");
     expect(screen.getByRole("button", { name: "Editor line spacing" })).toHaveTextContent("Comfortable");
     expect(screen.getByRole("button", { name: "Preview text size" })).toHaveTextContent("100%");
   });
@@ -95,7 +95,7 @@ describe("AppearanceSettingsSection text settings (#13)", () => {
     await user.click(screen.getByRole("button", { name: "Save text settings" }));
 
     expect(onSave).toHaveBeenCalledWith(
-      expect.objectContaining({ editorFontSize: 20, editorLineHeight: 2, previewFontScale: 1.25 }),
+      expect.objectContaining({ editorFontSize: 20, editorLineHeight: 2.1, previewFontScale: 1.25 }),
     );
   });
 

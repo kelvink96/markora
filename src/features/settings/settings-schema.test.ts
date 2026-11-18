@@ -77,6 +77,27 @@ describe("normalizeSettings", () => {
     expect(result.appearance.previewFontScale).toBe(1);
   });
 
+  it("moves the old never-applied 15px / 1.6 defaults to the new defaults (#13)", () => {
+    const result = normalizeSettings({ appearance: { editorFontSize: 15, editorLineHeight: 1.6 } });
+
+    expect(result.appearance.editorFontSize).toBe(16);
+    expect(result.appearance.editorLineHeight).toBe(1.7);
+  });
+
+  it("does the same for the old desktop defaults in fixed-point units", () => {
+    const result = normalizeSettings({ appearance: { editorFontSize: 15, editorLineHeight: 160 } });
+
+    expect(result.appearance.editorFontSize).toBe(16);
+    expect(result.appearance.editorLineHeight).toBe(1.7);
+  });
+
+  it("keeps a deliberate size even when it matches one of the old defaults", () => {
+    const result = normalizeSettings({ appearance: { editorFontSize: 15, editorLineHeight: 1.9 } });
+
+    expect(result.appearance.editorFontSize).toBe(15);
+    expect(result.appearance.editorLineHeight).toBe(1.9);
+  });
+
   it("leaves current-unit values alone", () => {
     const result = normalizeSettings({
       appearance: { editorLineHeight: 1.8, previewFontScale: 1.25 },
@@ -95,7 +116,7 @@ describe("normalizeSettings", () => {
 
     expect(result.appearance.theme).toBe("system");
     expect(result.appearance.colorScheme).toBe("standard");
-    expect(result.appearance.editorFontSize).toBe(15);
+    expect(result.appearance.editorFontSize).toBe(16);
     expect(result.appearance.showStatusBar).toBe(true);
     expect(result.editor.wordWrap).toBe(true);
     expect(result.preview.contentWidth).toBe("normal");

@@ -141,10 +141,10 @@ function ColorSchemeSwatch({
 
 const EDITOR_FONT_SIZES = [12, 13, 14, 15, 16, 18, 20, 24];
 const EDITOR_LINE_HEIGHTS = [
-  { value: 1.4, label: "Compact" },
-  { value: 1.6, label: "Comfortable" },
-  { value: 1.8, label: "Relaxed" },
-  { value: 2, label: "Spacious" },
+  { value: 1.5, label: "Compact" },
+  { value: 1.7, label: "Comfortable" },
+  { value: 1.9, label: "Relaxed" },
+  { value: 2.1, label: "Spacious" },
 ];
 const PREVIEW_FONT_SCALES = [
   { value: 0.9, label: "90%" },

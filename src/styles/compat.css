@@ -41,6 +41,8 @@
   font-size: 1.05rem;
   line-height: 1.78;
   letter-spacing: 0;
+  /* Keep lines near 72 characters on wide panels without shrinking the surface. */
+  padding-inline: max(calc(var(--space-6) - 0.1rem), calc((100% - 72ch) / 2));
 }
 
 .preview-pane__content.prose h1,
@@ -123,6 +125,36 @@
   padding-left: 1.35rem;
 }
 
+/* Tailwind preflight sets list-style: none; restore markers for rendered markdown. */
+.preview-pane__content.prose ul {
+  list-style-type: disc;
+}
+
+.preview-pane__content.prose ol {
+  list-style-type: decimal;
+}
+
+.preview-pane__content.prose ul ul {
+  list-style-type: circle;
+}
+
+.preview-pane__content.prose ul ul ul {
+  list-style-type: square;
+}
+
+.preview-pane__content.prose li::marker {
+  color: var(--text-secondary);
+}
+
+.preview-pane__content.prose li:has(> input[type="checkbox"]) {
+  list-style-type: none;
+}
+
+.preview-pane__content.prose li > input[type="checkbox"] {
+  margin: 0 0.5rem 0 -1.35rem;
+  vertical-align: middle;
+}
+
 .preview-pane__content.prose li + li {
   margin-top: 0.35rem;
 }
@@ -150,4 +182,22 @@
   border: 0;
   border-top: 1px solid var(--ghost-border);
   margin: 1.5rem 0;
+}
+
+/* Shown in place of an image that failed to load (missing file, offline, blocked). */
+.preview-pane__content.prose .preview-image-missing {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px dashed var(--ghost-border);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+}
+
+.preview-pane__content.prose .preview-image-missing::before {
+  content: "Image unavailable:";
+  font-weight: 600;
 }

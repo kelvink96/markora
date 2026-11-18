@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { PreviewPane } from "./preview-pane";
 import { useDocumentStore } from "../../../store/document";
 import { createDefaultSettings } from "../../../features/settings/settings-schema";
@@ -69,6 +69,46 @@ describe("PreviewPane", () => {
   it("renders markdown through the platform adapter instead of calling Tauri directly", async () => {
     render(<PreviewPane />);
 
-    await waitFor(() => expect(renderMock).toHaveBeenCalledWith("# Preview"));
+    await waitFor(() =>
+      expect(renderMock).toHaveBeenCalledWith("# Preview", { documentPath: null }),
+    );
+  });
+
+  it("passes the document path so relative images can resolve (#3)", async () => {
+    useDocumentStore.setState({ filePath: "/notes/today.md" });
+    render(<PreviewPane />);
+
+    await waitFor(() =>
+      expect(renderMock).toHaveBeenCalledWith("# Preview", { documentPath: "/notes/today.md" }),
+    );
+  });
+
+  it("keeps local asset image URLs through sanitization (#3)", async () => {
+    renderMock.mockResolvedValue(
+      '<img src="asset://localhost/%2Fnotes%2Fa.png" alt="a"><img src="http://asset.localhost/C%3A%5Ca.png" alt="b">',
+    );
+    render(<PreviewPane />);
+
+    await waitFor(() => {
+      const images = screen.getByTestId("preview-content").querySelectorAll("img");
+      expect(images[0]).toHaveAttribute("src", "asset://localhost/%2Fnotes%2Fa.png");
+      expect(images[1]).toHaveAttribute("src", "http://asset.localhost/C%3A%5Ca.png");
+    });
+  });
+
+  it("replaces images that fail to load with a labelled placeholder (#3)", async () => {
+    renderMock.mockResolvedValue('<p><img src="./missing.png" alt="Diagram"></p>');
+    render(<PreviewPane />);
+
+    const image = await waitFor(() => {
+      const img = screen.getByTestId("preview-content").querySelector("img");
+      expect(img).not.toBeNull();
+      return img as HTMLImageElement;
+    });
+    fireEvent.error(image);
+
+    const placeholder = screen.getByRole("img", { name: "Image unavailable: Diagram" });
+    expect(placeholder).toHaveClass("preview-image-missing");
+    expect(placeholder).toHaveTextContent("Diagram");
   });
 });

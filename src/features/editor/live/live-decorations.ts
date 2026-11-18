@@ -1,6 +1,6 @@
 import type { EditorState, Range } from "@codemirror/state";
 import { syntaxTree } from "@codemirror/language";
-import { Decoration, type DecorationSet } from "@codemirror/view";
+import { Decoration, type DecorationSet, type WidgetType } from "@codemirror/view";
 import type { SyntaxNodeRef } from "@lezer/common";
 import { blockHandlers } from "./block-handlers";
 import { inlineHandlers } from "./inline-handlers";
@@ -31,7 +31,9 @@ export interface LiveContext {
   /** Hides `from..to` unless its line is revealed. */
   hide(from: number, to: number): void;
   /** Styles `from..to` with a class unless its line is revealed. */
-  mark(from: number, to: number, className: string): void;
+  mark(from: number, to: number, className: string, attributes?: Record<string, string>): void;
+  /** Draws a widget at `pos` unless its line is revealed. It adds to the text and never replaces it. */
+  widget(pos: number, widget: WidgetType): void;
 }
 
 /** Return `false` to skip the node's children (used by code blocks, whose content is not markdown). */
@@ -82,9 +84,13 @@ export function buildLiveDecorations(
         if (to <= from || isRevealed(from)) return;
         decorations.push(hiddenDecoration.range(from, to));
       },
-      mark(from, to, className) {
+      mark(from, to, className, attributes) {
         if (to <= from || isRevealed(from)) return;
-        decorations.push(Decoration.mark({ class: className }).range(from, to));
+        decorations.push(Decoration.mark({ class: className, attributes }).range(from, to));
+      },
+      widget(pos, widget) {
+        if (isRevealed(pos)) return;
+        decorations.push(Decoration.widget({ widget, side: -1 }).range(pos));
       },
     };
 

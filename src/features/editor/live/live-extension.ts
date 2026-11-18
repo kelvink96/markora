@@ -2,13 +2,21 @@ import { syntaxTree } from "@codemirror/language";
 import type { Extension } from "@codemirror/state";
 import { type DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from "@codemirror/view";
 import { buildLiveDecorations, type LiveHandlers, liveHandlers } from "./live-decorations";
+import { LIVE_HREF } from "./inline-handlers";
+
+export interface LiveOptions {
+  handlers?: LiveHandlers;
+  /** Called with a link's destination when it is Ctrl/Cmd+clicked. Plain clicks never call it. */
+  onOpenLink?: (href: string) => void;
+}
 
 /**
  * Live mode for the CodeMirror editor: renders markdown elements in place and shows raw markdown
  * on the lines the cursor or selection touches. Add it to the editor only while the view mode is
- * "live" (the editor keeps it in a Compartment). Purely visual: the document is never changed.
+ * "live" (the editor keeps it in a Compartment). Rendering never changes the document; the only
+ * edit Live mode makes is a task checkbox toggle, as an ordinary undoable transaction.
  */
-export function liveExtension(handlers: LiveHandlers = liveHandlers): Extension {
+export function liveExtension({ handlers = liveHandlers, onOpenLink }: LiveOptions = {}): Extension {
   const plugin = ViewPlugin.fromClass(
     class {
       decorations: DecorationSet;
@@ -31,7 +39,30 @@ export function liveExtension(handlers: LiveHandlers = liveHandlers): Extension 
     },
     { decorations: (instance) => instance.decorations },
   );
-  return [plugin, liveTheme];
+  return [plugin, linkClicks(onOpenLink), liveTheme];
+}
+
+/** The destination of the rendered link under a Ctrl/Cmd press, if any. */
+function modifierLink(event: MouseEvent): string | null {
+  if (event.button !== 0 || !(event.ctrlKey || event.metaKey) || !(event.target instanceof Element)) return null;
+  return event.target.closest(`[${LIVE_HREF}]`)?.getAttribute(LIVE_HREF) ?? null;
+}
+
+function linkClicks(onOpenLink?: (href: string) => void): Extension {
+  return EditorView.domEventHandlers({
+    // Without this, Ctrl/Cmd+click would also add a caret. A plain click is left alone: it places the caret.
+    mousedown: (event) => {
+      if (!modifierLink(event)) return false;
+      event.preventDefault();
+      return true;
+    },
+    click: (event) => {
+      const href = modifierLink(event);
+      if (!href) return false;
+      onOpenLink?.(href);
+      return true;
+    },
+  });
 }
 
 function decorate(view: EditorView, handlers: LiveHandlers): DecorationSet {
@@ -89,4 +120,6 @@ const liveTheme = EditorView.baseTheme({
     backgroundColor: "color-mix(in oklab, var(--muted) 70%, transparent)",
   },
   ".cm-live-link": { color: "var(--primary)", textDecoration: "underline" },
+  ".cm-live-task-marker": { color: "transparent", fontSize: "0.01em" },
+  ".cm-live-checkbox": { margin: "0 0.45em 0 0", verticalAlign: "middle", cursor: "pointer", accentColor: "var(--primary)" },
 });

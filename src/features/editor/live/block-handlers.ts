@@ -1,5 +1,6 @@
 import type { SyntaxNodeRef } from "@lezer/common";
 import type { LiveContext, LiveHandlers } from "./live-decorations";
+import { TaskCheckboxWidget } from "./task-checkbox";
 
 /** Hides a block marker such as `#` or `>` together with the single space that follows it. */
 function hideMarker(node: SyntaxNodeRef, context: LiveContext) {
@@ -63,6 +64,13 @@ export const blockHandlers: LiveHandlers = {
   ListMark: (node, context) => {
     const bullet = node.node.parent?.parent?.name === "BulletList";
     context.mark(node.from, node.to, bullet ? "cm-live-bullet" : "cm-live-number");
+  },
+
+  // The `[ ]` / `[x]` text stays; it is only painted transparent, with a real checkbox in front.
+  TaskMarker: (node, context) => {
+    const checked = /x/i.test(context.state.sliceDoc(node.from, node.to));
+    context.mark(node.from, node.to, "cm-live-task-marker");
+    context.widget(node.from, new TaskCheckboxWidget(checked));
   },
 
   FencedCode: fencedCode,

@@ -21,6 +21,8 @@ import {
 } from "../../../features/editor/slash-commands";
 import { useEditorStatusState } from "../../../features/workspace/editor-status-state";
 import { useSettingsStore } from "../../../features/settings/settings-store";
+import { getLinkAdapter } from "../../../platform/links";
+import { createLinkOpener } from "../../../features/editor/live/link-opener";
 import { FindBar } from "../find-bar";
 import { InlineFormattingMenu } from "../inline-formatting-menu";
 import { SlashCommandMenu } from "../slash-command-menu/slash-command-menu";
@@ -69,6 +71,12 @@ export function EditorPane({ theme, viewMode = "edit" }: EditorPaneProps) {
   const settingsCompartment = useMemo(() => new Compartment(), []);
   // Holds the Live-mode decorations, so switching view mode reconfigures the editor in place.
   const liveCompartment = useMemo(() => new Compartment(), []);
+  // Ctrl/Cmd+click on a link in Live mode; the setting is read when the click happens.
+  const onOpenLink = useMemo(
+    () =>
+      createLinkOpener(() => useSettingsStore.getState().settings.preview.openLinksExternally, getLinkAdapter()),
+    [],
+  );
   const liveMode = viewMode === "live";
   // The mode the editor was last configured with; the creation effect reads it once, then the effect below keeps it current.
   const appliedLiveMode = useRef(liveMode);
@@ -216,7 +224,7 @@ export function EditorPane({ theme, viewMode = "edit" }: EditorPaneProps) {
           ]),
         ),
         ...markoraEditorTheme,
-        liveCompartment.of(appliedLiveMode.current ? liveExtension() : []),
+        liveCompartment.of(appliedLiveMode.current ? liveExtension({ onOpenLink }) : []),
         // Last, so user settings win over the theme where both style the same thing.
         settingsCompartment.of(
           createEditorSettingsExtensions(settings.editor, settings.appearance, theme === "dark"),
@@ -233,15 +241,15 @@ export function EditorPane({ theme, viewMode = "edit" }: EditorPaneProps) {
     };
     // The theme is read once here and then kept current by the effect below, so switching
     // light/dark doesn't rebuild the editor (which would lose undo history and the cursor).
-  }, [liveCompartment, setContent, setCursorPosition, settingsCompartment]);
+  }, [liveCompartment, onOpenLink, setContent, setCursorPosition, settingsCompartment]);
 
   useEffect(() => {
     if (appliedLiveMode.current === liveMode) return;
     appliedLiveMode.current = liveMode;
     viewRef.current?.dispatch({
-      effects: liveCompartment.reconfigure(liveMode ? liveExtension() : []),
+      effects: liveCompartment.reconfigure(liveMode ? liveExtension({ onOpenLink }) : []),
     });
-  }, [liveCompartment, liveMode]);
+  }, [liveCompartment, liveMode, onOpenLink]);
 
   useEffect(() => {
     // Apply setting changes to the live editor (the creation effect only reads them once).

@@ -18,7 +18,9 @@ describe("settings-schema", () => {
     const template = defaultSettings.authoring.newDocumentTemplate;
 
     expect(template.startsWith("# Welcome to Markora")).toBe(true);
-    expect(template).toContain("Split view");
+    expect(template).toContain("Live");
+    expect(template).toContain("Edit");
+    expect(template).toContain("Split");
     expect(template).not.toMatch(/Start writing your markdown here|placeholder block|Example Outline/);
   });
 

@@ -41,7 +41,7 @@ export interface MarkoraSettings {
 }
 
 export const defaultNewDocumentTemplate =
-  "# Welcome to Markora\n\nThis is a scratch note. Switch to Split view to see it rendered as you type.\n\n## Try it\n\n- Select some text to format it, or type `/` for the command menu\n- Switch between Edit, Split and Preview with the buttons at the top right\n- Open the outline to jump between headings\n\n## Make it yours\n\n- [ ] Change the first heading to rename this note\n- [ ] Save with Ctrl+S\n- [ ] Pick a light or dark theme from the toolbar\n\n> Markdown is plain text, so your notes stay yours.\n\n```ts\nfunction hello() {\n  return \"Write first, refine later.\";\n}\n```\n";
+  "# Welcome to Markora\n\nThis is a scratch note. In Live view it renders as you type, and the line you are on shows its raw markdown.\n\n## Try it\n\n- Select some text to format it, or type `/` for the command menu\n- Switch between Live, Edit, Split and Preview with the buttons at the top right\n- Open the outline to jump between headings\n\n## Make it yours\n\n- [ ] Change the first heading to rename this note\n- [ ] Save with Ctrl+S\n- [ ] Pick a light or dark theme from the toolbar\n\n> Markdown is plain text, so your notes stay yours.\n\n```ts\nfunction hello() {\n  return \"Write first, refine later.\";\n}\n```\n";
 
 export const defaultSettings: MarkoraSettings = {
   appearance: {

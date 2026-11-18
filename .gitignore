@@ -33,3 +33,4 @@ tauri.key.pub
 
 markora-signing.pfx
 markora-signing.base64.txt
+.scratch/

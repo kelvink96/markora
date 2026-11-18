@@ -130,5 +130,19 @@ export function useFileOperations(fileAdapter: FileAdapter) {
     }
   }, [exportCurrentDocument, fileAdapter, handleSaveAs, markClean]);
 
-  return { fileError, clearFileError, handleOpen, handleSave, handleSaveAs };
+  /**
+   * True when `handleSave` would write the active document straight to its file, with no
+   * dialog or download. Autosave only runs in that case. Mirrors handleSave's branches.
+   */
+  const canSaveInPlace = useCallback(() => {
+    const { activeDocumentId, filePath, openDocuments } = useDocumentStore.getState();
+    const activeDocument = openDocuments.find((document) => document.id === activeDocumentId);
+    if (!activeDocument) return false;
+
+    if (activeDocument.handle && fileAdapter.writeWorkspaceFile) return true;
+    if (fileAdapter.supportsFileExport() && fileAdapter.exportFile) return false;
+    return Boolean(filePath);
+  }, [fileAdapter]);
+
+  return { fileError, clearFileError, handleOpen, handleSave, handleSaveAs, canSaveInPlace };
 }

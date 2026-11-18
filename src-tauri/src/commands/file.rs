@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
@@ -6,28 +5,96 @@ use std::sync::Mutex;
 use tauri::{AppHandle, Manager, State};
 use tauri_plugin_dialog::DialogExt;
 
-/// Paths the user picked through a native dialog during this session.
+/// The most picked files remembered across restarts.
+const MAX_REMEMBERED_PATHS: usize = 200;
+
+/// One remembered file: its comparison key and the real path (for image folders).
+struct Entry {
+    key: PathBuf,
+    path: PathBuf,
+}
+
+/// Files the user picked through a native dialog, this run or an earlier one.
 ///
-/// `read_file` and `write_file` only touch paths in this set, so the webview can't
+/// `read_file` and `write_file` only touch paths in this list, so the webview can't
 /// read or write arbitrary files even if something in it misbehaves (issue #21).
-/// `Mutex` lets several commands share the set safely across threads.
+/// Picked paths are saved to a file in the app config folder, so "restore previous
+/// session" can reopen them next launch. Only dialog picks ever get in.
+/// `Mutex` lets several commands share the list safely across threads.
 #[derive(Default)]
-pub struct AllowedPaths(Mutex<HashSet<PathBuf>>);
+pub struct AllowedPaths {
+    entries: Mutex<Vec<Entry>>,
+    store: Option<PathBuf>,
+}
 
 impl AllowedPaths {
+    /// Loads the remembered paths from `store` (a JSON list of strings) and saves
+    /// future picks back to it. A missing or unreadable file just means an empty list.
+    pub fn persistent(store: PathBuf) -> Self {
+        let remembered: Vec<String> = fs::read_to_string(&store)
+            .ok()
+            .and_then(|text| serde_json::from_str(&text).ok())
+            .unwrap_or_default();
+
+        // Paths whose folder has since disappeared can't be normalized; drop them.
+        let entries = remembered
+            .into_iter()
+            .map(PathBuf::from)
+            .filter_map(|path| normalize(&path).ok().map(|key| Entry { key, path }))
+            .collect();
+
+        Self { entries: Mutex::new(entries), store: Some(store) }
+    }
+
+    /// The real paths currently remembered.
+    pub fn paths(&self) -> Vec<PathBuf> {
+        match self.entries.lock() {
+            Ok(entries) => entries.iter().map(|entry| entry.path.clone()).collect(),
+            Err(_) => Vec::new(),
+        }
+    }
+
     pub fn allow(&self, path: &Path) -> Result<(), String> {
         let key = normalize(path)?;
-        self.0.lock().map_err(|e| e.to_string())?.insert(key);
+        let mut entries = self.entries.lock().map_err(|e| e.to_string())?;
+
+        // Picking a file again moves it to the end, so the oldest picks fall off first.
+        entries.retain(|entry| entry.key != key);
+        entries.push(Entry { key, path: path.to_path_buf() });
+        if entries.len() > MAX_REMEMBERED_PATHS {
+            let overflow = entries.len() - MAX_REMEMBERED_PATHS;
+            entries.drain(..overflow);
+        }
+
+        self.save(&entries);
         Ok(())
     }
 
     pub fn ensure_allowed(&self, path: &Path) -> Result<(), String> {
         let key = normalize(path)?;
-        let allowed = self.0.lock().map_err(|e| e.to_string())?;
-        if allowed.contains(&key) {
+        let entries = self.entries.lock().map_err(|e| e.to_string())?;
+        if entries.iter().any(|entry| entry.key == key) {
             Ok(())
         } else {
             Err(format!("Access denied: {} was not opened through a file dialog", path.display()))
+        }
+    }
+
+    // Best effort: a failed save must not stop the user from opening the file they picked.
+    fn save(&self, entries: &[Entry]) {
+        let Some(store) = &self.store else { return };
+        let paths: Vec<String> = entries.iter().map(|e| e.path.to_string_lossy().into_owned()).collect();
+
+        let result = (|| -> Result<(), String> {
+            if let Some(folder) = store.parent() {
+                fs::create_dir_all(folder).map_err(|e| e.to_string())?;
+            }
+            let json = serde_json::to_string_pretty(&paths).map_err(|e| e.to_string())?;
+            fs::write(store, json).map_err(|e| e.to_string())
+        })();
+
+        if let Err(error) = result {
+            eprintln!("could not save remembered paths to {}: {error}", store.display());
         }
     }
 }
@@ -52,7 +119,7 @@ fn normalize(path: &Path) -> Result<PathBuf, String> {
 }
 
 /// Lets the preview load images that sit next to (or below) the picked document.
-fn allow_images_near(app: &AppHandle, path: &Path) {
+pub fn allow_images_near(app: &AppHandle, path: &Path) {
     if let Some(folder) = path.parent() {
         if let Err(error) = app.asset_protocol_scope().allow_directory(folder, true) {
             eprintln!("could not allow image folder {}: {error}", folder.display());
@@ -221,5 +288,99 @@ mod tests {
         let result = write_allowed(&allowing(&picked), &upper, "ok");
         assert!(result.is_ok());
         fs::remove_file(&picked).ok();
+    }
+
+    // A fresh folder per test, so parallel tests never share a store file.
+    fn unique_dir(label: &str) -> PathBuf {
+        let nanos = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let dir = env::temp_dir().join(format!("markora-{label}-{nanos}"));
+        fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    #[test]
+    fn test_remembered_paths_survive_a_restart() {
+        let dir = unique_dir("restart");
+        let store = dir.join("allowed.json");
+        let file = dir.join("notes.md");
+
+        AllowedPaths::persistent(store.clone()).allow(&file).unwrap();
+        let after_restart = AllowedPaths::persistent(store);
+
+        assert!(after_restart.ensure_allowed(&file).is_ok());
+        assert!(after_restart.ensure_allowed(&dir.join("other.md")).is_err());
+        fs::remove_dir_all(dir).ok();
+    }
+
+    #[test]
+    fn test_picking_a_file_twice_remembers_it_once() {
+        let dir = unique_dir("twice");
+        let allowed = AllowedPaths::persistent(dir.join("allowed.json"));
+        let file = dir.join("notes.md");
+
+        allowed.allow(&file).unwrap();
+        allowed.allow(&file).unwrap();
+
+        assert_eq!(allowed.paths().len(), 1);
+        fs::remove_dir_all(dir).ok();
+    }
+
+    #[test]
+    fn test_remembered_paths_in_deleted_folders_are_dropped_on_load() {
+        let dir = unique_dir("deleted");
+        let store = dir.join("allowed.json");
+        let kept = dir.join("kept.md");
+        let gone = dir.join("deleted-folder").join("gone.md");
+        let json = serde_json::to_string(&[kept.to_str().unwrap(), gone.to_str().unwrap()]).unwrap();
+        fs::write(&store, json).unwrap();
+
+        let allowed = AllowedPaths::persistent(store);
+
+        assert_eq!(allowed.paths(), vec![kept]);
+        fs::remove_dir_all(dir).ok();
+    }
+
+    #[test]
+    fn test_a_corrupt_store_means_nothing_is_remembered() {
+        let dir = unique_dir("corrupt");
+        let store = dir.join("allowed.json");
+        fs::write(&store, "{ not json").unwrap();
+
+        let allowed = AllowedPaths::persistent(store);
+
+        assert!(allowed.paths().is_empty());
+        assert!(allowed.ensure_allowed(&dir.join("notes.md")).is_err());
+        fs::remove_dir_all(dir).ok();
+    }
+
+    #[test]
+    fn test_the_store_folder_is_created_when_missing() {
+        let dir = unique_dir("nested");
+        let store = dir.join("config").join("app").join("allowed.json");
+
+        AllowedPaths::persistent(store.clone()).allow(&dir.join("a.md")).unwrap();
+
+        assert!(store.exists());
+        fs::remove_dir_all(dir).ok();
+    }
+
+    #[test]
+    fn test_only_the_most_recent_picks_are_kept() {
+        let dir = unique_dir("cap");
+        let allowed = AllowedPaths::persistent(dir.join("allowed.json"));
+
+        for index in 0..(MAX_REMEMBERED_PATHS + 5) {
+            allowed.allow(&dir.join(format!("note-{index}.md"))).unwrap();
+        }
+
+        assert_eq!(allowed.paths().len(), MAX_REMEMBERED_PATHS);
+        assert!(allowed.ensure_allowed(&dir.join("note-0.md")).is_err());
+        assert!(allowed
+            .ensure_allowed(&dir.join(format!("note-{}.md", MAX_REMEMBERED_PATHS + 4)))
+            .is_ok());
+        fs::remove_dir_all(dir).ok();
     }
 }

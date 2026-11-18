@@ -121,4 +121,48 @@ describe("useFileOperations", () => {
 
     expect(result.current.fileError).toBe("Failed to open file. Please try again.");
   });
+
+  describe("canSaveInPlace", () => {
+    it("is true for a document with a file path on desktop", () => {
+      seedDocument("/notes/a.md", "# A");
+      const { result } = renderHook(() => useFileOperations(createAdapter()));
+
+      expect(result.current.canSaveInPlace()).toBe(true);
+    });
+
+    it("is false for an untitled document, which would open a save dialog", () => {
+      seedDocument(null, "# A");
+      const { result } = renderHook(() => useFileOperations(createAdapter()));
+
+      expect(result.current.canSaveInPlace()).toBe(false);
+    });
+
+    it("is true for a folder-backed web document with a file handle", () => {
+      const handle = { kind: "file" } as unknown as FileSystemFileHandle;
+      seedDocument("notes.md", "# A", handle);
+      const adapter = createAdapter({
+        writeWorkspaceFile: vi.fn(),
+        supportsFileExport: () => true,
+        exportFile: vi.fn(),
+      });
+      const { result } = renderHook(() => useFileOperations(adapter));
+
+      expect(result.current.canSaveInPlace()).toBe(true);
+    });
+
+    it("is false for web documents that would only download, even with a path", () => {
+      seedDocument("imported.md", "# A");
+      const adapter = createAdapter({ supportsFileExport: () => true, exportFile: vi.fn() });
+      const { result } = renderHook(() => useFileOperations(adapter));
+
+      expect(result.current.canSaveInPlace()).toBe(false);
+    });
+
+    it("is false when no document is open", () => {
+      useDocumentStore.setState({ openDocuments: [], activeDocumentId: "", filePath: null });
+      const { result } = renderHook(() => useFileOperations(createAdapter()));
+
+      expect(result.current.canSaveInPlace()).toBe(false);
+    });
+  });
 });

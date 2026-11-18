@@ -2,11 +2,13 @@ import { useCallback, useMemo, useState } from "react";
 import packageJson from "../package.json";
 import { AppShell } from "./app/app-shell";
 import {
+  useAutosave,
   useCloseConfirmation,
   useDocumentTitle,
   useFileOperations,
   useInstallPrompt,
   useKeyboardShortcuts,
+  useSessionRestore,
   useSettingsHydration,
   useThemeSync,
   useWebWorkspacePersistence,
@@ -62,7 +64,7 @@ export default function App() {
   const line = useEditorStatusState((state) => state.line);
   const column = useEditorStatusState((state) => state.column);
 
-  const { fileError, clearFileError, handleOpen, handleSave, handleSaveAs } =
+  const { fileError, clearFileError, handleOpen, handleSave, handleSaveAs, canSaveInPlace } =
     useFileOperations(fileAdapter);
   const {
     pendingCloseRequest,
@@ -78,6 +80,8 @@ export default function App() {
   useThemeSync();
   useWebWorkspacePersistence(isWeb);
   useDocumentTitle();
+  useAutosave({ save: handleSave, canSaveInPlace });
+  useSessionRestore(fileAdapter, !isWeb);
 
   const handleNew = useCallback(() => {
     newDocument(useSettingsStore.getState().settings.authoring.newDocumentTemplate);
@@ -151,6 +155,7 @@ export default function App() {
         templateDraft={templateDraft}
         version={packageJson.version}
         onClose={() => setActiveScreen("workspace")}
+        canRestoreSession={!isWeb}
         onSaveAppearance={(appearance) => {
           updateAppearance(appearance);
           void persistCurrentSettings();

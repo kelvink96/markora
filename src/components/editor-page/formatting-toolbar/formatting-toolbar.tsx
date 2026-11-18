@@ -11,10 +11,11 @@ import {
   SquareCode,
   Strikethrough,
   Table2,
+  type LucideIcon,
 } from "lucide-react";
-import { IconButton } from "../../shared/icon-button";
-import { Toolbar } from "../../shared/toolbar";
-import { ToolbarGroup } from "../../shared/toolbar-group";
+import { Fragment } from "react";
+import { Toolbar, ToolbarButton, ToolbarSeparator } from "@/components/ui/toolbar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface FormattingToolbarProps {
   onHeading: () => void;
@@ -32,6 +33,12 @@ interface FormattingToolbarProps {
   disabled?: boolean;
 }
 
+interface ToolbarAction {
+  label: string;
+  icon: LucideIcon;
+  run: () => void;
+}
+
 export function FormattingToolbar({
   onHeading,
   onBold,
@@ -47,74 +54,45 @@ export function FormattingToolbar({
   onImage,
   disabled = false,
 }: FormattingToolbarProps) {
-  const actionClassName =
-    "formatting-toolbar__action size-8 min-h-0 min-w-0 rounded-app-sm border-transparent bg-transparent p-0 text-app-text shadow-none backdrop-blur-none hover:border-transparent hover:bg-[color:var(--glass-hover)]";
-  const separatorClassName = "mx-0.5 h-4 w-px shrink-0 rounded-full bg-[color:var(--glass-border-strong)]";
+  // Grouped by what they do to the text: structure, emphasis, lists, then blocks and media.
+  const groups: ToolbarAction[][] = [
+    [{ label: "Heading", icon: Heading1, run: onHeading }],
+    [
+      { label: "Bold", icon: Bold, run: onBold },
+      { label: "Italic", icon: Italic, run: onItalic },
+      { label: "Strikethrough", icon: Strikethrough, run: onStrike },
+    ],
+    [
+      { label: "Bullet list", icon: List, run: onBulletList },
+      { label: "Numbered list", icon: ListOrdered, run: onOrderedList },
+      { label: "Task list", icon: ListTodo, run: onTaskList },
+    ],
+    [
+      { label: "Quote", icon: Quote, run: onQuote },
+      { label: "Code block", icon: SquareCode, run: onCodeBlock },
+      { label: "Link", icon: Link2, run: onLink },
+      { label: "Table", icon: Table2, run: onTable },
+      { label: "Image", icon: ImageIcon, run: onImage },
+    ],
+  ];
 
   return (
-    <Toolbar ariaLabel="Formatting" className="formatting-toolbar">
-      <ToolbarGroup>
-        <IconButton label="Heading" onClick={onHeading} disabled={disabled} className={actionClassName}>
-          <Heading1 size={16} aria-hidden="true" />
-        </IconButton>
-      </ToolbarGroup>
-      <span aria-hidden="true" className={separatorClassName} />
-      <ToolbarGroup>
-        <IconButton label="Bold" onClick={onBold} disabled={disabled} className={actionClassName}>
-          <Bold size={16} aria-hidden="true" />
-        </IconButton>
-        <IconButton label="Italic" onClick={onItalic} disabled={disabled} className={actionClassName}>
-          <Italic size={16} aria-hidden="true" />
-        </IconButton>
-        <IconButton
-          label="Strikethrough"
-          onClick={onStrike}
-          disabled={disabled}
-          className={actionClassName}
-        >
-          <Strikethrough size={16} aria-hidden="true" />
-        </IconButton>
-      </ToolbarGroup>
-      <span aria-hidden="true" className={separatorClassName} />
-      <ToolbarGroup>
-        <IconButton
-          label="Bullet list"
-          onClick={onBulletList}
-          disabled={disabled}
-          className={actionClassName}
-        >
-          <List size={16} aria-hidden="true" />
-        </IconButton>
-        <IconButton
-          label="Numbered list"
-          onClick={onOrderedList}
-          disabled={disabled}
-          className={actionClassName}
-        >
-          <ListOrdered size={16} aria-hidden="true" />
-        </IconButton>
-        <IconButton label="Task list" onClick={onTaskList} disabled={disabled} className={actionClassName}>
-          <ListTodo size={16} aria-hidden="true" />
-        </IconButton>
-      </ToolbarGroup>
-      <span aria-hidden="true" className={separatorClassName} />
-      <ToolbarGroup>
-        <IconButton label="Quote" onClick={onQuote} disabled={disabled} className={actionClassName}>
-          <Quote size={16} aria-hidden="true" />
-        </IconButton>
-        <IconButton label="Code block" onClick={onCodeBlock} disabled={disabled} className={actionClassName}>
-          <SquareCode size={16} aria-hidden="true" />
-        </IconButton>
-        <IconButton label="Link" onClick={onLink} disabled={disabled} className={actionClassName}>
-          <Link2 size={16} aria-hidden="true" />
-        </IconButton>
-        <IconButton label="Table" onClick={onTable} disabled={disabled} className={actionClassName}>
-          <Table2 size={16} aria-hidden="true" />
-        </IconButton>
-        <IconButton label="Image" onClick={onImage} disabled={disabled} className={actionClassName}>
-          <ImageIcon size={16} aria-hidden="true" />
-        </IconButton>
-      </ToolbarGroup>
+    <Toolbar aria-label="Formatting" className="formatting-toolbar">
+      {groups.map((group, index) => (
+        <Fragment key={group[0].label}>
+          {index > 0 ? <ToolbarSeparator /> : null}
+          {group.map(({ label, icon: Icon, run }) => (
+            <Tooltip key={label}>
+              <TooltipTrigger asChild>
+                <ToolbarButton aria-label={label} disabled={disabled} onClick={run}>
+                  <Icon aria-hidden="true" />
+                </ToolbarButton>
+              </TooltipTrigger>
+              <TooltipContent>{label}</TooltipContent>
+            </Tooltip>
+          ))}
+        </Fragment>
+      ))}
     </Toolbar>
   );
 }

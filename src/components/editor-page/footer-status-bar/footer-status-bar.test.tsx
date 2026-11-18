@@ -7,7 +7,7 @@ describe("FooterStatusBar", () => {
     render(<FooterStatusBar wordCount={12} viewMode="preview" line={8} column={14} />);
 
     expect(screen.getByRole("contentinfo", { name: "Footer status bar" })).toBeInTheDocument();
-    expect(screen.getByText("preview")).toHaveClass("text-app-text");
+    expect(screen.getByText("preview")).toBeInTheDocument();
     expect(screen.getByText("Markdown")).toBeInTheDocument();
     expect(screen.getByText("Ln 8, Col 14")).toBeInTheDocument();
     expect(screen.getByText("12 words")).toBeInTheDocument();

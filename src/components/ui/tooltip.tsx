@@ -15,10 +15,16 @@ function TooltipProvider({
   )
 }
 
+// Each Tooltip carries its own provider, so it works anywhere (and in isolated tests) without the
+// app having to remember to wrap it. App still mounts one at the root for shared settings.
 function Tooltip({
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Root>) {
-  return <TooltipPrimitive.Root data-slot="tooltip" {...props} />
+  return (
+    <TooltipProvider>
+      <TooltipPrimitive.Root data-slot="tooltip" {...props} />
+    </TooltipProvider>
+  )
 }
 
 function TooltipTrigger({

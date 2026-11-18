@@ -11,8 +11,10 @@ const themeColor: Record<ColorScheme, Record<"light" | "dark", string>> = {
 interface AppShellProps {
   themeMode: "light" | "dark";
   colorScheme: ColorScheme;
-  tabStrip: ReactNode;
-  commandBar: ReactNode;
+  /** The top row: logo, menus, tabs and view controls. */
+  header: ReactNode;
+  /** An optional slim row under the header (the formatting toolbar). */
+  toolbar?: ReactNode;
   workspace: ReactNode;
   statusBar: ReactNode;
 }
@@ -20,8 +22,8 @@ interface AppShellProps {
 export function AppShell({
   themeMode,
   colorScheme,
-  tabStrip,
-  commandBar,
+  header,
+  toolbar,
   workspace,
   statusBar,
 }: AppShellProps) {
@@ -47,10 +49,10 @@ export function AppShell({
     // Theme remains a class so the token layer can swap colors without extra JS.
     <div
       data-testid="app-shell"
-      className={`color-scheme-${colorScheme} flex h-screen h-dvh w-full flex-col overflow-hidden bg-app-bg text-app-text antialiased ${themeMode === "dark" ? "theme-dark" : ""}`}
+      className={`color-scheme-${colorScheme} flex h-screen h-dvh w-full flex-col overflow-hidden bg-background text-foreground antialiased ${themeMode === "dark" ? "theme-dark" : ""}`}
     >
-      <div className="shrink-0">{tabStrip}</div>
-      <div className="shrink-0">{commandBar}</div>
+      <div className="shrink-0">{header}</div>
+      {toolbar ? <div className="shrink-0">{toolbar}</div> : null}
       <div className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto">{workspace}</div>
       <div className="shrink-0">{statusBar}</div>
     </div>

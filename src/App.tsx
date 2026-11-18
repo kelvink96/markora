@@ -15,6 +15,7 @@ import {
 } from "./app/hooks";
 import { EditorPane } from "./components/editor-page/editor-pane";
 import { TabStrip } from "./components/editor-page/tab-strip";
+import { FormattingBar } from "./components/editor-page/formatting-toolbar";
 import { TopBar } from "./components/editor-page/top-bar";
 import { PreviewPane } from "./components/editor-page/preview-pane";
 import { SettingsPage } from "./components/settings-page/settings-page";
@@ -130,8 +131,9 @@ export default function App() {
     />
   ) : null;
 
-  const commandBar = (
+  const header = (
     <TopBar
+      tabs={activeScreen === "workspace" ? tabStrip : null}
       onOpenSettings={() => setActiveScreen("settings")}
       onOpenKeyboardShortcuts={() => setIsKeyboardShortcutsOpen(true)}
       onOpenAbout={() => setIsAboutDialogOpen(true)}
@@ -220,8 +222,8 @@ export default function App() {
       <AppShell
         themeMode={theme}
         colorScheme={settings.appearance.colorScheme}
-        tabStrip={activeScreen === "workspace" ? tabStrip : null}
-        commandBar={activeScreen === "workspace" ? commandBar : null}
+        header={activeScreen === "workspace" ? header : null}
+        toolbar={activeScreen === "workspace" && hasOpenDocuments ? <FormattingBar /> : null}
         workspace={workspace}
         statusBar={settings.appearance.showStatusBar && activeScreen === "workspace" && hasOpenDocuments ? statusBar : null}
       />

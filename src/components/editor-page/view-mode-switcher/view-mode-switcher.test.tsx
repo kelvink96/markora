@@ -4,14 +4,13 @@ import userEvent from "@testing-library/user-event";
 import { ViewModeSwitcher } from "./view-mode-switcher";
 
 describe("ViewModeSwitcher", () => {
-  it("renders icon tabs for edit, split, and preview modes", () => {
-    render(<ViewModeSwitcher value="edit" onValueChange={vi.fn()} />);
+  it("offers edit, split and preview as one labelled choice, with the current one selected", () => {
+    render(<ViewModeSwitcher value="split" onValueChange={vi.fn()} />);
 
-    expect(screen.getByRole("tablist", { name: "View mode" })).toHaveClass("app-toolbar", "inline-flex");
-    expect(screen.getByRole("tab", { name: "Edit view" })).toHaveClass("size-10", "px-0");
-    expect(screen.getByRole("tab", { name: "Edit view" })).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByRole("tab", { name: "Split view" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Preview view" })).toBeInTheDocument();
+    expect(screen.getByRole("radiogroup", { name: "View mode" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Split view" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Edit view" })).not.toBeChecked();
+    expect(screen.getByRole("radio", { name: "Preview view" })).not.toBeChecked();
   });
 
   it("changes modes when clicked", async () => {
@@ -19,8 +18,29 @@ describe("ViewModeSwitcher", () => {
     const onValueChange = vi.fn();
 
     render(<ViewModeSwitcher value="edit" onValueChange={onValueChange} />);
-    await user.click(screen.getByRole("tab", { name: "Preview view" }));
+    await user.click(screen.getByRole("radio", { name: "Preview view" }));
 
     expect(onValueChange).toHaveBeenCalledWith("preview");
+  });
+
+  it("never ends up with no view: clicking the selected one again does nothing", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+
+    render(<ViewModeSwitcher value="split" onValueChange={onValueChange} />);
+    await user.click(screen.getByRole("radio", { name: "Split view" }));
+
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+
+  it("moves between modes with the arrow keys", async () => {
+    const user = userEvent.setup();
+    render(<ViewModeSwitcher value="edit" onValueChange={vi.fn()} />);
+
+    await user.tab();
+    expect(screen.getByRole("radio", { name: "Edit view" })).toHaveFocus();
+    await user.keyboard("{ArrowRight}");
+
+    expect(screen.getByRole("radio", { name: "Split view" })).toHaveFocus();
   });
 });

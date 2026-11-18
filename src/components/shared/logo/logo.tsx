@@ -18,7 +18,7 @@ export function Logo({ className = "", size = 28, showLabel = false }: LogoProps
         >
           <image href="/logo_transparent.svg" width={1024} height={1024} />
         </svg>
-        <span className="text-base font-semibold tracking-tight text-app-text">Markora</span>
+        <span className="text-base font-semibold tracking-tight text-foreground">Markora</span>
       </span>
     );
   }

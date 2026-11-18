@@ -1,11 +1,22 @@
-import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { Ellipsis, Plus, X } from "lucide-react";
-import { useState } from "react";
+import { useRef, type KeyboardEvent } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import { getDisplayFileName } from "../../../features/document/document-actions";
 import type { DocumentTab } from "../../../store/document";
-import { MenuContent, MenuItem, MenuTrigger } from "../../shared/menu";
-import { Logo } from "../../shared/logo";
-import { Tab } from "../../shared/tab";
 
 interface TabStripProps {
   tabs: DocumentTab[];
@@ -17,12 +28,6 @@ interface TabStripProps {
   onRenameTab?: (id: string) => void;
 }
 
-interface ContextMenuState {
-  tabId: string | null;
-  x: number;
-  y: number;
-}
-
 export function TabStrip({
   tabs,
   activeTabId,
@@ -32,115 +37,125 @@ export function TabStrip({
   onNewTab,
   onRenameTab,
 }: TabStripProps) {
-  const [contextMenu, setContextMenu] = useState<ContextMenuState>({ tabId: null, x: 0, y: 0 });
+  const tabButtons = useRef(new Map<string, HTMLButtonElement>());
 
-  const handleContextMenu = (event: React.MouseEvent, tabId: string) => {
+  // Arrow keys, Home and End move between tabs and open the one they land on
+  // (the "automatic activation" pattern from the ARIA tabs guidance).
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const current = tabs.findIndex((tab) => tab.id === (event.target as HTMLElement).dataset.tabId);
+    if (current === -1) return;
+
+    const last = tabs.length - 1;
+    const targets: Record<string, number> = {
+      ArrowRight: current === last ? 0 : current + 1,
+      ArrowLeft: current === 0 ? last : current - 1,
+      Home: 0,
+      End: last,
+    };
+    const next = targets[event.key];
+    if (next === undefined) return;
+
     event.preventDefault();
-    setContextMenu({ tabId, x: event.clientX, y: event.clientY });
-  };
-
-  const closeContextMenu = () => {
-    setContextMenu({ tabId: null, x: 0, y: 0 });
-  };
-
-  const handleRename = () => {
-    if (contextMenu.tabId && onRenameTab) {
-      onRenameTab(contextMenu.tabId);
-    }
-    closeContextMenu();
-  };
-
-  const handleClose = () => {
-    if (contextMenu.tabId) {
-      onCloseTab(contextMenu.tabId);
-    }
-    closeContextMenu();
+    const id = tabs[next].id;
+    tabButtons.current.get(id)?.focus();
+    onSelectTab(id);
   };
 
   return (
-    <div className="tab-strip flex items-center gap-2 bg-[color:var(--glass-panel-strong)] px-2.5 py-1.5 backdrop-blur-[var(--glass-blur-strong)]">
-      <Logo size={24} showLabel />
+    <div className="tab-strip flex min-w-0 flex-1 items-center gap-1">
       <div
-        className="flex min-w-0 flex-1 items-end gap-1.5 overflow-x-auto"
         role="tablist"
         aria-label="Open documents"
+        aria-orientation="horizontal"
+        onKeyDown={handleKeyDown}
+        className="flex min-w-0 items-center gap-1 overflow-x-auto py-1 [scrollbar-width:none]"
       >
         {tabs.map((tab) => {
           const isActive = tab.id === activeTabId;
           const title = getDisplayFileName(tab.filePath);
 
           return (
-            <Tab
-              key={tab.id}
-              ariaSelected={isActive}
-              isActive={isActive}
-              className="group tab-strip__tab min-w-0 backdrop-blur-lg duration-150"
-              wrapperProps={{
-                onContextMenu: (e) => handleContextMenu(e, tab.id),
-                onDoubleClick: () => onRenameTab?.(tab.id),
-              }}
-              rightSection={
-                <button
-                  type="button"
-                  aria-label={`Close ${title}`}
-                  className="inline-flex size-5 items-center justify-center rounded-full text-app-text-muted opacity-0 transition-[background-color,color,opacity] hover:cursor-pointer hover:bg-[color:var(--tab-close-hover)] hover:text-app-text hover:opacity-100 focus-visible:outline-none group-hover:opacity-80"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onCloseTab(tab.id);
-                  }}
+            <ContextMenu key={tab.id}>
+              <ContextMenuTrigger asChild>
+                <div
+                  data-tab-item="true"
+                  data-active={isActive}
+                  onDoubleClick={() => onRenameTab?.(tab.id)}
+                  className={cn(
+                    "group relative flex h-8 max-w-56 min-w-0 shrink-0 items-center rounded-md text-sm transition-colors",
+                    isActive
+                      ? "bg-accent text-accent-foreground after:absolute after:inset-x-2 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-linear-to-r after:from-brand-from after:to-brand-to"
+                      : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                  )}
                 >
-                  <X size={14} strokeWidth={2.1} aria-hidden="true" />
-                </button>
-              }
-              onClick={() => onSelectTab(tab.id)}
-            >
-              {title}
-              {tab.isDirty ? " *" : ""}
-            </Tab>
+                  <button
+                    ref={(element) => {
+                      if (element) tabButtons.current.set(tab.id, element);
+                      else tabButtons.current.delete(tab.id);
+                    }}
+                    type="button"
+                    role="tab"
+                    data-tab-id={tab.id}
+                    aria-selected={isActive}
+                    // Starts with the visible text, so the name still matches what sighted users read.
+                    aria-label={tab.isDirty ? `${title} (unsaved)` : undefined}
+                    tabIndex={isActive ? 0 : -1}
+                    onClick={() => onSelectTab(tab.id)}
+                    className="h-full min-w-0 flex-1 cursor-pointer truncate rounded-md pr-1 pl-3 text-left outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                  >
+                    <span className="truncate">{title}</span>
+                    {tab.isDirty ? (
+                      <span aria-hidden="true" className="ml-2 inline-block size-1.5 rounded-full bg-primary align-middle" />
+                    ) : null}
+                  </button>
+                  {/* Hidden until the tab is hovered, focused or active, but always there on touch
+                      screens, where there is no hover. */}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-xs"
+                    aria-label={`Close ${title}`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onCloseTab(tab.id);
+                    }}
+                    className={cn(
+                      "mr-1 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100",
+                      isActive && "opacity-100",
+                    )}
+                  >
+                    <X aria-hidden="true" />
+                  </Button>
+                </div>
+              </ContextMenuTrigger>
+              <ContextMenuContent>
+                <ContextMenuItem onSelect={() => onRenameTab?.(tab.id)}>Rename</ContextMenuItem>
+                <ContextMenuItem onSelect={() => onCloseTab(tab.id)}>Close tab</ContextMenuItem>
+              </ContextMenuContent>
+            </ContextMenu>
           );
         })}
       </div>
-      {contextMenu.tabId && (
-        <>
-          <div
-            className="fixed inset-0 z-40"
-            onClick={closeContextMenu}
-          />
-          <div
-            className="app-flyout-solid fixed z-[60] w-40 p-1"
-            style={{ left: contextMenu.x, top: contextMenu.y }}
-          >
-            <button
-              className="w-full rounded-app-sm px-2 py-1.5 text-left text-sm text-app-text transition-colors duration-150 hover:cursor-pointer hover:bg-[color:color-mix(in_srgb,var(--glass-panel-strong)_65%,var(--surface-subtle))] focus-visible:outline-none"
-              onClick={handleRename}
-            >
-              Rename
-            </button>
-            <button
-              className="w-full rounded-app-sm px-2 py-1.5 text-left text-sm text-app-text transition-colors duration-150 hover:cursor-pointer hover:bg-[color:color-mix(in_srgb,var(--glass-panel-strong)_65%,var(--surface-subtle))] focus-visible:outline-none"
-              onClick={handleClose}
-            >
-              Close tab
-            </button>
-          </div>
-        </>
-      )}
-      <DropdownMenu.Root>
-        <MenuTrigger aria-label="Tab actions" className="tab-strip__actions inline-flex size-8 shrink-0 items-center justify-center px-0 hover:cursor-pointer">
-          <Ellipsis size={16} strokeWidth={2.1} aria-hidden="true" />
-        </MenuTrigger>
-        <MenuContent className="w-48">
-          <MenuItem onSelect={onCloseAllTabs}>Close all tabs</MenuItem>
-        </MenuContent>
-      </DropdownMenu.Root>
-      <button
-        type="button"
-        aria-label="New tab"
-        className="tab-strip__new-tab inline-flex size-8 shrink-0 items-center justify-center rounded-app-md border border-[color:var(--glass-border)] bg-[color:var(--glass-panel)] text-app-text-secondary backdrop-blur-[var(--glass-blur-soft)] transition hover:cursor-pointer hover:bg-[color:var(--glass-hover)] hover:text-app-text focus-visible:outline-none"
-        onClick={onNewTab}
-      >
-        <Plus size={16} strokeWidth={2.1} aria-hidden="true" />
-      </button>
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button type="button" variant="ghost" size="icon-sm" aria-label="New tab" className="tab-strip__new-tab" onClick={onNewTab}>
+            <Plus aria-hidden="true" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>New tab</TooltipContent>
+      </Tooltip>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button type="button" variant="ghost" size="icon-sm" aria-label="Tab actions" className="tab-strip__actions">
+            <Ellipsis aria-hidden="true" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuItem onSelect={onCloseAllTabs}>Close all tabs</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }

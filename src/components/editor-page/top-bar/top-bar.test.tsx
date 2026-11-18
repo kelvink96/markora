@@ -1,365 +1,262 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TopBar } from "./top-bar";
 import { useDocumentStore } from "../../../store/document";
+import { useEditorCommandState } from "../../../features/editor/editor-command-state";
+import { useThemeStore } from "../../../features/theme/theme-store";
+
+function renderBar(props: Partial<Parameters<typeof TopBar>[0]> = {}) {
+  const handlers = {
+    onOpenSettings: vi.fn(),
+    onOpenKeyboardShortcuts: vi.fn(),
+    onOpenAbout: vi.fn(),
+    onOpenReleaseNotes: vi.fn(),
+    onThemeToggle: vi.fn(),
+    onNew: vi.fn(),
+    onOpen: vi.fn(),
+    onSave: vi.fn(),
+    onSaveAs: vi.fn(),
+    onCloseTab: vi.fn(),
+    onOpenRecent: vi.fn(),
+    onViewModeChange: vi.fn(),
+  };
+  render(<TopBar viewMode="split" {...handlers} {...props} />);
+  return handlers;
+}
 
 describe("TopBar", () => {
   beforeEach(() => {
-    // Formatting, Edit and view controls only show while a document is open.
+    // Most controls only show while a document is open.
     useDocumentStore.setState({ activeDocumentId: "doc-1" });
+    useThemeStore.setState({ resolvedTheme: "light" });
   });
 
-  it("shows mac-style shortcut labels in the File menu on macOS", async () => {
+  it("is the page banner with a menubar, a slot for tabs, and the utilities", () => {
+    renderBar({ tabs: <div>The tabs</div> });
+
+    expect(screen.getByRole("banner")).toBeInTheDocument();
+    expect(screen.getByRole("menubar")).toBeInTheDocument();
+    expect(screen.getByText("The tabs")).toBeInTheDocument();
+    expect(screen.getByTestId("top-bar-menu")).toBeInTheDocument();
+    expect(screen.getByTestId("top-bar-utilities")).toBeInTheDocument();
+  });
+
+  it("shows File, Edit, View and Help while a document is open", () => {
+    renderBar();
+
+    for (const name of ["File", "Edit", "View", "Help"]) {
+      expect(screen.getByRole("menuitem", { name })).toBeInTheDocument();
+    }
+  });
+
+  it("hides the document-only controls when nothing is open", () => {
+    useDocumentStore.setState({ activeDocumentId: "" });
+    renderBar();
+
+    expect(screen.getByRole("menuitem", { name: "File" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "View" })).toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: "Edit" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("radiogroup", { name: "View mode" })).not.toBeInTheDocument();
+    // The formatting toolbar is its own row now, not part of the header.
+    expect(screen.queryByRole("toolbar", { name: "Formatting" })).not.toBeInTheDocument();
+  });
+
+  it("shows the wordmark only on the empty screen", () => {
+    useDocumentStore.setState({ activeDocumentId: "" });
+    const { unmount } = render(<TopBar viewMode="split" onViewModeChange={vi.fn()} />);
+    expect(screen.getByText("Markora")).toBeInTheDocument();
+    unmount();
+
+    useDocumentStore.setState({ activeDocumentId: "doc-1" });
+    render(<TopBar viewMode="split" onViewModeChange={vi.fn()} />);
+    expect(screen.queryByText("Markora")).not.toBeInTheDocument();
+  });
+
+  it("shows Cmd shortcut labels on macOS", async () => {
     const user = userEvent.setup();
-    const originalPlatform = window.navigator.platform;
+    const original = window.navigator.platform;
+    Object.defineProperty(window.navigator, "platform", { configurable: true, value: "MacIntel" });
+    renderBar();
 
-    Object.defineProperty(window.navigator, "platform", {
-      configurable: true,
-      value: "MacIntel",
-    });
-
-    render(
-      <TopBar
-        onOpenSettings={vi.fn()}
-        onThemeToggle={vi.fn()}
-        onNew={vi.fn()}
-        onOpen={vi.fn()}
-        onSave={vi.fn()}
-        onSaveAs={vi.fn()}
-        viewMode="edit"
-        onViewModeChange={vi.fn()}
-      />,
-    );
-
-    await user.click(screen.getByRole("button", { name: "File" }));
+    await user.click(screen.getByRole("menuitem", { name: "File" }));
 
     expect(screen.getByText("Cmd+N")).toBeInTheDocument();
     expect(screen.getByText("Cmd+Shift+S")).toBeInTheDocument();
+    Object.defineProperty(window.navigator, "platform", { configurable: true, value: original });
+  });
 
-    Object.defineProperty(window.navigator, "platform", {
-      configurable: true,
-      value: originalPlatform,
+  describe("File menu", () => {
+    // Item names include their shortcut ("Open Ctrl+O"), and "Open" / "Save" are prefixes of
+    // "Open Recent" / "Save As", so each is matched precisely.
+    it.each([
+      ["New", /^New\b/, "onNew"],
+      ["Open", /^Open\b(?! Recent)/, "onOpen"],
+      ["Save", /^Save\b(?! As)/, "onSave"],
+      ["Save As", /^Save As\b/, "onSaveAs"],
+      ["Close Tab", /^Close Tab/, "onCloseTab"],
+      ["Settings", /^Settings/, "onOpenSettings"],
+    ] as const)("%s calls %s", async (_label, name, handler) => {
+      const user = userEvent.setup();
+      const handlers = renderBar();
+
+      await user.click(screen.getByRole("menuitem", { name: "File" }));
+      await user.click(await screen.findByRole("menuitem", { name }));
+
+      expect(handlers[handler]).toHaveBeenCalledTimes(1);
+    });
+
+    it("offers only New, Open and Settings when no document is open", async () => {
+      const user = userEvent.setup();
+      useDocumentStore.setState({ activeDocumentId: "" });
+      renderBar();
+
+      await user.click(screen.getByRole("menuitem", { name: "File" }));
+      const menu = await screen.findByRole("menu");
+
+      expect(within(menu).queryByRole("menuitem", { name: /^Save/ })).not.toBeInTheDocument();
+      expect(within(menu).queryByRole("menuitem", { name: /Close Tab/ })).not.toBeInTheDocument();
+      expect(within(menu).getByRole("menuitem", { name: /^New/ })).toBeInTheDocument();
+    });
+
+    it("lists recent files in a submenu and opens the one picked", async () => {
+      const user = userEvent.setup();
+      const handlers = renderBar({
+        recentFiles: [
+          { documentId: "doc-1", projectId: "proj-1", title: "notes.md" },
+          { documentId: "doc-2", projectId: "proj-1", title: "readme.md" },
+        ],
+      });
+
+      await user.click(screen.getByRole("menuitem", { name: "File" }));
+      await user.click(await screen.findByRole("menuitem", { name: /Open Recent/ }));
+      const readme = await screen.findByRole("menuitem", { name: "readme.md" });
+      readme.focus();
+      await user.keyboard("{Enter}");
+
+      expect(handlers.onOpenRecent).toHaveBeenCalledWith("proj-1", "doc-2");
+    });
+
+    it("says so when there are no recent files", async () => {
+      const user = userEvent.setup();
+      renderBar({ recentFiles: [] });
+
+      await user.click(screen.getByRole("menuitem", { name: "File" }));
+      await user.click(await screen.findByRole("menuitem", { name: /Open Recent/ }));
+
+      expect(await screen.findByRole("menuitem", { name: "No recent files" })).toHaveAttribute("aria-disabled", "true");
     });
   });
 
-  it("hides document controls when no document is open", () => {
-    useDocumentStore.setState({ activeDocumentId: "" });
+  describe("Edit menu", () => {
+    it.each([
+      ["Undo", "undo"],
+      ["Redo", "redo"],
+      ["Cut", "cut"],
+      ["Copy", "copy"],
+      ["Paste", "paste"],
+      ["Select All", "selectAll"],
+    ] as const)("%s runs the %s editor action", async (label, action) => {
+      const user = userEvent.setup();
+      const runEditAction = vi.fn().mockResolvedValue(undefined);
+      useEditorCommandState.setState({ runEditAction });
+      renderBar();
 
-    render(
-      <TopBar
-        onOpenSettings={vi.fn()}
-        onThemeToggle={vi.fn()}
-        viewMode="edit"
-        onViewModeChange={vi.fn()}
-      />,
-    );
+      await user.click(screen.getByRole("menuitem", { name: "Edit" }));
+      await user.click(await screen.findByRole("menuitem", { name: new RegExp(`^${label}`) }));
 
-    expect(screen.queryByLabelText("Formatting")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("tab", { name: "Split view" })).not.toBeInTheDocument();
+      expect(runEditAction).toHaveBeenCalledWith(action);
+    });
   });
 
-  it("renders document metadata and control groups", () => {
-    render(
-      <TopBar
-        onOpenSettings={() => {}}
-        onThemeToggle={() => {}}
-        onNew={() => {}}
-        onOpen={() => {}}
-        onSave={() => {}}
-        onSaveAs={() => {}}
-        viewMode="edit"
-        onViewModeChange={() => {}}
-      />,
-    );
+  describe("View menu", () => {
+    it.each([
+      ["Edit View", "edit"],
+      ["Split View", "split"],
+      ["Preview View", "preview"],
+    ] as const)("%s switches to %s", async (label, mode) => {
+      const user = userEvent.setup();
+      const handlers = renderBar();
 
-    expect(screen.getByLabelText("Formatting")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Settings" })).not.toBeInTheDocument();
+      await user.click(screen.getByRole("menuitem", { name: "View" }));
+      await user.click(await screen.findByRole("menuitem", { name: label }));
+
+      expect(handlers.onViewModeChange).toHaveBeenCalledWith(mode);
+    });
+
+    it("keeps Toggle Theme available with no document open, without the view options", async () => {
+      const user = userEvent.setup();
+      useDocumentStore.setState({ activeDocumentId: "" });
+      const handlers = renderBar();
+
+      await user.click(screen.getByRole("menuitem", { name: "View" }));
+      const menu = await screen.findByRole("menu");
+
+      expect(within(menu).queryByRole("menuitem", { name: "Split View" })).not.toBeInTheDocument();
+      await user.click(within(menu).getByRole("menuitem", { name: /Toggle Theme/ }));
+      expect(handlers.onThemeToggle).toHaveBeenCalled();
+    });
   });
 
-  it("renders document, menu, and utility zones", () => {
-    render(
-      <TopBar
-        onOpenSettings={vi.fn()}
-        onThemeToggle={vi.fn()}
-        onNew={vi.fn()}
-        onOpen={vi.fn()}
-        onSave={vi.fn()}
-        onSaveAs={vi.fn()}
-        viewMode="edit"
-        onViewModeChange={vi.fn()}
-      />,
-    );
+  describe("Help menu", () => {
+    it.each([
+      ["Keyboard Shortcuts", "onOpenKeyboardShortcuts"],
+      ["Release Notes", "onOpenReleaseNotes"],
+      ["About Markora", "onOpenAbout"],
+    ] as const)("%s calls %s", async (label, handler) => {
+      const user = userEvent.setup();
+      const handlers = renderBar();
 
-    expect(screen.getByTestId("top-bar-menu")).toBeInTheDocument();
-    expect(screen.getByTestId("top-bar-toolbar")).toBeInTheDocument();
-    expect(screen.getByTestId("top-bar-utilities")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "File" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Edit" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "View" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Help" })).toBeInTheDocument();
+      await user.click(screen.getByRole("menuitem", { name: "Help" }));
+      await user.click(await screen.findByRole("menuitem", { name: new RegExp(label) }));
+
+      expect(handlers[handler]).toHaveBeenCalledTimes(1);
+    });
   });
 
-  it("uses a compact command bar layout", () => {
-    render(
-      <TopBar
-        onOpenSettings={vi.fn()}
-        onThemeToggle={vi.fn()}
-        onNew={vi.fn()}
-        onOpen={vi.fn()}
-        onSave={vi.fn()}
-        onSaveAs={vi.fn()}
-        viewMode="edit"
-        onViewModeChange={vi.fn()}
-      />,
-    );
-
-    expect(screen.getByRole("banner")).toHaveClass("px-3", "py-2");
-    expect(screen.getByRole("banner")).toHaveClass("grid-cols-[auto_minmax(0,1fr)_auto]");
-    expect(screen.getByRole("banner")).toHaveClass(
-      "top-bar",
-      "border-[color:var(--glass-border)]",
-      "bg-[color:var(--glass-panel-strong)]",
-      "backdrop-blur-[var(--glass-blur-strong)]",
-    );
-    expect(screen.getByTestId("top-bar-toolbar")).toHaveClass("justify-center");
-    expect(screen.getByTestId("top-bar-utilities")).toHaveClass("gap-2", "rounded-app-sm", "p-0.5");
-  });
-
-  it("places settings at the bottom of the file menu behind a divider", async () => {
+  it("moves between the menus with the arrow keys", async () => {
     const user = userEvent.setup();
-    const onOpenSettings = vi.fn();
+    renderBar();
 
-    render(
-      <TopBar
-        onOpenSettings={onOpenSettings}
-        onThemeToggle={vi.fn()}
-        onNew={vi.fn()}
-        onOpen={vi.fn()}
-        onSave={vi.fn()}
-        onSaveAs={vi.fn()}
-        viewMode="edit"
-        onViewModeChange={vi.fn()}
-      />,
-    );
+    screen.getByRole("menuitem", { name: "File" }).focus();
+    await user.keyboard("{ArrowRight}");
 
-    await user.click(screen.getByRole("button", { name: "File" }));
-
-    expect(screen.getAllByRole("separator").length).toBeGreaterThanOrEqual(1);
-    await user.click(screen.getByRole("menuitem", { name: "Settings" }));
-    expect(onOpenSettings).toHaveBeenCalled();
+    expect(screen.getByRole("menuitem", { name: "Edit" })).toHaveFocus();
   });
 
-  it("keeps document identity separate from utility controls", () => {
-    render(
-      <TopBar
-        onOpenSettings={vi.fn()}
-        onThemeToggle={vi.fn()}
-        onNew={vi.fn()}
-        onOpen={vi.fn()}
-        onSave={vi.fn()}
-        onSaveAs={vi.fn()}
-        viewMode="edit"
-        onViewModeChange={vi.fn()}
-      />,
-    );
+  describe("utilities", () => {
+    it("toggles the theme from the header button", async () => {
+      const user = userEvent.setup();
+      const handlers = renderBar();
 
-    expect(screen.getByRole("banner")).toBeInTheDocument();
-    expect(screen.getByTestId("top-bar-toolbar")).toBeInTheDocument();
-    expect(screen.getByTestId("top-bar-utilities")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Bold" })).toBeInTheDocument();
-  });
+      await user.click(screen.getByRole("button", { name: "Toggle theme" }));
 
-  it("invokes file actions from the File menu", async () => {
-    const user = userEvent.setup();
-    const onOpen = vi.fn();
+      expect(handlers.onThemeToggle).toHaveBeenCalledTimes(1);
+    });
 
-    render(
-      <TopBar
-        onOpenSettings={vi.fn()}
-        onThemeToggle={vi.fn()}
-        onNew={vi.fn()}
-        onOpen={onOpen}
-        onSave={vi.fn()}
-        onSaveAs={vi.fn()}
-        viewMode="edit"
-        onViewModeChange={vi.fn()}
-      />,
-    );
+    it("switches the view from the view mode control", async () => {
+      const user = userEvent.setup();
+      const handlers = renderBar({ viewMode: "split" });
 
-    await user.click(screen.getByRole("button", { name: "File" }));
-    await user.click(screen.getByRole("menuitem", { name: "Open" }));
+      const group = screen.getByRole("radiogroup", { name: "View mode" });
+      await user.click(within(group).getByRole("radio", { name: "Preview view" }));
 
-    expect(onOpen).toHaveBeenCalled();
-    expect(screen.queryByRole("button", { name: "File actions" })).not.toBeInTheDocument();
-  });
+      expect(handlers.onViewModeChange).toHaveBeenCalledWith("preview");
+    });
 
-  it("shows only real actions across the four menus", async () => {
-    const user = userEvent.setup();
+    it("shows an install action only when the web app can be installed", async () => {
+      const user = userEvent.setup();
+      const onInstallApp = vi.fn();
+      const { unmount } = render(
+        <TopBar viewMode="split" onViewModeChange={vi.fn()} canInstallApp onInstallApp={onInstallApp} />,
+      );
 
-    render(
-      <TopBar
-        onOpenSettings={vi.fn()}
-        onOpenKeyboardShortcuts={vi.fn()}
-        onOpenAbout={vi.fn()}
-        onCloseTab={vi.fn()}
-        onThemeToggle={vi.fn()}
-        onNew={vi.fn()}
-        onOpen={vi.fn()}
-        onSave={vi.fn()}
-        onSaveAs={vi.fn()}
-        viewMode="edit"
-        onViewModeChange={vi.fn()}
-      />,
-    );
+      await user.click(screen.getByRole("button", { name: "Install app" }));
+      expect(onInstallApp).toHaveBeenCalled();
+      unmount();
 
-    await user.click(screen.getByRole("button", { name: "File" }));
-    expect(screen.getByRole("menuitem", { name: "Close Tab" })).toBeInTheDocument();
-    expect(screen.getByRole("menuitem", { name: "Settings" })).toBeInTheDocument();
-    expect(screen.getByRole("menuitem", { name: "Open Recent" })).toBeInTheDocument();
-    expect(screen.getAllByRole("separator").length).toBeGreaterThanOrEqual(1);
-    await user.keyboard("{Escape}");
-
-    await user.click(screen.getByRole("button", { name: "Edit" }));
-    expect(screen.getByRole("menuitem", { name: "Undo" })).toBeInTheDocument();
-    expect(screen.getByRole("menuitem", { name: "Paste" })).toBeInTheDocument();
-    await user.keyboard("{Escape}");
-
-    await user.click(screen.getByRole("button", { name: "View" }));
-    expect(screen.getByRole("menuitem", { name: "Split View" })).toBeInTheDocument();
-    expect(screen.getByRole("menuitem", { name: "Preview View" })).toBeInTheDocument();
-    await user.keyboard("{Escape}");
-
-    await user.click(screen.getByRole("button", { name: "Help" }));
-    expect(screen.getByRole("menuitem", { name: "Keyboard Shortcuts" })).toBeInTheDocument();
-    expect(screen.getByRole("menuitem", { name: "About Markora" })).toBeInTheDocument();
-  });
-
-  it("renders icon-only view mode controls with accessible labels", () => {
-    const onViewModeChange = vi.fn();
-
-    render(
-      <TopBar
-        onOpenSettings={vi.fn()}
-        onThemeToggle={vi.fn()}
-        onNew={vi.fn()}
-        onOpen={vi.fn()}
-        onSave={vi.fn()}
-        onSaveAs={vi.fn()}
-        viewMode="edit"
-        onViewModeChange={onViewModeChange}
-      />,
-    );
-
-    expect(screen.getByRole("tab", { name: "Edit view" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Split view" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Preview view" })).toBeInTheDocument();
-    expect(onViewModeChange).not.toHaveBeenCalled();
-  });
-
-  it("does not render a standalone settings utility button", () => {
-    render(
-      <TopBar
-        onOpenSettings={vi.fn()}
-        onThemeToggle={vi.fn()}
-        onNew={vi.fn()}
-        onOpen={vi.fn()}
-        onSave={vi.fn()}
-        onSaveAs={vi.fn()}
-        viewMode="edit"
-        onViewModeChange={vi.fn()}
-      />,
-    );
-
-    expect(screen.queryByRole("button", { name: "Settings" })).not.toBeInTheDocument();
-  });
-
-  it("opens settings from the file menu", async () => {
-    const user = userEvent.setup();
-    const onOpenSettings = vi.fn();
-
-    render(
-      <TopBar
-        onOpenSettings={onOpenSettings}
-        onThemeToggle={vi.fn()}
-        onNew={vi.fn()}
-        onOpen={vi.fn()}
-        onSave={vi.fn()}
-        onSaveAs={vi.fn()}
-        viewMode="edit"
-        onViewModeChange={vi.fn()}
-      />,
-    );
-
-    await user.click(screen.getByRole("button", { name: "File" }));
-    await user.click(screen.getByRole("menuitem", { name: "Settings" }));
-
-    expect(onOpenSettings).toHaveBeenCalled();
-  });
-
-  it("shows Open Recent trigger in the File menu", async () => {
-    const user = userEvent.setup();
-
-    render(
-      <TopBar
-        onOpenSettings={vi.fn()}
-        onThemeToggle={vi.fn()}
-        onNew={vi.fn()}
-        onOpen={vi.fn()}
-        onSave={vi.fn()}
-        onSaveAs={vi.fn()}
-        recentFiles={[
-          { documentId: "doc-1", projectId: "proj-1", title: "notes.md" },
-          { documentId: "doc-2", projectId: "proj-1", title: "readme.md" },
-        ]}
-        onOpenRecent={vi.fn()}
-        viewMode="edit"
-        onViewModeChange={vi.fn()}
-      />,
-    );
-
-    await user.click(screen.getByRole("button", { name: "File" }));
-    expect(screen.getByRole("menuitem", { name: "Open Recent" })).toBeInTheDocument();
-  });
-
-  it("renders an install action only when web install is available", async () => {
-    const user = userEvent.setup();
-    const onInstallApp = vi.fn();
-
-    const { rerender } = render(
-      <TopBar
-        onOpenSettings={vi.fn()}
-        onThemeToggle={vi.fn()}
-        onNew={vi.fn()}
-        onOpen={vi.fn()}
-        onSave={vi.fn()}
-        onSaveAs={vi.fn()}
-        canInstallApp
-        onInstallApp={onInstallApp}
-        viewMode="edit"
-        onViewModeChange={vi.fn()}
-      />,
-    );
-
-    await user.click(screen.getByRole("button", { name: "Install app" }));
-    expect(onInstallApp).toHaveBeenCalled();
-
-    rerender(
-      <TopBar
-        onOpenSettings={vi.fn()}
-        onThemeToggle={vi.fn()}
-        onNew={vi.fn()}
-        onOpen={vi.fn()}
-        onSave={vi.fn()}
-        onSaveAs={vi.fn()}
-        canInstallApp={false}
-        onInstallApp={vi.fn()}
-        viewMode="edit"
-        onViewModeChange={vi.fn()}
-      />,
-    );
-
-    expect(screen.queryByRole("button", { name: "Install app" })).not.toBeInTheDocument();
+      render(<TopBar viewMode="split" onViewModeChange={vi.fn()} canInstallApp={false} />);
+      expect(screen.queryByRole("button", { name: "Install app" })).not.toBeInTheDocument();
+    });
   });
 });

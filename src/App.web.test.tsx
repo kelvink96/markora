@@ -61,19 +61,19 @@ vi.mock("./platform/persistence/web", () => ({
 
 vi.mock("./app/app-shell", () => ({
   AppShell: ({
-    tabStrip,
-    commandBar,
+    header,
+    toolbar,
     workspace,
     statusBar,
   }: {
-    tabStrip: React.ReactNode;
-    commandBar: React.ReactNode;
+    header: React.ReactNode;
+    toolbar?: React.ReactNode;
     workspace: React.ReactNode;
     statusBar: React.ReactNode;
   }) => (
     <div>
-      {tabStrip}
-      {commandBar}
+      {header}
+      {toolbar}
       {workspace}
       {statusBar}
     </div>
@@ -108,11 +108,13 @@ vi.mock("./components/editor-page/workspace", () => ({
 
 vi.mock("./components/editor-page/top-bar", () => ({
   TopBar: ({
+    tabs,
     onOpen,
     onSave,
     canInstallApp,
     onInstallApp,
   }: {
+    tabs?: React.ReactNode;
     onOpen: () => void;
     onSave: () => void;
     canInstallApp?: boolean;
@@ -130,9 +132,14 @@ vi.mock("./components/editor-page/top-bar", () => ({
           Install app
         </button>
       ) : null}
+      {tabs}
       <div>Top Bar</div>
     </div>
   ),
+}));
+
+vi.mock("./components/editor-page/formatting-toolbar", () => ({
+  FormattingBar: () => <div>Formatting Bar</div>,
 }));
 
 vi.mock("./components/editor-page/footer-status-bar", () => ({

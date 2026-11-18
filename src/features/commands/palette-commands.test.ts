@@ -77,7 +77,7 @@ describe("buildPaletteCommands", () => {
     const ids = buildPaletteCommands(context({ viewMode: "split" })).map((command) => command.id);
 
     expect(ids).not.toContain("view.mode.split");
-    expect(ids).toEqual(expect.arrayContaining(["view.mode.edit", "view.mode.preview"]));
+    expect(ids).toEqual(expect.arrayContaining(["view.mode.live", "view.mode.edit", "view.mode.preview"]));
   });
 
   it("words the outline command for its current state", () => {

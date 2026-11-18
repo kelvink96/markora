@@ -20,8 +20,8 @@ export function Workspace({ sidebar, left, right, viewMode }: WorkspaceProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
   const syncScroll = useSettingsStore((state) => state.settings.preview.syncScroll);
-  // Edit view shows no preview, so there is nothing to keep in step there.
-  useScrollSync(containerRef, viewMode !== "edit" && syncScroll);
+  // Live and Edit views show no preview, so there is nothing to keep in step there.
+  useScrollSync(containerRef, (viewMode === "split" || viewMode === "preview") && syncScroll);
 
   useEffect(() => {
     if (viewMode === "split") {
@@ -66,7 +66,7 @@ export function Workspace({ sidebar, left, right, viewMode }: WorkspaceProps) {
     }
   }, []);
 
-  if (viewMode === "edit") {
+  if (viewMode === "live" || viewMode === "edit") {
     return (
       <div className="workspace relative flex min-h-0 flex-1 overflow-hidden px-3 pb-3 pt-2.5">
         {sidebar ? <div className={SIDEBAR_SLOT}>{sidebar}</div> : null}

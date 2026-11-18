@@ -22,6 +22,7 @@ import {
   Save,
   Scissors,
   Search,
+  Sparkles,
   Settings2,
   SquarePen,
   Sun,
@@ -216,6 +217,9 @@ export function TopBar({
             <MenubarContent>
               {hasActiveDocument ? (
                 <>
+                  <MenubarItem onSelect={() => onViewModeChange("live")}>
+                    <Sparkles className={iconClass} /> Live View
+                  </MenubarItem>
                   <MenubarItem onSelect={() => onViewModeChange("edit")}>
                     <FileInput className={iconClass} /> Edit View
                   </MenubarItem>

@@ -1,6 +1,7 @@
 import { create } from "zustand";
+import { loadViewMode, saveViewMode } from "./view-mode-storage";
 
-export type WorkspaceViewMode = "edit" | "split" | "preview";
+export type WorkspaceViewMode = "live" | "edit" | "split" | "preview";
 
 interface WorkspaceState {
   viewMode: WorkspaceViewMode;
@@ -11,8 +12,11 @@ interface WorkspaceState {
 }
 
 export const useWorkspaceState = create<WorkspaceState>((set) => ({
-  viewMode: "edit",
-  setViewMode: (viewMode) => set({ viewMode }),
+  viewMode: loadViewMode(),
+  setViewMode: (viewMode) => {
+    saveViewMode(viewMode);
+    set({ viewMode });
+  },
   showOutline: false,
   toggleOutline: () => set((state) => ({ showOutline: !state.showOutline })),
 }));

@@ -1,0 +1,124 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { act, renderHook } from "@testing-library/react";
+import { useFileOperations } from "./use-file-operations";
+import { useDocumentStore } from "../../store/document";
+import type { FileAdapter } from "../../platform/files/types";
+
+function createAdapter(overrides: Partial<FileAdapter> = {}): FileAdapter {
+  return {
+    pickOpenPath: vi.fn().mockResolvedValue(null),
+    pickSavePath: vi.fn().mockResolvedValue(null),
+    readFile: vi.fn().mockResolvedValue(""),
+    writeFile: vi.fn().mockResolvedValue(undefined),
+    supportsDirectoryAccess: () => false,
+    supportsFileImport: () => false,
+    supportsFileExport: () => false,
+    ...overrides,
+  };
+}
+
+function seedDocument(filePath: string | null, content: string, handle?: FileSystemFileHandle) {
+  const document = { id: "doc-1", content, filePath, isDirty: true, handle };
+  useDocumentStore.setState({
+    projects: [{ id: "project-1", name: "P", documents: [document], activeDocumentId: "doc-1" }],
+    activeProjectId: "project-1",
+    openDocuments: [document],
+    activeDocumentId: "doc-1",
+    content,
+    filePath,
+    isDirty: true,
+    recentDocuments: [],
+  });
+}
+
+describe("useFileOperations", () => {
+  beforeEach(() => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  it("saves to the existing path and marks the document clean", async () => {
+    const adapter = createAdapter();
+    seedDocument("/notes/a.md", "# A");
+    const { result } = renderHook(() => useFileOperations(adapter));
+
+    await act(() => result.current.handleSave());
+
+    expect(adapter.writeFile).toHaveBeenCalledWith("/notes/a.md", "# A");
+    expect(useDocumentStore.getState().isDirty).toBe(false);
+  });
+
+  it("asks where to save an untitled document, then records the path", async () => {
+    const adapter = createAdapter({ pickSavePath: vi.fn().mockResolvedValue("/notes/new.md") });
+    seedDocument(null, "# New");
+    const { result } = renderHook(() => useFileOperations(adapter));
+
+    await act(() => result.current.handleSave());
+
+    expect(adapter.pickSavePath).toHaveBeenCalledWith("untitled.md");
+    expect(adapter.writeFile).toHaveBeenCalledWith("/notes/new.md", "# New");
+    expect(useDocumentStore.getState().filePath).toBe("/notes/new.md");
+    expect(useDocumentStore.getState().isDirty).toBe(false);
+  });
+
+  it("leaves the document dirty when the save dialog is cancelled", async () => {
+    const adapter = createAdapter();
+    seedDocument(null, "# New");
+    const { result } = renderHook(() => useFileOperations(adapter));
+
+    await act(() => result.current.handleSaveAs());
+
+    expect(adapter.writeFile).not.toHaveBeenCalled();
+    expect(useDocumentStore.getState().isDirty).toBe(true);
+  });
+
+  it("writes folder-backed documents through their file handle", async () => {
+    const handle = { kind: "file" } as unknown as FileSystemFileHandle;
+    const adapter = createAdapter({ writeWorkspaceFile: vi.fn().mockResolvedValue(undefined) });
+    seedDocument("notes.md", "# H", handle);
+    const { result } = renderHook(() => useFileOperations(adapter));
+
+    await act(() => result.current.handleSave());
+
+    expect(adapter.writeWorkspaceFile).toHaveBeenCalledWith(handle, "# H");
+    expect(adapter.writeFile).not.toHaveBeenCalled();
+  });
+
+  it("downloads with a name taken from the first heading when saving on the web", async () => {
+    const adapter = createAdapter({
+      supportsFileExport: () => true,
+      exportFile: vi.fn().mockResolvedValue(undefined),
+    });
+    seedDocument(null, "# My Plan\n\ntext");
+    const { result } = renderHook(() => useFileOperations(adapter));
+
+    await act(() => result.current.handleSave());
+
+    expect(adapter.exportFile).toHaveBeenCalledWith("my-plan.md", "# My Plan\n\ntext");
+    expect(useDocumentStore.getState().isDirty).toBe(false);
+  });
+
+  it("shows a dismissible error when saving fails", async () => {
+    const adapter = createAdapter({ writeFile: vi.fn().mockRejectedValue(new Error("disk full")) });
+    seedDocument("/notes/a.md", "# A");
+    const { result } = renderHook(() => useFileOperations(adapter));
+
+    await act(() => result.current.handleSave());
+    expect(result.current.fileError).toBe("Failed to save file. Please try again.");
+    expect(useDocumentStore.getState().isDirty).toBe(true);
+
+    act(() => result.current.clearFileError());
+    expect(result.current.fileError).toBeNull();
+  });
+
+  it("shows an error when opening a file fails", async () => {
+    const adapter = createAdapter({
+      pickOpenPath: vi.fn().mockResolvedValue("/notes/a.md"),
+      readFile: vi.fn().mockRejectedValue(new Error("denied")),
+    });
+    const { result } = renderHook(() => useFileOperations(adapter));
+
+    await act(() => result.current.handleOpen());
+
+    expect(result.current.fileError).toBe("Failed to open file. Please try again.");
+  });
+});

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { untitledStarterContent, useDocumentStore } from "./document";
+import { untitledStarterContent, useDocumentStore } from "./index";
 
 describe("DocumentStore", () => {
   beforeEach(() => {

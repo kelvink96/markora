@@ -224,7 +224,7 @@ export default function App() {
     ) : (
       hasOpenDocuments ? (
         <Workspace
-          left={<EditorPane theme={theme} />}
+          left={<EditorPane theme={theme} viewMode={viewMode} />}
           right={<PreviewPane />}
           viewMode={viewMode}
           sidebar={

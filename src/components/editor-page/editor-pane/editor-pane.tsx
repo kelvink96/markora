@@ -10,6 +10,8 @@ import { useEditorCommandState } from "../../../features/editor/editor-command-s
 import { findExtensions } from "../../../features/editor/find-replace";
 import { markoraEditorTheme } from "../../../features/editor/editor-theme";
 import { createEditorSettingsExtensions } from "../../../features/editor/editor-settings-extensions";
+import { liveExtension } from "../../../features/editor/live/live-extension";
+import type { WorkspaceViewMode } from "../../../features/workspace/workspace-state";
 import { applyMarkdownToolbarAction, type MarkdownToolbarAction } from "../../../features/editor/markdown-toolbar-actions";
 import {
   applySlashCommand,
@@ -25,6 +27,8 @@ import { SlashCommandMenu } from "../slash-command-menu/slash-command-menu";
 
 interface EditorPaneProps {
   theme: "light" | "dark";
+  /** Live rendering is only on in "live"; the other modes show the raw markdown. */
+  viewMode?: WorkspaceViewMode;
 }
 
 interface SlashMenuState {
@@ -52,7 +56,7 @@ interface InlineMenuState {
   };
 }
 
-export function EditorPane({ theme }: EditorPaneProps) {
+export function EditorPane({ theme, viewMode = "edit" }: EditorPaneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Keep the imperative CodeMirror instance in a ref so React re-renders do not recreate it.
   const viewRef = useRef<EditorView | null>(null);
@@ -63,6 +67,11 @@ export function EditorPane({ theme }: EditorPaneProps) {
   const lineNumbers = editorSettings.lineNumbers;
   // Holds the settings-driven extensions so they can be swapped without rebuilding the editor.
   const settingsCompartment = useMemo(() => new Compartment(), []);
+  // Holds the Live-mode decorations, so switching view mode reconfigures the editor in place.
+  const liveCompartment = useMemo(() => new Compartment(), []);
+  const liveMode = viewMode === "live";
+  // The mode the editor was last configured with; the creation effect reads it once, then the effect below keeps it current.
+  const appliedLiveMode = useRef(liveMode);
   const setCursorPosition = useEditorStatusState((state) => state.setCursorPosition);
   const setRunToolbarAction = useEditorCommandState((state) => state.setRunToolbarAction);
   const setRunEditAction = useEditorCommandState((state) => state.setRunEditAction);
@@ -206,6 +215,7 @@ export function EditorPane({ theme }: EditorPaneProps) {
           ]),
         ),
         ...markoraEditorTheme,
+        liveCompartment.of(appliedLiveMode.current ? liveExtension() : []),
         // Last, so user settings win over the theme where both style the same thing.
         settingsCompartment.of(
           createEditorSettingsExtensions(settings.editor, settings.appearance, theme === "dark"),
@@ -222,7 +232,15 @@ export function EditorPane({ theme }: EditorPaneProps) {
     };
     // The theme is read once here and then kept current by the effect below, so switching
     // light/dark doesn't rebuild the editor (which would lose undo history and the cursor).
-  }, [setContent, setCursorPosition, settingsCompartment]);
+  }, [liveCompartment, setContent, setCursorPosition, settingsCompartment]);
+
+  useEffect(() => {
+    if (appliedLiveMode.current === liveMode) return;
+    appliedLiveMode.current = liveMode;
+    viewRef.current?.dispatch({
+      effects: liveCompartment.reconfigure(liveMode ? liveExtension() : []),
+    });
+  }, [liveCompartment, liveMode]);
 
   useEffect(() => {
     // Apply setting changes to the live editor (the creation effect only reads them once).

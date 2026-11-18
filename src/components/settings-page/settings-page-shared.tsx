@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import {
+  Eye,
   FilePlus2,
   FolderOpen,
   Info,
@@ -40,6 +41,7 @@ export function SidebarButton({
   const iconMap: Record<SettingsNavigationIcon, ReactNode> = {
     palette: <Palette data-testid={iconTestId} className="size-4" />,
     "pen-square": <PenSquare data-testid={iconTestId} className="size-4" />,
+    eye: <Eye data-testid={iconTestId} className="size-4" />,
     "folder-open": <FolderOpen data-testid={iconTestId} className="size-4" />,
     info: <Info data-testid={iconTestId} className="size-4" />,
     "sliders-horizontal": <SlidersHorizontal data-testid={iconTestId} className="size-4" />,

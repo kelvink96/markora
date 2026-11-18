@@ -16,6 +16,7 @@ export function useSettingsPageState({
   const [activeSection, setActiveSection] = useState<SettingsSection>(DEFAULT_SETTINGS_SECTION);
   const [appearanceDraft, setAppearanceDraft] = useState(settings.appearance);
   const [editorDraft, setEditorDraft] = useState(settings.editor);
+  const [previewDraft, setPreviewDraft] = useState(settings.preview);
   const [filesDraft, setFilesDraft] = useState(settings.files);
   const [templateDraftValue, setTemplateDraftValue] = useState(templateDraft);
   const [systemThemeMode, setSystemThemeMode] = useState<"light" | "dark">(getSystemThemeMode);
@@ -23,6 +24,7 @@ export function useSettingsPageState({
   useEffect(() => {
     setAppearanceDraft(settings.appearance);
     setEditorDraft(settings.editor);
+    setPreviewDraft(settings.preview);
     setFilesDraft(settings.files);
   }, [settings]);
 
@@ -50,11 +52,13 @@ export function useSettingsPageState({
     appearanceDraft,
     editorDraft,
     filesDraft,
+    previewDraft,
     previewThemeMode,
     setActiveSection,
     setAppearanceDraft,
     setEditorDraft,
     setFilesDraft,
+    setPreviewDraft,
     setTemplateDraftValue,
     templateDraftValue,
   };

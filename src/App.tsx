@@ -58,6 +58,7 @@ export default function App() {
   const updateAppearance = useSettingsStore((state) => state.updateAppearance);
   const updateEditor = useSettingsStore((state) => state.updateEditor);
   const updateFiles = useSettingsStore((state) => state.updateFiles);
+  const updatePreview = useSettingsStore((state) => state.updatePreview);
   const templateDraft = useSettingsStore((state) => state.templateDraft);
   const setTemplateDraft = useSettingsStore((state) => state.setTemplateDraft);
   const saveTemplateDraft = useSettingsStore((state) => state.saveTemplateDraft);
@@ -166,6 +167,10 @@ export default function App() {
         }}
         onSaveFiles={(files) => {
           updateFiles(files);
+          void persistCurrentSettings();
+        }}
+        onSavePreview={(preview) => {
+          updatePreview(preview);
           void persistCurrentSettings();
         }}
         onSaveTemplate={(value) => {

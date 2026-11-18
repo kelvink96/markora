@@ -1,3 +1,4 @@
+import { isolateHistory } from "@codemirror/commands";
 import { type EditorView, WidgetType } from "@codemirror/view";
 
 /**
@@ -25,12 +26,12 @@ export class TaskCheckboxWidget extends WidgetType {
     box.addEventListener("mousedown", (event) => event.preventDefault());
     // The native toggle already flipped the box; the edit makes the document agree, and the
     // widget then redraws from the document.
-    box.addEventListener("click", () => toggleTask(view, box));
+    box.addEventListener("click", () => toggleTask(view, box, this.checked));
     box.addEventListener("keydown", (event) => {
       // Space toggles a native checkbox already (as a click); Enter is added for list-style use.
       if (event.key !== "Enter") return;
       event.preventDefault();
-      toggleTask(view, box);
+      toggleTask(view, box, this.checked);
     });
     return box;
   }
@@ -46,12 +47,18 @@ export class TaskCheckboxWidget extends WidgetType {
   }
 }
 
-function toggleTask(view: EditorView, box: HTMLElement) {
+function toggleTask(view: EditorView, box: HTMLInputElement, rendered: boolean) {
   const from = view.posAtDOM(box);
   const marker = view.state.sliceDoc(from, from + 3);
-  if (!/^\[[ xX]\]$/.test(marker)) return;
+  if (!/^\[[ xX]\]$/.test(marker)) {
+    // The native toggle already flipped the box but the document did not change: show what it says.
+    box.checked = rendered;
+    return;
+  }
   view.dispatch({
     changes: { from: from + 1, to: from + 2, insert: marker[1] === " " ? "x" : " " },
-    userEvent: "input.toggle",
+    // Not `input.*`, which history may merge with adjacent typing; isolated so it is one undo step.
+    userEvent: "toggle.task",
+    annotations: isolateHistory.of("full"),
   });
 }

@@ -61,6 +61,30 @@ describe("task checkboxes", () => {
     expect(checkboxes(view)[0].checked).toBe(false);
   });
 
+  it("is its own undo step, even when typing follows straight after", () => {
+    const doc = `- [ ] todo${AWAY}`;
+    const { view } = mount(doc, doc.length);
+    checkboxes(view)[0].click();
+    view.dispatch({ changes: { from: 4, insert: "y" }, userEvent: "input.type" });
+    expect(view.state.doc.toString()).toBe(`- [xy] todo${AWAY}`);
+
+    undo(view);
+
+    expect(view.state.doc.toString()).toBe(`- [x] todo${AWAY}`);
+  });
+
+  it("puts the box back in line with the document when the toggle cannot be applied", () => {
+    const doc = `- [ ] todo${AWAY}`;
+    const { view } = mount(doc, doc.length);
+    const box = checkboxes(view)[0];
+    vi.spyOn(view, "posAtDOM").mockReturnValue(0);
+
+    box.click();
+
+    expect(view.state.doc.toString()).toBe(doc);
+    expect(box.checked).toBe(false);
+  });
+
   it("unchecks a checked item and works in a nested list", () => {
     const doc = `- parent\n  - [x] child\n    - [ ] grandchild${AWAY}`;
     const { view } = mount(doc, doc.length);

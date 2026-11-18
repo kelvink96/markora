@@ -8,7 +8,7 @@ import { FilesSettingsSection } from "./files-settings-section";
 function renderSection({ canRestoreSession = false }: { canRestoreSession?: boolean } = {}) {
   const user = userEvent.setup();
   const settings = createDefaultSettings();
-  const onSave = vi.fn();
+  const onChange = vi.fn();
 
   function TestHarness() {
     const [files, setFiles] = useState(settings.files);
@@ -16,16 +16,17 @@ function renderSection({ canRestoreSession = false }: { canRestoreSession?: bool
     return (
       <FilesSettingsSection
         files={files}
-        savedFiles={settings.files}
-        onFilesChange={setFiles}
-        onSave={onSave}
+        onChange={(next) => {
+          setFiles(next);
+          onChange(next);
+        }}
         canRestoreSession={canRestoreSession}
       />
     );
   }
 
   render(<TestHarness />);
-  return { user, onSave, defaults: settings.files };
+  return { user, onChange, defaults: settings.files };
 }
 
 describe("FilesSettingsSection", () => {
@@ -53,17 +54,15 @@ describe("FilesSettingsSection", () => {
     expect(restore).toHaveAccessibleDescription(/saved files you had open/);
   });
 
-  it("saves the toggled options", async () => {
-    const { user, onSave, defaults } = renderSection({ canRestoreSession: true });
+  it("applies each toggle as soon as it is flipped, with no Save step", async () => {
+    const { user, onChange, defaults } = renderSection({ canRestoreSession: true });
 
     await user.click(screen.getByRole("switch", { name: "Save changes automatically" }));
-    await user.click(screen.getByRole("switch", { name: "Reopen last session's files on launch" }));
-    await user.click(screen.getByRole("button", { name: /save/i }));
+    expect(onChange).toHaveBeenLastCalledWith({ ...defaults, autosave: true });
 
-    expect(onSave).toHaveBeenCalledWith({
-      ...defaults,
-      autosave: true,
-      restorePreviousSession: true,
-    });
+    await user.click(screen.getByRole("switch", { name: "Reopen last session's files on launch" }));
+    expect(onChange).toHaveBeenLastCalledWith({ ...defaults, autosave: true, restorePreviousSession: true });
+    // "Save changes automatically" is a switch, so only a button named Save would be a leftover Save step.
+    expect(screen.queryByRole("button", { name: /save/i })).not.toBeInTheDocument();
   });
 });

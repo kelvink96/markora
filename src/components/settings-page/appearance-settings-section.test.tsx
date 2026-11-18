@@ -8,7 +8,7 @@ import { AppearanceSettingsSection } from "./appearance-settings-section";
 function renderSection(previewThemeMode: "light" | "dark" = "light") {
   const user = userEvent.setup();
   const settings = createDefaultSettings();
-  const onSave = vi.fn();
+  const onChange = vi.fn();
 
   function TestHarness() {
     const [appearance, setAppearance] = useState(settings.appearance);
@@ -16,16 +16,17 @@ function renderSection(previewThemeMode: "light" | "dark" = "light") {
     return (
       <AppearanceSettingsSection
         appearance={appearance}
-        savedAppearance={settings.appearance}
         previewThemeMode={previewThemeMode}
-        onAppearanceChange={setAppearance}
-        onSave={onSave}
+        onChange={(next) => {
+          setAppearance(next);
+          onChange(next);
+        }}
       />
     );
   }
 
   render(<TestHarness />);
-  return { user, onSave };
+  return { user, onChange };
 }
 
 describe("AppearanceSettingsSection", () => {
@@ -65,25 +66,38 @@ describe("AppearanceSettingsSection", () => {
     expect(screen.getByTestId("theme-swatch-light")).toHaveAttribute("data-resolved-theme-mode", "light");
   });
 
-  it("keeps Save disabled until something changes, then saves the draft explicitly", async () => {
-    const { user, onSave } = renderSection();
-    expect(screen.getByRole("button", { name: "Save theme mode" })).toBeDisabled();
+  it("has no Save buttons: every control applies as soon as it is changed", () => {
+    renderSection();
 
-    await user.click(screen.getByTestId("theme-swatch-dark"));
-    expect(onSave).not.toHaveBeenCalled();
-    await user.click(screen.getByRole("button", { name: "Save theme mode" }));
-
-    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ theme: "dark" }));
+    expect(screen.queryByRole("button", { name: /save/i })).not.toBeInTheDocument();
   });
 
-  it("changes the colour scheme and saves it", async () => {
-    const { user, onSave } = renderSection();
+  it("applies the theme mode immediately", async () => {
+    const { user, onChange } = renderSection();
+    expect(onChange).not.toHaveBeenCalled();
+
+    await user.click(screen.getByTestId("theme-swatch-dark"));
+
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ theme: "dark" }));
+  });
+
+  it("applies the colour scheme immediately", async () => {
+    const { user, onChange } = renderSection();
 
     await user.click(screen.getByTestId("scheme-swatch-sepia"));
-    expect(screen.getByTestId("scheme-swatch-sepia")).toBeChecked();
-    await user.click(screen.getByRole("button", { name: "Save color scheme" }));
 
-    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ colorScheme: "sepia" }));
+    expect(screen.getByTestId("scheme-swatch-sepia")).toBeChecked();
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ colorScheme: "sepia" }));
+  });
+
+  it("changing one setting does not re-send a stale copy of another", async () => {
+    const { user, onChange } = renderSection();
+
+    await user.click(screen.getByTestId("theme-swatch-dark"));
+    await user.click(screen.getByTestId("scheme-swatch-sepia"));
+
+    // The second change carries the first one forward, so nothing is lost.
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ theme: "dark", colorScheme: "sepia" }));
   });
 
   it("moves between the options with the arrow keys", async () => {
@@ -96,14 +110,13 @@ describe("AppearanceSettingsSection", () => {
   });
 
   it("toggles the footer metrics with a switch", async () => {
-    const { user, onSave } = renderSection();
+    const { user, onChange } = renderSection();
     const toggle = screen.getByRole("switch", { name: "Show footer metrics" });
     expect(toggle).toBeChecked();
 
     await user.click(toggle);
-    await user.click(screen.getByRole("button", { name: "Save status bar" }));
 
-    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ showStatusBar: false }));
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ showStatusBar: false }));
   });
 });
 
@@ -116,8 +129,8 @@ describe("AppearanceSettingsSection text settings (#13)", () => {
     expect(screen.getByRole("combobox", { name: "Preview text size" })).toHaveTextContent("100%");
   });
 
-  it("saves the chosen sizes as numbers", async () => {
-    const { user, onSave } = renderSection();
+  it("applies the chosen sizes as numbers", async () => {
+    const { user, onChange } = renderSection();
 
     await user.click(screen.getByRole("combobox", { name: "Editor font size" }));
     await user.click(await screen.findByRole("option", { name: "20 px" }));
@@ -125,16 +138,9 @@ describe("AppearanceSettingsSection text settings (#13)", () => {
     await user.click(await screen.findByRole("option", { name: "Spacious" }));
     await user.click(screen.getByRole("combobox", { name: "Preview text size" }));
     await user.click(await screen.findByRole("option", { name: "125%" }));
-    await user.click(screen.getByRole("button", { name: "Save text settings" }));
 
-    expect(onSave).toHaveBeenCalledWith(
+    expect(onChange).toHaveBeenLastCalledWith(
       expect.objectContaining({ editorFontSize: 20, editorLineHeight: 2.1, previewFontScale: 1.25 }),
     );
-  });
-
-  it("keeps Save disabled until something changes", () => {
-    renderSection();
-
-    expect(screen.getByRole("button", { name: "Save text settings" })).toBeDisabled();
   });
 });

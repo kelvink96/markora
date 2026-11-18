@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
-import { Eye, FilePlus2, FolderOpen, Info, Palette, PenSquare, Save, SlidersHorizontal } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Eye, FilePlus2, FolderOpen, Info, Palette, PenSquare, SlidersHorizontal } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -110,27 +109,4 @@ export function SettingRow({
       <div className="shrink-0">{children}</div>
     </div>
   );
-}
-
-export function SectionActions({
-  canSave,
-  label = "Save changes",
-  onSave,
-}: {
-  canSave: boolean;
-  label?: string;
-  onSave: () => void;
-}) {
-  return (
-    <div className="flex justify-end pt-1">
-      <Button disabled={!canSave} onClick={onSave}>
-        <Save data-testid="settings-save-icon" aria-hidden="true" />
-        {label}
-      </Button>
-    </div>
-  );
-}
-
-export function hasChanges<T>(left: T, right: T) {
-  return JSON.stringify(left) !== JSON.stringify(right);
 }

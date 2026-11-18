@@ -515,7 +515,7 @@ describe("App", () => {
     expect(screen.getByRole("alertdialog", { name: "Discard unsaved changes?" })).toBeInTheDocument();
   });
 
-  it("persists editor settings only after the section save action", async () => {
+  it("persists an editor setting as soon as it is changed", async () => {
     const user = userEvent.setup();
 
     render(<App />);
@@ -523,41 +523,36 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "Editor" }));
     await user.click(screen.getByLabelText("Show line numbers"));
 
-    expect(invokeMock).not.toHaveBeenCalledWith(
-      "save_settings",
-      expect.objectContaining({
-        settings: expect.anything(),
-      }),
-    );
-
-    await user.click(screen.getByRole("button", { name: "Save changes" }));
-
-    expect(invokeMock).toHaveBeenCalledWith(
+    await waitFor(() =>
+      expect(invokeMock).toHaveBeenCalledWith(
       "save_settings",
       expect.objectContaining({
         settings: expect.objectContaining({
           editor: expect.objectContaining({ lineNumbers: true }),
         }),
       }),
+      ),
     );
+    expect(screen.queryByRole("button", { name: "Save changes" })).not.toBeInTheDocument();
   });
 
-  it("persists preview settings after the section save action (#12)", async () => {
+  it("persists a preview setting as soon as it is changed (#12)", async () => {
     const user = userEvent.setup();
 
     render(<App />);
     await user.click(screen.getByRole("button", { name: "open-settings" }));
     await user.click(screen.getByRole("button", { name: "Preview" }));
     await user.click(screen.getByRole("switch", { name: "Open links in your browser" }));
-    await user.click(screen.getByRole("button", { name: "Save changes" }));
 
-    expect(invokeMock).toHaveBeenCalledWith(
+    await waitFor(() =>
+      expect(invokeMock).toHaveBeenCalledWith(
       "save_settings",
       expect.objectContaining({
         settings: expect.objectContaining({
           preview: expect.objectContaining({ openLinksExternally: false }),
         }),
       }),
+      ),
     );
     expect(useSettingsStore.getState().settings.preview.openLinksExternally).toBe(false);
   });

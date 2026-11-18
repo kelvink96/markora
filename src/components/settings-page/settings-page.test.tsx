@@ -23,10 +23,10 @@ describe("SettingsPage", () => {
         templateDraft={settings.authoring.newDocumentTemplate}
         version="0.1.0"
         onClose={() => {}}
-        onSaveAppearance={() => {}}
-        onSaveEditor={() => {}}
-        onSaveFiles={() => {}}
-        onSavePreview={() => {}}
+        onChangeAppearance={() => {}}
+        onChangeEditor={() => {}}
+        onChangeFiles={() => {}}
+        onChangePreview={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
         onResetAll={() => {}}
@@ -59,10 +59,10 @@ describe("SettingsPage", () => {
         templateDraft={settings.authoring.newDocumentTemplate}
         version="0.1.0"
         onClose={() => {}}
-        onSaveAppearance={() => {}}
-        onSaveEditor={() => {}}
-        onSaveFiles={() => {}}
-        onSavePreview={() => {}}
+        onChangeAppearance={() => {}}
+        onChangeEditor={() => {}}
+        onChangeFiles={() => {}}
+        onChangePreview={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
         onResetAll={() => {}}
@@ -84,10 +84,10 @@ describe("SettingsPage", () => {
         templateDraft={settings.authoring.newDocumentTemplate}
         version="0.1.0"
         onClose={() => {}}
-        onSaveAppearance={() => {}}
-        onSaveEditor={() => {}}
-        onSaveFiles={() => {}}
-        onSavePreview={() => {}}
+        onChangeAppearance={() => {}}
+        onChangeEditor={() => {}}
+        onChangeFiles={() => {}}
+        onChangePreview={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
         onResetAll={() => {}}
@@ -112,10 +112,10 @@ describe("SettingsPage", () => {
         templateDraft={settings.authoring.newDocumentTemplate}
         version="0.1.0"
         onClose={() => {}}
-        onSaveAppearance={() => {}}
-        onSaveEditor={() => {}}
-        onSaveFiles={() => {}}
-        onSavePreview={() => {}}
+        onChangeAppearance={() => {}}
+        onChangeEditor={() => {}}
+        onChangeFiles={() => {}}
+        onChangePreview={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
         onResetAll={() => {}}
@@ -144,10 +144,10 @@ describe("SettingsPage", () => {
         templateDraft="# Draft"
         version="0.1.0"
         onClose={() => {}}
-        onSaveAppearance={() => {}}
-        onSaveEditor={() => {}}
-        onSaveFiles={() => {}}
-        onSavePreview={() => {}}
+        onChangeAppearance={() => {}}
+        onChangeEditor={() => {}}
+        onChangeFiles={() => {}}
+        onChangePreview={() => {}}
         onSaveTemplate={onSaveTemplate}
         onResetTemplate={() => {}}
         onResetAll={() => {}}
@@ -173,10 +173,10 @@ describe("SettingsPage", () => {
         templateDraft={settings.authoring.newDocumentTemplate}
         version="0.1.0"
         onClose={() => {}}
-        onSaveAppearance={() => {}}
-        onSaveEditor={() => {}}
-        onSaveFiles={() => {}}
-        onSavePreview={() => {}}
+        onChangeAppearance={() => {}}
+        onChangeEditor={() => {}}
+        onChangeFiles={() => {}}
+        onChangePreview={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
         onResetAll={onResetAll}
@@ -205,10 +205,10 @@ describe("SettingsPage", () => {
         templateDraft={settings.authoring.newDocumentTemplate}
         version="0.1.0"
         onClose={() => {}}
-        onSaveAppearance={() => {}}
-        onSaveEditor={() => {}}
-        onSaveFiles={() => {}}
-        onSavePreview={() => {}}
+        onChangeAppearance={() => {}}
+        onChangeEditor={() => {}}
+        onChangeFiles={() => {}}
+        onChangePreview={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
         onResetAll={onResetAll}
@@ -223,11 +223,11 @@ describe("SettingsPage", () => {
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
   });
 
-  it("saves editor settings explicitly from the section action", async () => {
+  it("applies an editor setting as soon as it is changed", async () => {
     const user = userEvent.setup();
     const settings = createDefaultSettings();
     settings.editor.lineNumbers = true;
-    const onSaveEditor = vi.fn();
+    const onChangeEditor = vi.fn();
 
     render(
       <SettingsPage
@@ -235,10 +235,10 @@ describe("SettingsPage", () => {
         templateDraft={settings.authoring.newDocumentTemplate}
         version="0.1.0"
         onClose={() => {}}
-        onSaveAppearance={() => {}}
-        onSaveEditor={onSaveEditor}
-        onSaveFiles={() => {}}
-        onSavePreview={() => {}}
+        onChangeAppearance={() => {}}
+        onChangeEditor={onChangeEditor}
+        onChangeFiles={() => {}}
+        onChangePreview={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
         onResetAll={() => {}}
@@ -247,18 +247,17 @@ describe("SettingsPage", () => {
 
     await user.click(screen.getByRole("button", { name: "Editor" }));
     await user.click(screen.getByLabelText("Show line numbers"));
-    expect(onSaveEditor).not.toHaveBeenCalled();
-    await user.click(screen.getByRole("button", { name: "Save changes" }));
 
-    expect(onSaveEditor).toHaveBeenCalledWith(
+    expect(onChangeEditor).toHaveBeenCalledWith(
       expect.objectContaining({ lineNumbers: false }),
     );
+    expect(screen.queryByRole("button", { name: "Save changes" })).not.toBeInTheDocument();
   });
 
-  it("saves the app color scheme explicitly from the appearance section", async () => {
+  it("applies the app color scheme as soon as it is picked", async () => {
     const user = userEvent.setup();
     const settings = createDefaultSettings();
-    const onSaveAppearance = vi.fn();
+    const onChangeAppearance = vi.fn();
 
     render(
       <SettingsPage
@@ -266,10 +265,10 @@ describe("SettingsPage", () => {
         templateDraft={settings.authoring.newDocumentTemplate}
         version="0.1.0"
         onClose={() => {}}
-        onSaveAppearance={onSaveAppearance}
-        onSaveEditor={() => {}}
-        onSaveFiles={() => {}}
-        onSavePreview={() => {}}
+        onChangeAppearance={onChangeAppearance}
+        onChangeEditor={() => {}}
+        onChangeFiles={() => {}}
+        onChangePreview={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
         onResetAll={() => {}}
@@ -278,10 +277,8 @@ describe("SettingsPage", () => {
 
     await user.click(screen.getByRole("button", { name: "Appearance" }));
     await user.click(screen.getByTestId("scheme-swatch-sepia"));
-    expect(onSaveAppearance).not.toHaveBeenCalled();
-    await user.click(screen.getByRole("button", { name: "Save color scheme" }));
 
-    expect(onSaveAppearance).toHaveBeenCalledWith(
+    expect(onChangeAppearance).toHaveBeenCalledWith(
       expect.objectContaining({ colorScheme: "sepia" }),
     );
   });
@@ -295,10 +292,10 @@ describe("SettingsPage", () => {
         templateDraft={settings.authoring.newDocumentTemplate}
         version="0.1.0"
         onClose={() => {}}
-        onSaveAppearance={() => {}}
-        onSaveEditor={() => {}}
-        onSaveFiles={() => {}}
-        onSavePreview={() => {}}
+        onChangeAppearance={() => {}}
+        onChangeEditor={() => {}}
+        onChangeFiles={() => {}}
+        onChangePreview={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
         onResetAll={() => {}}
@@ -325,10 +322,10 @@ describe("SettingsPage", () => {
         templateDraft={settings.authoring.newDocumentTemplate}
         version="0.1.0"
         onClose={onClose}
-        onSaveAppearance={() => {}}
-        onSaveEditor={() => {}}
-        onSaveFiles={() => {}}
-        onSavePreview={() => {}}
+        onChangeAppearance={() => {}}
+        onChangeEditor={() => {}}
+        onChangeFiles={() => {}}
+        onChangePreview={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
         onResetAll={() => {}}
@@ -350,10 +347,10 @@ describe("SettingsPage", () => {
         templateDraft={settings.authoring.newDocumentTemplate}
         version="0.1.0"
         onClose={() => {}}
-        onSaveAppearance={() => {}}
-        onSaveEditor={() => {}}
-        onSaveFiles={() => {}}
-        onSavePreview={() => {}}
+        onChangeAppearance={() => {}}
+        onChangeEditor={() => {}}
+        onChangeFiles={() => {}}
+        onChangePreview={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
         onResetAll={() => {}}
@@ -361,8 +358,6 @@ describe("SettingsPage", () => {
     );
 
     expect(within(screen.getByRole("button", { name: "Back to editor" })).getByTestId("settings-back-icon")).toBeInTheDocument();
-    expect(within(screen.getByRole("button", { name: "Save theme mode" })).getByTestId("settings-save-icon")).toBeInTheDocument();
-    expect(within(screen.getByRole("button", { name: "Save color scheme" })).getByTestId("settings-save-icon")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "New Document Template" }));
     expect(within(screen.getByRole("button", { name: "Save template" })).getByTestId("settings-save-icon")).toBeInTheDocument();

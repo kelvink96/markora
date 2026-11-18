@@ -1,7 +1,7 @@
 import type { PreviewSettings } from "../../features/settings/settings-schema";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { SectionActions, SectionCard, SettingRow, hasChanges } from "./settings-page-shared";
+import { SectionCard, SettingRow } from "./settings-page-shared";
 
 const CONTENT_WIDTHS: Array<{ value: PreviewSettings["contentWidth"]; label: string }> = [
   { value: "narrow", label: "Narrow (60 characters)" },
@@ -11,17 +11,11 @@ const CONTENT_WIDTHS: Array<{ value: PreviewSettings["contentWidth"]; label: str
 
 interface PreviewSettingsSectionProps {
   preview: PreviewSettings;
-  savedPreview: PreviewSettings;
-  onPreviewChange: (preview: PreviewSettings) => void;
-  onSave: (preview: PreviewSettings) => void;
+  /** Called with the full new settings on every change; the caller applies and saves them straight away. */
+  onChange: (preview: PreviewSettings) => void;
 }
 
-export function PreviewSettingsSection({
-  preview,
-  savedPreview,
-  onPreviewChange,
-  onSave,
-}: PreviewSettingsSectionProps) {
+export function PreviewSettingsSection({ preview, onChange }: PreviewSettingsSectionProps) {
   return (
     <SectionCard
       title="Preview"
@@ -31,7 +25,7 @@ export function PreviewSettingsSection({
         <Select
           value={preview.contentWidth}
           onValueChange={(contentWidth) =>
-            onPreviewChange({ ...preview, contentWidth: contentWidth as PreviewSettings["contentWidth"] })
+            onChange({ ...preview, contentWidth: contentWidth as PreviewSettings["contentWidth"] })
           }
         >
           <SelectTrigger id="preview-content-width" className="w-56">
@@ -55,7 +49,7 @@ export function PreviewSettingsSection({
           id="preview-sync-scroll"
           aria-describedby="preview-sync-scroll-description"
           checked={preview.syncScroll}
-          onCheckedChange={(syncScroll) => onPreviewChange({ ...preview, syncScroll })}
+          onCheckedChange={(syncScroll) => onChange({ ...preview, syncScroll })}
         />
       </SettingRow>
       <SettingRow
@@ -67,10 +61,9 @@ export function PreviewSettingsSection({
           id="preview-open-links"
           aria-describedby="preview-open-links-description"
           checked={preview.openLinksExternally}
-          onCheckedChange={(openLinksExternally) => onPreviewChange({ ...preview, openLinksExternally })}
+          onCheckedChange={(openLinksExternally) => onChange({ ...preview, openLinksExternally })}
         />
       </SettingRow>
-      <SectionActions canSave={hasChanges(preview, savedPreview)} onSave={() => onSave(preview)} />
     </SectionCard>
   );
 }

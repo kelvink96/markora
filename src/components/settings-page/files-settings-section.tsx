@@ -1,21 +1,18 @@
 import type { FileSettings } from "../../features/settings/settings-schema";
 import { Switch } from "@/components/ui/switch";
-import { SectionActions, SectionCard, SettingRow, hasChanges } from "./settings-page-shared";
+import { SectionCard, SettingRow } from "./settings-page-shared";
 
 interface FilesSettingsSectionProps {
   files: FileSettings;
-  savedFiles: FileSettings;
-  onFilesChange: (files: FileSettings) => void;
-  onSave: (files: FileSettings) => void;
+  /** Called with the full new settings on every change; the caller applies and saves them straight away. */
+  onChange: (files: FileSettings) => void;
   /** Desktop only: on web the workspace is already kept in the browser. */
   canRestoreSession?: boolean;
 }
 
 export function FilesSettingsSection({
   files,
-  savedFiles,
-  onFilesChange,
-  onSave,
+  onChange,
   canRestoreSession = false,
 }: FilesSettingsSectionProps) {
   return (
@@ -32,7 +29,7 @@ export function FilesSettingsSection({
           id="files-autosave"
           aria-describedby="files-autosave-description"
           checked={files.autosave}
-          onCheckedChange={(autosave) => onFilesChange({ ...files, autosave })}
+          onCheckedChange={(autosave) => onChange({ ...files, autosave })}
         />
       </SettingRow>
       {canRestoreSession ? (
@@ -45,7 +42,7 @@ export function FilesSettingsSection({
             id="files-restore-session"
             aria-describedby="files-restore-session-description"
             checked={files.restorePreviousSession}
-            onCheckedChange={(restorePreviousSession) => onFilesChange({ ...files, restorePreviousSession })}
+            onCheckedChange={(restorePreviousSession) => onChange({ ...files, restorePreviousSession })}
           />
         </SettingRow>
       ) : null}
@@ -53,10 +50,9 @@ export function FilesSettingsSection({
         <Switch
           id="files-confirm-close"
           checked={files.confirmOnUnsavedClose}
-          onCheckedChange={(confirmOnUnsavedClose) => onFilesChange({ ...files, confirmOnUnsavedClose })}
+          onCheckedChange={(confirmOnUnsavedClose) => onChange({ ...files, confirmOnUnsavedClose })}
         />
       </SettingRow>
-      <SectionActions canSave={hasChanges(files, savedFiles)} onSave={() => onSave(files)} />
     </SectionCard>
   );
 }

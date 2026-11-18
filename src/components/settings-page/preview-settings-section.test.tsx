@@ -8,7 +8,7 @@ import { PreviewSettingsSection } from "./preview-settings-section";
 function renderSection() {
   const user = userEvent.setup();
   const settings = createDefaultSettings();
-  const onSave = vi.fn();
+  const onChange = vi.fn();
 
   function TestHarness() {
     const [preview, setPreview] = useState(settings.preview);
@@ -16,15 +16,16 @@ function renderSection() {
     return (
       <PreviewSettingsSection
         preview={preview}
-        savedPreview={settings.preview}
-        onPreviewChange={setPreview}
-        onSave={onSave}
+        onChange={(next) => {
+          setPreview(next);
+          onChange(next);
+        }}
       />
     );
   }
 
   render(<TestHarness />);
-  return { user, onSave, defaults: settings.preview };
+  return { user, onChange, defaults: settings.preview };
 }
 
 describe("PreviewSettingsSection", () => {
@@ -44,22 +45,22 @@ describe("PreviewSettingsSection", () => {
     );
   });
 
-  it("keeps Save disabled until something changes", () => {
+  it("has no Save button, because changes apply immediately", () => {
     renderSection();
 
-    expect(screen.getByRole("button", { name: /save/i })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: /save/i })).not.toBeInTheDocument();
   });
 
-  it("saves every changed option", async () => {
-    const { user, onSave, defaults } = renderSection();
+  it("applies every change as soon as it is made", async () => {
+    const { user, onChange, defaults } = renderSection();
 
     await user.click(screen.getByRole("combobox", { name: "Line width" }));
     await user.click(await screen.findByRole("option", { name: "Wide (90 characters)" }));
+    expect(onChange).toHaveBeenLastCalledWith({ ...defaults, contentWidth: "wide" });
+
     await user.click(screen.getByRole("switch", { name: "Scroll the editor and preview together" }));
     await user.click(screen.getByRole("switch", { name: "Open links in your browser" }));
-    await user.click(screen.getByRole("button", { name: /save/i }));
-
-    expect(onSave).toHaveBeenCalledWith({
+    expect(onChange).toHaveBeenLastCalledWith({
       ...defaults,
       contentWidth: "wide",
       syncScroll: false,

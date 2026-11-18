@@ -186,19 +186,19 @@ export default function App() {
         version={packageJson.version}
         onClose={() => setActiveScreen("workspace")}
         canRestoreSession={!isWeb}
-        onSaveAppearance={(appearance) => {
+        onChangeAppearance={(appearance) => {
           updateAppearance(appearance);
           void persistCurrentSettings();
         }}
-        onSaveEditor={(editor) => {
+        onChangeEditor={(editor) => {
           updateEditor(editor);
           void persistCurrentSettings();
         }}
-        onSaveFiles={(files) => {
+        onChangeFiles={(files) => {
           updateFiles(files);
           void persistCurrentSettings();
         }}
-        onSavePreview={(preview) => {
+        onChangePreview={(preview) => {
           updatePreview(preview);
           void persistCurrentSettings();
         }}

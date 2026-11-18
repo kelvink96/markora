@@ -1,11 +1,7 @@
 import type { PreviewSettings } from "../../features/settings/settings-schema";
-import { Checkbox } from "../shared/checkbox";
-import { Select } from "../shared/select";
-import {
-  SectionActions,
-  SectionCard,
-  hasChanges,
-} from "./settings-page-shared";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { SectionActions, SectionCard, SettingRow, hasChanges } from "./settings-page-shared";
 
 const CONTENT_WIDTHS: Array<{ value: PreviewSettings["contentWidth"]; label: string }> = [
   { value: "narrow", label: "Narrow (60 characters)" },
@@ -31,53 +27,50 @@ export function PreviewSettingsSection({
       title="Preview"
       description="Control how the rendered preview reads and behaves next to the editor."
     >
-      <Select
-        id="preview-content-width"
-        label="Line width"
-        value={preview.contentWidth}
-        onChange={(event) =>
-          onPreviewChange({
-            ...preview,
-            contentWidth: event.target.value as PreviewSettings["contentWidth"],
-          })
-        }
+      <SettingRow controlId="preview-content-width" label="Line width">
+        <Select
+          value={preview.contentWidth}
+          onValueChange={(contentWidth) =>
+            onPreviewChange({ ...preview, contentWidth: contentWidth as PreviewSettings["contentWidth"] })
+          }
+        >
+          <SelectTrigger id="preview-content-width" className="w-56">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {CONTENT_WIDTHS.map(({ value, label }) => (
+              <SelectItem key={value} value={value}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </SettingRow>
+      <SettingRow
+        controlId="preview-sync-scroll"
+        label="Scroll the editor and preview together"
+        description="Applies whenever the editor and preview are side by side."
       >
-        {CONTENT_WIDTHS.map(({ value, label }) => (
-          <option key={value} value={value}>
-            {label}
-          </option>
-        ))}
-      </Select>
-      <div>
-        <Checkbox
-          label="Scroll the editor and preview together"
-          aria-describedby="sync-scroll-help"
+        <Switch
+          id="preview-sync-scroll"
+          aria-describedby="preview-sync-scroll-description"
           checked={preview.syncScroll}
-          onChange={(event) =>
-            onPreviewChange({ ...preview, syncScroll: event.target.checked })
-          }
+          onCheckedChange={(syncScroll) => onPreviewChange({ ...preview, syncScroll })}
         />
-        <p id="sync-scroll-help" className="ml-[1.875rem] mt-1 text-xs text-app-text/60">
-          Applies whenever the editor and preview are side by side.
-        </p>
-      </div>
-      <div>
-        <Checkbox
-          label="Open links in your browser"
-          aria-describedby="open-links-help"
+      </SettingRow>
+      <SettingRow
+        controlId="preview-open-links"
+        label="Open links in your browser"
+        description="When off, links in the preview do nothing, so you can't leave your document by accident."
+      >
+        <Switch
+          id="preview-open-links"
+          aria-describedby="preview-open-links-description"
           checked={preview.openLinksExternally}
-          onChange={(event) =>
-            onPreviewChange({ ...preview, openLinksExternally: event.target.checked })
-          }
+          onCheckedChange={(openLinksExternally) => onPreviewChange({ ...preview, openLinksExternally })}
         />
-        <p id="open-links-help" className="ml-[1.875rem] mt-1 text-xs text-app-text/60">
-          When off, links in the preview do nothing, so you can't leave your document by accident.
-        </p>
-      </div>
-      <SectionActions
-        canSave={hasChanges(preview, savedPreview)}
-        onSave={() => onSave(preview)}
-      />
+      </SettingRow>
+      <SectionActions canSave={hasChanges(preview, savedPreview)} onSave={() => onSave(preview)} />
     </SectionCard>
   );
 }

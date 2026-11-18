@@ -1,10 +1,6 @@
 import type { EditorSettings } from "../../features/settings/settings-schema";
-import { Checkbox } from "../shared/checkbox";
-import {
-  SectionActions,
-  SectionCard,
-  hasChanges,
-} from "./settings-page-shared";
+import { Switch } from "@/components/ui/switch";
+import { SectionActions, SectionCard, SettingRow, hasChanges } from "./settings-page-shared";
 
 interface EditorSettingsSectionProps {
   editor: EditorSettings;
@@ -24,31 +20,28 @@ export function EditorSettingsSection({
       title="Editor"
       description="Tune the writing surface and keep technical chrome optional."
     >
-      <Checkbox
-        label="Show line numbers"
-        checked={editor.lineNumbers}
-        onChange={(event) =>
-          onEditorChange({ ...editor, lineNumbers: event.target.checked })
-        }
-      />
-      <Checkbox
-        label="Wrap long lines"
-        checked={editor.wordWrap}
-        onChange={(event) =>
-          onEditorChange({ ...editor, wordWrap: event.target.checked })
-        }
-      />
-      <Checkbox
-        label="Highlight the current line"
-        checked={editor.highlightActiveLine}
-        onChange={(event) =>
-          onEditorChange({ ...editor, highlightActiveLine: event.target.checked })
-        }
-      />
-      <SectionActions
-        canSave={hasChanges(editor, savedEditor)}
-        onSave={() => onSave(editor)}
-      />
+      <SettingRow controlId="editor-line-numbers" label="Show line numbers">
+        <Switch
+          id="editor-line-numbers"
+          checked={editor.lineNumbers}
+          onCheckedChange={(lineNumbers) => onEditorChange({ ...editor, lineNumbers })}
+        />
+      </SettingRow>
+      <SettingRow controlId="editor-word-wrap" label="Wrap long lines">
+        <Switch
+          id="editor-word-wrap"
+          checked={editor.wordWrap}
+          onCheckedChange={(wordWrap) => onEditorChange({ ...editor, wordWrap })}
+        />
+      </SettingRow>
+      <SettingRow controlId="editor-active-line" label="Highlight the current line">
+        <Switch
+          id="editor-active-line"
+          checked={editor.highlightActiveLine}
+          onCheckedChange={(highlightActiveLine) => onEditorChange({ ...editor, highlightActiveLine })}
+        />
+      </SettingRow>
+      <SectionActions canSave={hasChanges(editor, savedEditor)} onSave={() => onSave(editor)} />
     </SectionCard>
   );
 }

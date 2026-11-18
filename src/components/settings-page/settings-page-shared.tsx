@@ -1,18 +1,9 @@
 import type { ReactNode } from "react";
-import {
-  Eye,
-  FilePlus2,
-  FolderOpen,
-  Info,
-  Palette,
-  PenSquare,
-  Save,
-  SlidersHorizontal,
-} from "lucide-react";
-import { Button } from "../shared/button";
-import { Card } from "../shared/card";
-import { Text } from "../shared/text";
-import { Title } from "../shared/title";
+import { Eye, FilePlus2, FolderOpen, Info, Palette, PenSquare, Save, SlidersHorizontal } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import type { SettingsNavigationIcon } from "./settings-navigation";
 
 export function getSystemThemeMode() {
@@ -23,56 +14,50 @@ export function getSystemThemeMode() {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
+const NAVIGATION_ICONS: Record<SettingsNavigationIcon, typeof Palette> = {
+  palette: Palette,
+  "pen-square": PenSquare,
+  eye: Eye,
+  "folder-open": FolderOpen,
+  info: Info,
+  "sliders-horizontal": SlidersHorizontal,
+  "file-plus-2": FilePlus2,
+};
+
 export function SidebarButton({
   icon,
   iconTestId,
-  isHighContrast,
   isActive,
   label,
   onClick,
 }: {
   icon: SettingsNavigationIcon;
   iconTestId: string;
-  isHighContrast?: boolean;
   isActive: boolean;
   label: string;
   onClick: () => void;
 }) {
-  const iconMap: Record<SettingsNavigationIcon, ReactNode> = {
-    palette: <Palette data-testid={iconTestId} className="size-4" />,
-    "pen-square": <PenSquare data-testid={iconTestId} className="size-4" />,
-    eye: <Eye data-testid={iconTestId} className="size-4" />,
-    "folder-open": <FolderOpen data-testid={iconTestId} className="size-4" />,
-    info: <Info data-testid={iconTestId} className="size-4" />,
-    "sliders-horizontal": <SlidersHorizontal data-testid={iconTestId} className="size-4" />,
-    "file-plus-2": <FilePlus2 data-testid={iconTestId} className="size-4" />,
-  };
-
-  const activeClassName = isHighContrast
-    ? "border-2 border-l-4 border-[color:var(--app-text)] bg-[color:color-mix(in_srgb,var(--surface-panel)_92%,var(--surface-panel-strong))] font-semibold text-app-text shadow-[0_0_0_1px_var(--app-text)]"
-    : "bg-[color:var(--glass-elevated)] text-app-text shadow-[0_1px_0_rgba(255,255,255,0.18)_inset]";
-  const iconClassName = isActive ? "text-app-text" : "text-app-text/70";
+  const Icon = NAVIGATION_ICONS[icon];
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`w-full rounded-app-sm border border-transparent px-3 py-2 text-left text-sm transition ${
+      aria-current={isActive ? "page" : undefined}
+      className={cn(
+        "relative flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-left text-sm outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50 pointer-coarse:py-3",
         isActive
-          ? activeClassName
-          : "text-app-text/70 hover:border-[color:var(--glass-border)] hover:bg-[color:var(--glass-hover)]"
-      }`}
+          ? "bg-accent font-medium text-accent-foreground before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-linear-to-b before:from-brand-from before:to-brand-to"
+          : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+      )}
     >
-      <span className="flex items-center gap-3">
-        <span aria-hidden="true" className={`shrink-0 transition ${iconClassName}`}>
-          {iconMap[icon]}
-        </span>
-        <span className="min-w-0 truncate">{label}</span>
-      </span>
+      <Icon data-testid={iconTestId} aria-hidden="true" className="size-4 shrink-0" />
+      <span className="min-w-0 truncate">{label}</span>
     </button>
   );
 }
 
+/** One group of settings on the page: a titled card with the controls inside. */
 export function SectionCard({
   description,
   title,
@@ -83,32 +68,47 @@ export function SectionCard({
   children: ReactNode;
 }) {
   return (
-    <Card className="rounded-app-sm bg-[color:var(--glass-panel)] backdrop-blur-[var(--glass-blur-soft)]">
-      <header className="mb-4 space-y-1">
-        <Title as="h3" size="sm">
+    <Card className="gap-5 bg-card/80 py-5 backdrop-blur-sm">
+      <CardHeader>
+        <CardTitle role="heading" aria-level={3} className="text-base">
           {title}
-        </Title>
-        <Text tone="muted">{description}</Text>
-      </header>
-      <div className="space-y-4">{children}</div>
+        </CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-5">{children}</CardContent>
     </Card>
   );
 }
 
-export function FieldLabel({
+/**
+ * A label with optional help text on the left and its control on the right (a switch, a select).
+ * `controlId` ties the label and the help text to the control for assistive technology.
+ */
+export function SettingRow({
+  controlId,
+  label,
+  description,
   children,
-  helper,
-  htmlFor,
 }: {
+  controlId: string;
+  label: string;
+  description?: string;
   children: ReactNode;
-  helper?: string;
-  htmlFor: string;
 }) {
   return (
-    <label htmlFor={htmlFor} className="flex flex-col gap-1 text-sm text-app-text">
-      <span>{children}</span>
-      {helper ? <span className="text-xs text-app-text/60">{helper}</span> : null}
-    </label>
+    <div className="flex items-start justify-between gap-6">
+      <div className="min-w-0 space-y-1">
+        <Label htmlFor={controlId} className="text-sm leading-5">
+          {label}
+        </Label>
+        {description ? (
+          <p id={`${controlId}-description`} className="text-sm text-muted-foreground">
+            {description}
+          </p>
+        ) : null}
+      </div>
+      <div className="shrink-0">{children}</div>
+    </div>
   );
 }
 
@@ -122,12 +122,9 @@ export function SectionActions({
   onSave: () => void;
 }) {
   return (
-    <div className="flex justify-end pt-2">
-      <Button
-        disabled={!canSave}
-        leftSection={<Save data-testid="settings-save-icon" className="size-4" />}
-        onClick={onSave}
-      >
+    <div className="flex justify-end pt-1">
+      <Button disabled={!canSave} onClick={onSave}>
+        <Save data-testid="settings-save-icon" aria-hidden="true" />
         {label}
       </Button>
     </div>

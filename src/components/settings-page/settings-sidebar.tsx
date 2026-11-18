@@ -1,72 +1,49 @@
 import { ArrowLeft } from "lucide-react";
-import type { ColorScheme } from "../../features/settings/settings-schema";
+import { Button } from "@/components/ui/button";
 import type { SettingsSection } from "./settings-page-types";
 import { SETTINGS_NAVIGATION_GROUPS } from "./settings-navigation";
 import { SidebarButton } from "./settings-page-shared";
-import { Button } from "../shared/button";
-import { Card } from "../shared/card";
-import { Text } from "../shared/text";
-import { Title } from "../shared/title";
 
 interface SettingsSidebarProps {
   activeSection: SettingsSection;
-  colorScheme: ColorScheme;
   onClose: () => void;
   onSectionChange: (section: SettingsSection) => void;
 }
 
-export function SettingsSidebar({
-  activeSection,
-  colorScheme,
-  onClose,
-  onSectionChange,
-}: SettingsSidebarProps) {
-  const isHighContrast = colorScheme === "high-contrast";
-
+export function SettingsSidebar({ activeSection, onClose, onSectionChange }: SettingsSidebarProps) {
   return (
-    <Card
-      as="aside"
-      className="flex h-full min-h-0 flex-col rounded-app-sm bg-[color:var(--glass-panel)] p-4 backdrop-blur-[var(--glass-blur-soft)]"
-    >
+    <aside className="flex h-full min-h-0 flex-col overflow-auto rounded-xl border bg-card/80 p-4 shadow-sm backdrop-blur-sm">
       <div className="mb-5">
-        <Title as="h2">Settings</Title>
-        <Text tone="muted">Tune Markora for your writing flow.</Text>
+        <h2 className="text-lg font-semibold tracking-tight">Settings</h2>
+        <p className="text-sm text-muted-foreground">Tune Markora for your writing flow.</p>
       </div>
 
-      <div className="space-y-5">
+      <nav aria-label="Settings sections" className="space-y-5">
         {SETTINGS_NAVIGATION_GROUPS.map((group) => (
-          <div key={group.title} className="space-y-2">
-            <Text
-              as="h3"
-              size="xs"
-              weight="semibold"
-              className="uppercase tracking-[0.16em] text-app-text/50"
-            >
+          <div key={group.title} className="space-y-1">
+            <h3 className="px-3 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
               {group.title}
-            </Text>
+            </h3>
             {group.items.map((item) => (
               <SidebarButton
                 key={item.id}
                 icon={item.icon}
                 iconTestId={`settings-tab-icon-${item.id}`}
                 label={item.label}
-                isHighContrast={isHighContrast}
                 isActive={activeSection === item.id}
                 onClick={() => onSectionChange(item.id)}
               />
             ))}
           </div>
         ))}
-      </div>
+      </nav>
 
-      <div className="mt-auto flex items-start pt-4">
-        <Button
-          leftSection={<ArrowLeft data-testid="settings-back-icon" className="size-4" />}
-          onClick={onClose}
-        >
+      <div className="mt-auto pt-4">
+        <Button variant="outline" onClick={onClose}>
+          <ArrowLeft data-testid="settings-back-icon" aria-hidden="true" />
           Back to editor
         </Button>
       </div>
-    </Card>
+    </aside>
   );
 }

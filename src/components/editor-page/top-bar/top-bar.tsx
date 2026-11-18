@@ -10,7 +10,7 @@ import {
   FileOutput,
   FolderOpen,
   Info,
-  MoonStar,
+  Moon,
   PanelLeftClose,
   PanelsTopLeft,
   Redo2,
@@ -18,27 +18,36 @@ import {
   Scissors,
   Settings2,
   SquarePen,
+  Sun,
   Type,
   Undo2,
 } from "lucide-react";
-import { MenuBar, type MenuBarGroup } from "../../shared/menu-bar";
-import { Logo } from "../../shared/logo";
-import { Button } from "../../shared/button";
-import { FormattingToolbar } from "../formatting-toolbar";
+import type { ReactNode } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Menubar,
+  MenubarContent,
+  MenubarItem,
+  MenubarMenu,
+  MenubarSeparator,
+  MenubarShortcut,
+  MenubarSub,
+  MenubarSubContent,
+  MenubarSubTrigger,
+  MenubarTrigger,
+} from "@/components/ui/menubar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Logo } from "../../logo";
 import { ViewModeSwitcher } from "../view-mode-switcher";
 import { useEditorCommandState } from "../../../features/editor/editor-command-state";
+import { getModifierLabel } from "../../../features/shortcuts/modifier-label";
+import { useThemeStore } from "../../../features/theme/theme-store";
 import type { WorkspaceViewMode } from "../../../features/workspace/workspace-state";
 import { useDocumentStore } from "../../../store/document";
 
-function getModifierLabel() {
-  if (typeof navigator === "undefined") {
-    return "Ctrl";
-  }
-
-  return /Mac|iPhone|iPad|iPod/i.test(navigator.platform) ? "Cmd" : "Ctrl";
-}
-
 interface TopBarProps {
+  /** The document tabs, shown between the menus and the view controls. */
+  tabs?: ReactNode;
   onOpenSettings?: () => void;
   onOpenKeyboardShortcuts?: () => void;
   onOpenAbout?: () => void;
@@ -58,6 +67,7 @@ interface TopBarProps {
 }
 
 export function TopBar({
+  tabs,
   onOpenSettings = () => {},
   onOpenKeyboardShortcuts = () => {},
   onOpenAbout = () => {},
@@ -75,112 +85,159 @@ export function TopBar({
   viewMode,
   onViewModeChange,
 }: TopBarProps) {
-  const runToolbarAction = useEditorCommandState((state) => state.runToolbarAction);
   const runEditAction = useEditorCommandState((state) => state.runEditAction);
   const hasActiveDocument = useDocumentStore((state) => Boolean(state.activeDocumentId));
-  const modifierLabel = getModifierLabel();
-  const menuGroups: MenuBarGroup[] = [
-    {
-      label: "File",
-      items: [
-        { label: "New", icon: <SquarePen className="size-4" />, shortcut: `${modifierLabel}+N`, onSelect: onNew },
-        { label: "Open", icon: <FolderOpen className="size-4" />, shortcut: `${modifierLabel}+O`, onSelect: onOpen },
-        hasActiveDocument ? { type: "separator", label: "separator-file-save" } : null,
-        hasActiveDocument ? { label: "Save", icon: <Save className="size-4" />, shortcut: `${modifierLabel}+S`, onSelect: onSave } : null,
-        hasActiveDocument ? { label: "Save As", icon: <FileOutput className="size-4" />, shortcut: `${modifierLabel}+Shift+S`, onSelect: onSaveAs } : null,
-        { type: "separator", label: "separator-file-recent" },
-        {
-          label: "Open Recent",
-          icon: <Clock className="size-4" />,
-          children: recentFiles.length > 0
-            ? recentFiles.map((entry) => ({
-                label: entry.title,
-                onSelect: () => onOpenRecent(entry.projectId, entry.documentId),
-              }))
-            : [{ label: "No recent files", disabled: true }],
-        },
-        hasActiveDocument ? { type: "separator", label: "separator-file-close" } : null,
-        hasActiveDocument ? { label: "Close Tab", icon: <PanelLeftClose className="size-4" />, onSelect: onCloseTab } : null,
-        { type: "separator", label: "separator-file-settings" },
-        { label: "Settings", icon: <Settings2 className="size-4" />, onSelect: onOpenSettings },
-      ].filter(Boolean) as MenuBarGroup["items"],
-    },
-    ...(hasActiveDocument ? [{
-      label: "Edit",
-      items: [
-        { label: "Undo", icon: <Undo2 className="size-4" />, shortcut: `${modifierLabel}+Z`, onSelect: () => void runEditAction("undo") },
-        { label: "Redo", icon: <Redo2 className="size-4" />, shortcut: `${modifierLabel}+Shift+Z`, onSelect: () => void runEditAction("redo") },
-        { label: "Cut", icon: <Scissors className="size-4" />, shortcut: `${modifierLabel}+X`, onSelect: () => void runEditAction("cut") },
-        { label: "Copy", icon: <Copy className="size-4" />, shortcut: `${modifierLabel}+C`, onSelect: () => void runEditAction("copy") },
-        { label: "Paste", icon: <Clipboard className="size-4" />, shortcut: `${modifierLabel}+V`, onSelect: () => void runEditAction("paste") },
-        { label: "Select All", icon: <Type className="size-4" />, shortcut: `${modifierLabel}+A`, onSelect: () => void runEditAction("selectAll") },
-      ],
-    }] : []),
-    {
-      label: "View",
-      items: hasActiveDocument ? [
-        { label: "Edit View", icon: <FileInput className="size-4" />, onSelect: () => onViewModeChange("edit") },
-        { label: "Split View", icon: <PanelsTopLeft className="size-4" />, onSelect: () => onViewModeChange("split") },
-        { label: "Preview View", icon: <Eye className="size-4" />, onSelect: () => onViewModeChange("preview") },
-        { type: "separator", label: "separator-view-theme" },
-        { label: "Toggle Theme", icon: <MoonStar className="size-4" />, onSelect: onThemeToggle },
-      ] : [
-        { label: "Toggle Theme", icon: <MoonStar className="size-4" />, onSelect: onThemeToggle },
-      ],
-    },
-    {
-      label: "Help",
-      items: [
-        { label: "Keyboard Shortcuts", icon: <CircleHelp className="size-4" />, onSelect: onOpenKeyboardShortcuts },
-        { label: "Release Notes", icon: <BookOpen className="size-4" />, onSelect: onOpenReleaseNotes },
-        { type: "separator", label: "separator-help-about" },
-        { label: "About Markora", icon: <Info className="size-4" />, onSelect: onOpenAbout },
-      ],
-    },
-  ] as MenuBarGroup[];
+  const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
+  const mod = getModifierLabel();
+  const iconClass = "size-4";
 
   return (
-    <header className="top-bar grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-[color:var(--glass-border)] bg-[color:var(--glass-panel-strong)] px-3 py-2 backdrop-blur-[var(--glass-blur-strong)] supports-[backdrop-filter]:bg-[color:var(--glass-panel-strong)]">
-      <div className="flex min-w-0 items-center justify-start gap-2" data-testid="top-bar-menu">
-        {!hasActiveDocument && <Logo size={24} showLabel />}
-        <MenuBar groups={menuGroups} />
+    // On narrow screens the tabs wrap onto their own row (order-last + full width) instead of being squeezed out.
+    <header className="top-bar flex min-h-12 flex-wrap items-center gap-x-2 gap-y-1 border-b bg-card/70 px-2 py-1.5 backdrop-blur-md md:flex-nowrap md:py-0">
+      <div className="flex shrink-0 items-center gap-1.5" data-testid="top-bar-menu">
+        <Logo size={24} showLabel={!hasActiveDocument} className="mx-1" />
+        <Menubar className="h-auto gap-0.5 border-0 bg-transparent p-0 shadow-none">
+          <MenubarMenu>
+            <MenubarTrigger>File</MenubarTrigger>
+            <MenubarContent className="min-w-60">
+              <MenubarItem onSelect={onNew}>
+                <SquarePen className={iconClass} /> New <MenubarShortcut>{mod}+N</MenubarShortcut>
+              </MenubarItem>
+              <MenubarItem onSelect={onOpen}>
+                <FolderOpen className={iconClass} /> Open <MenubarShortcut>{mod}+O</MenubarShortcut>
+              </MenubarItem>
+              {hasActiveDocument ? (
+                <>
+                  <MenubarSeparator />
+                  <MenubarItem onSelect={onSave}>
+                    <Save className={iconClass} /> Save <MenubarShortcut>{mod}+S</MenubarShortcut>
+                  </MenubarItem>
+                  <MenubarItem onSelect={onSaveAs}>
+                    <FileOutput className={iconClass} /> Save As <MenubarShortcut>{mod}+Shift+S</MenubarShortcut>
+                  </MenubarItem>
+                </>
+              ) : null}
+              <MenubarSeparator />
+              <MenubarSub>
+                <MenubarSubTrigger>
+                  <Clock className={iconClass} /> Open Recent
+                </MenubarSubTrigger>
+                <MenubarSubContent>
+                  {recentFiles.length > 0 ? (
+                    recentFiles.map((entry) => (
+                      <MenubarItem
+                        key={`${entry.projectId}:${entry.documentId}`}
+                        onSelect={() => onOpenRecent(entry.projectId, entry.documentId)}
+                      >
+                        {entry.title}
+                      </MenubarItem>
+                    ))
+                  ) : (
+                    <MenubarItem disabled>No recent files</MenubarItem>
+                  )}
+                </MenubarSubContent>
+              </MenubarSub>
+              {hasActiveDocument ? (
+                <>
+                  <MenubarSeparator />
+                  <MenubarItem onSelect={onCloseTab}>
+                    <PanelLeftClose className={iconClass} /> Close Tab
+                  </MenubarItem>
+                </>
+              ) : null}
+              <MenubarSeparator />
+              <MenubarItem onSelect={onOpenSettings}>
+                <Settings2 className={iconClass} /> Settings
+              </MenubarItem>
+            </MenubarContent>
+          </MenubarMenu>
+
+          {hasActiveDocument ? (
+            <MenubarMenu>
+              <MenubarTrigger>Edit</MenubarTrigger>
+              <MenubarContent>
+                <MenubarItem onSelect={() => void runEditAction("undo")}>
+                  <Undo2 className={iconClass} /> Undo <MenubarShortcut>{mod}+Z</MenubarShortcut>
+                </MenubarItem>
+                <MenubarItem onSelect={() => void runEditAction("redo")}>
+                  <Redo2 className={iconClass} /> Redo <MenubarShortcut>{mod}+Shift+Z</MenubarShortcut>
+                </MenubarItem>
+                <MenubarSeparator />
+                <MenubarItem onSelect={() => void runEditAction("cut")}>
+                  <Scissors className={iconClass} /> Cut <MenubarShortcut>{mod}+X</MenubarShortcut>
+                </MenubarItem>
+                <MenubarItem onSelect={() => void runEditAction("copy")}>
+                  <Copy className={iconClass} /> Copy <MenubarShortcut>{mod}+C</MenubarShortcut>
+                </MenubarItem>
+                <MenubarItem onSelect={() => void runEditAction("paste")}>
+                  <Clipboard className={iconClass} /> Paste <MenubarShortcut>{mod}+V</MenubarShortcut>
+                </MenubarItem>
+                <MenubarSeparator />
+                <MenubarItem onSelect={() => void runEditAction("selectAll")}>
+                  <Type className={iconClass} /> Select All <MenubarShortcut>{mod}+A</MenubarShortcut>
+                </MenubarItem>
+              </MenubarContent>
+            </MenubarMenu>
+          ) : null}
+
+          <MenubarMenu>
+            <MenubarTrigger>View</MenubarTrigger>
+            <MenubarContent>
+              {hasActiveDocument ? (
+                <>
+                  <MenubarItem onSelect={() => onViewModeChange("edit")}>
+                    <FileInput className={iconClass} /> Edit View
+                  </MenubarItem>
+                  <MenubarItem onSelect={() => onViewModeChange("split")}>
+                    <PanelsTopLeft className={iconClass} /> Split View
+                  </MenubarItem>
+                  <MenubarItem onSelect={() => onViewModeChange("preview")}>
+                    <Eye className={iconClass} /> Preview View
+                  </MenubarItem>
+                  <MenubarSeparator />
+                </>
+              ) : null}
+              <MenubarItem onSelect={onThemeToggle}>
+                {resolvedTheme === "dark" ? <Sun className={iconClass} /> : <Moon className={iconClass} />} Toggle Theme
+              </MenubarItem>
+            </MenubarContent>
+          </MenubarMenu>
+
+          <MenubarMenu>
+            <MenubarTrigger>Help</MenubarTrigger>
+            <MenubarContent>
+              <MenubarItem onSelect={onOpenKeyboardShortcuts}>
+                <CircleHelp className={iconClass} /> Keyboard Shortcuts
+              </MenubarItem>
+              <MenubarItem onSelect={onOpenReleaseNotes}>
+                <BookOpen className={iconClass} /> Release Notes
+              </MenubarItem>
+              <MenubarSeparator />
+              <MenubarItem onSelect={onOpenAbout}>
+                <Info className={iconClass} /> About Markora
+              </MenubarItem>
+            </MenubarContent>
+          </MenubarMenu>
+        </Menubar>
       </div>
-      <div
-        className="flex min-w-0 items-center justify-center"
-        data-testid="top-bar-toolbar"
-      >
-        {hasActiveDocument && (
-          <FormattingToolbar
-            onHeading={() => runToolbarAction("heading")}
-            onBold={() => runToolbarAction("bold")}
-            onItalic={() => runToolbarAction("italic")}
-            onStrike={() => runToolbarAction("strike")}
-            onBulletList={() => runToolbarAction("bulletList")}
-            onOrderedList={() => runToolbarAction("orderedList")}
-            onTaskList={() => runToolbarAction("taskList")}
-            onQuote={() => runToolbarAction("quote")}
-            onCodeBlock={() => runToolbarAction("codeBlock")}
-            onLink={() => runToolbarAction("link")}
-            onTable={() => runToolbarAction("table")}
-            onImage={() => runToolbarAction("image")}
-          />
-        )}
-      </div>
-      <div
-        className="flex items-center justify-end gap-2 rounded-app-sm p-0.5"
-        data-testid="top-bar-utilities"
-      >
+
+      <div className="order-last flex w-full min-w-0 items-center md:order-none md:w-auto md:flex-1">{tabs}</div>
+
+      <div className="ml-auto flex shrink-0 items-center gap-1.5 md:ml-0" data-testid="top-bar-utilities">
         {canInstallApp ? (
-          <Button
-            size="sm"
-            variant="secondary"
-            leftSection={<Download className="size-4" />}
-            onClick={onInstallApp}
-          >
-            Install app
+          <Button size="sm" variant="outline" onClick={onInstallApp}>
+            <Download aria-hidden="true" /> Install app
           </Button>
         ) : null}
-        {hasActiveDocument && <ViewModeSwitcher value={viewMode} onValueChange={onViewModeChange} />}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon-sm" aria-label="Toggle theme" onClick={onThemeToggle}>
+              {resolvedTheme === "dark" ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Toggle theme</TooltipContent>
+        </Tooltip>
+        {hasActiveDocument ? <ViewModeSwitcher value={viewMode} onValueChange={onViewModeChange} /> : null}
       </div>
     </header>
   );

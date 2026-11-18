@@ -1,5 +1,4 @@
-import { WordCount } from "../../shared/word-count";
-import { Text } from "../../shared/text";
+import { Badge } from "@/components/ui/badge";
 import type { WorkspaceViewMode } from "../../../features/workspace/workspace-state";
 
 interface FooterStatusBarProps {
@@ -12,21 +11,19 @@ interface FooterStatusBarProps {
 export function FooterStatusBar({ wordCount, viewMode, line, column }: FooterStatusBarProps) {
   return (
     <footer
-      className="flex items-center justify-between border-t border-[color:var(--ghost-border)] bg-app-panel/88 px-3 py-1.5 text-app-text-secondary backdrop-blur-md"
+      className="flex h-8 items-center justify-between border-t bg-card/70 px-3 text-xs text-muted-foreground backdrop-blur-md"
       aria-label="Footer status bar"
     >
       <div className="flex items-center gap-3">
-        <Text as="span" weight="medium" className="capitalize text-app-text">
+        <Badge variant="secondary" className="capitalize">
           {viewMode}
-        </Text>
-        <Text as="span" tone="subtle">
-          Markdown
-        </Text>
-        <Text as="span" tone="subtle">
-          {`Ln ${line}, Col ${column}`}
-        </Text>
+        </Badge>
+        <span>Markdown</span>
+        <span className="font-mono tabular-nums">{`Ln ${line}, Col ${column}`}</span>
       </div>
-      <WordCount value={wordCount} />
+      <span className="font-mono tabular-nums">
+        {wordCount.toLocaleString()} {wordCount === 1 ? "word" : "words"}
+      </span>
     </footer>
   );
 }

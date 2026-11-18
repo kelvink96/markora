@@ -4,42 +4,97 @@ import userEvent from "@testing-library/user-event";
 import { TabStrip } from "./tab-strip";
 
 describe("TabStrip", () => {
-  it("renders tabs with an active document and a new-tab action", () => {
-    const { container } = render(
-      <TabStrip
-        tabs={[
-          { id: "one", content: "", filePath: "D:\\notes\\one.md", isDirty: false },
-          { id: "two", content: "", filePath: null, isDirty: true },
-        ]}
-        activeTabId="one"
-        onSelectTab={vi.fn()}
-        onCloseTab={vi.fn()}
-        onCloseAllTabs={vi.fn()}
-        onNewTab={vi.fn()}
-      />,
-    );
+  const tabs = [
+    { id: "one", content: "", filePath: "D:\\notes\\one.md", isDirty: false },
+    { id: "two", content: "", filePath: "D:\\notes\\two.md", isDirty: true },
+    { id: "three", content: "", filePath: "D:\\notes\\three.md", isDirty: false },
+  ];
 
-    expect(container.firstChild).toHaveClass(
-      "tab-strip",
-      "bg-[color:var(--glass-panel-strong)]",
-    );
-    const activeTab = screen.getByRole("tab", { name: "one.md" });
-    const inactiveTab = screen.getByRole("tab", { name: "Welcome to Markora *" });
-    expect(activeTab).toHaveAttribute("aria-selected", "true");
-    expect(activeTab.parentElement).toHaveClass(
-      "tab-strip__tab",
-      "rounded-app-md",
-      "bg-[color:color-mix(in_srgb,var(--glass-elevated)_88%,var(--surface-panel-strong))]",
-    );
-    expect(inactiveTab.parentElement).toHaveClass(
-      "tab-strip__tab",
-      "rounded-app-md",
-      "bg-[color:color-mix(in_srgb,var(--surface-panel)_90%,var(--surface-subtle))]",
-    );
-    expect(screen.getByRole("button", { name: "New tab" })).toHaveClass(
-      "tab-strip__new-tab",
-      "rounded-app-md",
-    );
+  function renderStrip(overrides: Partial<Parameters<typeof TabStrip>[0]> = {}) {
+    const handlers = {
+      onSelectTab: vi.fn(),
+      onCloseTab: vi.fn(),
+      onCloseAllTabs: vi.fn(),
+      onNewTab: vi.fn(),
+      onRenameTab: vi.fn(),
+    };
+    render(<TabStrip tabs={tabs} activeTabId="one" {...handlers} {...overrides} />);
+    return handlers;
+  }
+
+  it("renders every document as a tab, marks the active one, and offers a new-tab action", () => {
+    renderStrip();
+
+    expect(screen.getByRole("tablist", { name: "Open documents" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "one.md" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: /two\.md/ })).toHaveAttribute("aria-selected", "false");
+    expect(screen.getByRole("button", { name: "New tab" })).toBeInTheDocument();
+  });
+
+  it("tells screen readers which tabs have unsaved changes, not just sighted users", () => {
+    renderStrip();
+
+    expect(screen.getByRole("tab", { name: "two.md (unsaved)" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "one.md" })).toBeInTheDocument(); // clean: no suffix
+  });
+
+  it("has a single tab stop: only the active tab is reachable with Tab", () => {
+    renderStrip();
+
+    expect(screen.getByRole("tab", { name: "one.md" })).toHaveAttribute("tabindex", "0");
+    expect(screen.getByRole("tab", { name: /two\.md/ })).toHaveAttribute("tabindex", "-1");
+  });
+
+  it.each([
+    ["ArrowRight", "one", "two"],
+    ["ArrowLeft", "one", "three"], // wraps around
+    ["End", "one", "three"],
+    ["Home", "three", "one"],
+  ])("%s moves focus from %s to %s and opens it", async (key, from, to) => {
+    const user = userEvent.setup();
+    const { onSelectTab } = renderStrip({ activeTabId: from });
+    const button = (id: string) => screen.getAllByRole("tab").find((tab) => tab.dataset.tabId === id)!;
+
+    button(from).focus();
+    await user.keyboard(`{${key}}`);
+
+    expect(button(to)).toHaveFocus();
+    expect(onSelectTab).toHaveBeenCalledWith(to);
+  });
+
+  it("reveals the close button when a tab is focused, so keyboard users can find it (#5)", async () => {
+    const user = userEvent.setup();
+    renderStrip({ activeTabId: "two" });
+
+    await user.tab(); // lands on the active tab
+    const close = screen.getByRole("button", { name: "Close two.md" });
+
+    // The button is in the tab order and is revealed by the tab's focus-within state.
+    expect(close).not.toHaveAttribute("tabindex", "-1");
+    expect(close.className).toContain("group-focus-within:opacity-100");
+    expect(close.className).toContain("pointer-coarse:opacity-100");
+  });
+
+  it("opens a context menu with Rename and Close tab", async () => {
+    const user = userEvent.setup();
+    const { onRenameTab, onCloseTab } = renderStrip();
+
+    await user.pointer({ keys: "[MouseRight]", target: screen.getByRole("tab", { name: "one.md" }) });
+    await user.click(await screen.findByRole("menuitem", { name: "Rename" }));
+    expect(onRenameTab).toHaveBeenCalledWith("one");
+
+    await user.pointer({ keys: "[MouseRight]", target: screen.getByRole("tab", { name: /two\.md/ }) });
+    await user.click(await screen.findByRole("menuitem", { name: "Close tab" }));
+    expect(onCloseTab).toHaveBeenCalledWith("two");
+  });
+
+  it("renames a tab on double click", async () => {
+    const user = userEvent.setup();
+    const { onRenameTab } = renderStrip();
+
+    await user.dblClick(screen.getByRole("tab", { name: "one.md" }));
+
+    expect(onRenameTab).toHaveBeenCalledWith("one");
   });
 
   it("invokes tab actions", async () => {

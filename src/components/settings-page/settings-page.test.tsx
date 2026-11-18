@@ -34,15 +34,9 @@ describe("SettingsPage", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Application" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Settings", level: 2 })).toHaveClass(
-      "font-semibold",
-      "tracking-[-0.02em]",
-    );
-    expect(screen.getByRole("complementary")).toHaveClass(
-      "bg-[color:var(--glass-panel)]",
-      "backdrop-blur-[var(--glass-blur-soft)]",
-      "rounded-app-sm",
-    );
+    expect(screen.getByRole("heading", { name: "Settings", level: 2 })).toBeInTheDocument();
+    expect(screen.getByRole("complementary")).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Settings sections" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Appearance" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Editor" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Preview" })).toBeInTheDocument();
@@ -51,19 +45,11 @@ describe("SettingsPage", () => {
     expect(within(screen.getByRole("button", { name: "New Document Template" })).getByTestId("settings-tab-icon-template")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "About" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Back to editor" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Back to editor" })).toHaveClass(
-      "transition-[background-color,border-color,color,box-shadow,transform]",
-      "min-h-10",
-    );
-    expect(screen.getByRole("button", { name: "Back to editor" }).parentElement).toHaveClass(
-      "mt-auto",
-      "pt-4",
-    );
     expect(screen.getByRole("heading", { name: "Authoring Defaults" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "New Document Template" })).toBeInTheDocument();
   });
 
-  it("uses a strong bordered active state in high contrast mode", () => {
+  it("marks the current section for assistive technology, whatever the colour scheme", () => {
     const settings = createDefaultSettings();
     settings.appearance.colorScheme = "high-contrast";
 
@@ -83,13 +69,8 @@ describe("SettingsPage", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: "Appearance" })).toHaveClass(
-      "border-2",
-      "border-l-4",
-      "border-[color:var(--app-text)]",
-      "font-semibold",
-      "shadow-[0_0_0_1px_var(--app-text)]",
-    );
+    expect(screen.getByRole("button", { name: "Appearance" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("button", { name: "Editor" })).not.toHaveAttribute("aria-current");
     expect(screen.getByTestId("settings-tab-icon-appearance")).toHaveClass("size-4");
   });
 
@@ -115,13 +96,10 @@ describe("SettingsPage", () => {
 
     await user.click(screen.getByRole("button", { name: "About" }));
 
-    expect(screen.getByRole("heading", { name: "About", level: 3 }).closest("section")).toHaveClass(
-      "bg-[color:var(--glass-panel)]",
-      "backdrop-blur-[var(--glass-blur-soft)]",
-    );
+    expect(screen.getByRole("heading", { name: "About", level: 3 })).toBeInTheDocument();
     expect(screen.getByText("Markora is a desktop-first markdown editor.")).toBeInTheDocument();
     expect(screen.getByText("Version 0.1.0")).toBeInTheDocument();
-    expect(screen.getByText("Version 0.1.0")).toHaveClass("text-app-text-secondary");
+    expect(screen.getByRole("button", { name: "About" })).toHaveAttribute("aria-current", "page");
   });
 
   it("keeps app color scheme controls inside the appearance section", async () => {
@@ -149,8 +127,8 @@ describe("SettingsPage", () => {
     expect(screen.getByRole("heading", { name: "Appearance", level: 3 })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Status Bar", level: 3 })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Color Scheme", level: 3 })).toBeInTheDocument();
-    expect(screen.queryByLabelText(/^Theme mode/i)).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/^Color scheme/i)).not.toBeInTheDocument();
+    expect(screen.getByRole("radiogroup", { name: "Theme mode" })).toBeInTheDocument();
+    expect(screen.getByRole("radiogroup", { name: "Color scheme" })).toBeInTheDocument();
     expect(screen.getAllByTestId(/theme-swatch-/i)).toHaveLength(3);
     expect(screen.getAllByTestId(/scheme-swatch-/i)).toHaveLength(3);
   });
@@ -205,11 +183,44 @@ describe("SettingsPage", () => {
       />,
     );
 
-    vi.spyOn(window, "confirm").mockReturnValue(true);
     await user.click(screen.getByRole("button", { name: "Advanced" }));
     await user.click(screen.getByRole("button", { name: "Reset all settings" }));
 
-    expect(onResetAll).toHaveBeenCalled();
+    // Nothing happens until the question is answered.
+    const dialog = await screen.findByRole("alertdialog", { name: "Reset all settings?" });
+    expect(onResetAll).not.toHaveBeenCalled();
+
+    await user.click(within(dialog).getByRole("button", { name: "Reset everything" }));
+    expect(onResetAll).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps every setting when the reset is cancelled", async () => {
+    const user = userEvent.setup();
+    const settings = createDefaultSettings();
+    const onResetAll = vi.fn();
+
+    render(
+      <SettingsPage
+        settings={settings}
+        templateDraft={settings.authoring.newDocumentTemplate}
+        version="0.1.0"
+        onClose={() => {}}
+        onSaveAppearance={() => {}}
+        onSaveEditor={() => {}}
+        onSaveFiles={() => {}}
+        onSavePreview={() => {}}
+        onSaveTemplate={() => {}}
+        onResetTemplate={() => {}}
+        onResetAll={onResetAll}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Advanced" }));
+    await user.click(screen.getByRole("button", { name: "Reset all settings" }));
+    await user.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Cancel" }));
+
+    expect(onResetAll).not.toHaveBeenCalled();
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
   });
 
   it("saves editor settings explicitly from the section action", async () => {

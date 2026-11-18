@@ -110,11 +110,13 @@ vi.mock("@codemirror/view", () => ({
       }),
     },
     lineWrapping: {},
+    darkTheme: { of: vi.fn((isDark: boolean) => ({ dark: isDark })) },
   },
 }));
 
 vi.mock("@codemirror/lang-markdown", () => ({ markdown: vi.fn(() => ({})) }));
-vi.mock("@codemirror/theme-one-dark", () => ({ oneDark: {} }));
+// The real theme is exercised in editor-settings-extensions.test.ts and in the browser.
+vi.mock("../../../features/editor/editor-theme", () => ({ markoraEditorTheme: [] }));
 vi.mock("@codemirror/commands", () => ({
   undo: vi.fn((view: { dispatch: (transaction: unknown) => void }) => {
     view.dispatch({ annotation: "undo" });
@@ -190,13 +192,18 @@ describe("EditorPane", () => {
     expect(screen.getByTestId("editor-surface")).toHaveAttribute("data-line-numbers", "visible");
   });
 
-  it("rebuilds the editor when the theme changes", () => {
+  it("keeps the editor (and its undo history) when the theme changes, and tells it the new mode", () => {
     vi.mocked(EditorState.create).mockClear();
     const { rerender } = render(<EditorPane theme="light" />);
+    mockState.dispatchSpy.mockClear();
 
     rerender(<EditorPane theme="dark" />);
 
-    expect(EditorState.create).toHaveBeenCalledTimes(2);
+    // Not rebuilt: the colours come from CSS variables, only CodeMirror's dark flag changes.
+    expect(EditorState.create).toHaveBeenCalledTimes(1);
+    expect(mockState.dispatchSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ effects: expect.objectContaining({ reconfigured: expect.anything() }) }),
+    );
   });
 
   it("applies toolbar actions to the editor document through the command bridge", () => {
@@ -258,25 +265,10 @@ describe("EditorPane", () => {
 
     expect(screen.getByRole("region", { name: "Editor" })).toBeInTheDocument();
     expect(screen.getByTestId("editor-surface")).toBeInTheDocument();
-    expect(screen.getByRole("region", { name: "Editor" })).toHaveClass(
-      "h-full",
-      "min-h-0",
-      "pb-0",
-      "pr-0",
-    );
-    expect(screen.getByTestId("editor-surface").parentElement?.parentElement).toHaveClass(
-      "app-surface",
-      "editor-pane__panel",
-      "overflow-hidden",
-    );
-    expect(screen.getByTestId("editor-surface")).toHaveClass(
-      "rounded-[calc(var(--radius-sm)-1px)]",
-      "bg-[color:var(--glass-elevated)]",
-      "border-[color:var(--glass-border-strong)]",
-      "flex-1",
-      "min-h-0",
-      "overflow-hidden",
-    );
+    // A framed pane on the editor surface colour; its inner surface fills the space for CodeMirror.
+    const panel = screen.getByTestId("editor-surface").parentElement?.parentElement;
+    expect(panel).toHaveClass("editor-pane__panel", "overflow-hidden", "border", "bg-editor");
+    expect(screen.getByTestId("editor-surface")).toHaveClass("flex-1", "min-h-0", "overflow-hidden");
   });
 
   it("shows the slash command menu when the cursor is inside a slash token", () => {

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { FormattingToolbar } from "./formatting-toolbar";
 
 describe("FormattingToolbar", () => {
@@ -53,14 +54,61 @@ describe("FormattingToolbar", () => {
       />,
     );
 
-    expect(screen.getByLabelText("Formatting")).toHaveClass(
-      "gap-0.5",
-      "p-0.5",
+    expect(screen.getByRole("toolbar", { name: "Formatting" })).toBeInTheDocument();
+  });
+
+  it("moves between buttons with the arrow keys (one tab stop for the whole toolbar)", async () => {
+    const user = userEvent.setup();
+    render(
+      <FormattingToolbar
+        onHeading={() => {}}
+        onBold={() => {}}
+        onItalic={() => {}}
+        onStrike={() => {}}
+        onBulletList={() => {}}
+        onOrderedList={() => {}}
+        onTaskList={() => {}}
+        onQuote={() => {}}
+        onCodeBlock={() => {}}
+        onLink={() => {}}
+        onTable={() => {}}
+        onImage={() => {}}
+      />,
     );
-    expect(screen.getByRole("button", { name: "Heading" })).toHaveClass(
-      "formatting-toolbar__action",
-      "rounded-app-sm",
+
+    await user.tab();
+    expect(screen.getByRole("button", { name: "Heading" })).toHaveFocus();
+
+    await user.keyboard("{ArrowRight}");
+    expect(screen.getByRole("button", { name: "Bold" })).toHaveFocus();
+
+    await user.keyboard("{ArrowRight}{ArrowRight}{ArrowRight}");
+    expect(screen.getByRole("button", { name: "Bullet list" })).toHaveFocus();
+
+    await user.keyboard("{End}");
+    expect(screen.getByRole("button", { name: "Image" })).toHaveFocus();
+  });
+
+  it("disables every button when disabled", () => {
+    render(
+      <FormattingToolbar
+        disabled
+        onHeading={() => {}}
+        onBold={() => {}}
+        onItalic={() => {}}
+        onStrike={() => {}}
+        onBulletList={() => {}}
+        onOrderedList={() => {}}
+        onTaskList={() => {}}
+        onQuote={() => {}}
+        onCodeBlock={() => {}}
+        onLink={() => {}}
+        onTable={() => {}}
+        onImage={() => {}}
+      />,
     );
+
+    expect(screen.getAllByRole("button").every((button) => button.hasAttribute("disabled"))).toBe(true);
   });
 
   it("calls the bold handler", () => {

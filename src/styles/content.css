@@ -1,0 +1,216 @@
+/*
+ * Rendered-markdown (preview) styles. The editor's own look lives in features/editor/editor-theme.ts.
+ * Everything here uses theme tokens, so it follows the colour scheme and light/dark mode.
+ */
+
+.preview-pane__content.prose {
+  color: var(--foreground);
+  font-family: var(--font-serif);
+  /* --preview-font-scale comes from the Appearance setting (1 = 100%). */
+  font-size: calc(1.05rem * var(--preview-font-scale, 1));
+  line-height: 1.78;
+  letter-spacing: 0;
+  /* Keep lines near the chosen width on wide panels without shrinking the surface.
+     --preview-measure comes from the Line width setting. */
+  padding-block: 1.5rem 3rem;
+  padding-inline: max(1.5rem, calc((100% - var(--preview-measure, 72ch)) / 2));
+}
+
+.preview-pane__content.prose h1,
+.preview-pane__content.prose h2,
+.preview-pane__content.prose h3,
+.preview-pane__content.prose h4,
+.preview-pane__content.prose h5,
+.preview-pane__content.prose h6 {
+  font-family: var(--font-sans);
+  color: var(--foreground);
+  font-weight: 650;
+  line-height: 1.18;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.preview-pane__content.prose h1 {
+  margin: 0 0 1.5rem;
+  font-size: clamp(2rem, 4vw, 2.9rem);
+  font-weight: 700;
+}
+
+/* A short brand-gradient rule under the title: the one decorative touch in the preview. */
+.preview-pane__content.prose h1::after {
+  content: "";
+  display: block;
+  width: 3rem;
+  height: 0.25rem;
+  margin-top: 0.85rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--brand-from), var(--brand-to));
+}
+
+[data-color-scheme="high-contrast"] .preview-pane__content.prose h1::after {
+  background: var(--foreground);
+}
+
+.preview-pane__content.prose h2 {
+  margin: 2.25rem 0 0.85rem;
+  font-size: clamp(1.5rem, 2.4vw, 1.95rem);
+}
+
+.preview-pane__content.prose h3 {
+  margin: 1.6rem 0 0.65rem;
+  font-size: 1.25rem;
+}
+
+.preview-pane__content.prose p,
+.preview-pane__content.prose ul,
+.preview-pane__content.prose ol,
+.preview-pane__content.prose blockquote,
+.preview-pane__content.prose pre,
+.preview-pane__content.prose table {
+  margin: 0 0 1.1rem;
+}
+
+.preview-pane__content.prose a {
+  color: var(--primary);
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.preview-pane__content.prose a:hover {
+  text-decoration-thickness: 0.14em;
+}
+
+.preview-pane__content.prose strong {
+  color: var(--foreground);
+  font-weight: 650;
+}
+
+.preview-pane__content.prose code {
+  padding: 0.14rem 0.38rem;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) * 0.5);
+  background: var(--muted);
+  color: var(--foreground);
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+}
+
+.preview-pane__content.prose pre {
+  overflow: auto;
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--muted);
+  line-height: 1.6;
+}
+
+.preview-pane__content.prose pre code {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 0.9em;
+}
+
+.preview-pane__content.prose blockquote {
+  padding: 0.5rem 1rem;
+  border-left: 3px solid var(--primary);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: color-mix(in oklab, var(--primary) 7%, transparent);
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+
+.preview-pane__content.prose blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+.preview-pane__content.prose ul,
+.preview-pane__content.prose ol {
+  padding-left: 1.35rem;
+}
+
+/* Tailwind preflight sets list-style: none; restore markers for rendered markdown. */
+.preview-pane__content.prose ul {
+  list-style-type: disc;
+}
+
+.preview-pane__content.prose ol {
+  list-style-type: decimal;
+}
+
+.preview-pane__content.prose ul ul {
+  list-style-type: circle;
+}
+
+.preview-pane__content.prose ul ul ul {
+  list-style-type: square;
+}
+
+.preview-pane__content.prose li::marker {
+  color: var(--primary);
+}
+
+.preview-pane__content.prose li:has(> input[type="checkbox"]) {
+  list-style-type: none;
+}
+
+.preview-pane__content.prose li > input[type="checkbox"] {
+  margin: 0 0.5rem 0 -1.35rem;
+  vertical-align: middle;
+  accent-color: var(--primary);
+}
+
+.preview-pane__content.prose li + li {
+  margin-top: 0.35rem;
+}
+
+.preview-pane__content.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-sans);
+  font-size: 0.92em;
+}
+
+.preview-pane__content.prose th,
+.preview-pane__content.prose td {
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.preview-pane__content.prose th {
+  background: var(--muted);
+  font-weight: 600;
+}
+
+.preview-pane__content.prose img {
+  display: block;
+  max-width: 100%;
+  border-radius: var(--radius);
+}
+
+.preview-pane__content.prose hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 2rem 0;
+}
+
+/* Shown in place of an image that failed to load (missing file, offline, blocked). */
+.preview-pane__content.prose .preview-image-missing {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--muted-foreground);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+}
+
+.preview-pane__content.prose .preview-image-missing::before {
+  content: "Image unavailable:";
+  font-weight: 600;
+}

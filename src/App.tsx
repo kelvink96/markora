@@ -15,14 +15,14 @@ import {
 } from "./app/hooks";
 import { EditorPane } from "./components/editor-page/editor-pane";
 import { TabStrip } from "./components/editor-page/tab-strip";
+import { FormattingBar } from "./components/editor-page/formatting-toolbar";
 import { TopBar } from "./components/editor-page/top-bar";
 import { PreviewPane } from "./components/editor-page/preview-pane";
 import { SettingsPage } from "./components/settings-page/settings-page";
 import { Workspace } from "./components/editor-page/workspace";
 import { FooterStatusBar } from "./components/editor-page/footer-status-bar";
+import { AppDialogs } from "./components/editor-page/app-dialogs";
 import { EmptyWorkspaceState } from "./components/editor-page/empty-workspace-state";
-import { Button } from "./components/shared/button";
-import { Dialog } from "./components/shared/dialog";
 import { getWordCount } from "./features/document/document-actions";
 import { resetSettings, saveSettings } from "./features/settings/settings-api";
 import { createDefaultSettings } from "./features/settings/settings-schema";
@@ -32,6 +32,8 @@ import { useWorkspaceState } from "./features/workspace/workspace-state";
 import { useDocumentStore } from "./store/document";
 import { useThemeStore } from "./features/theme/theme-store";
 import { ErrorBanner } from "./components/editor-page/error-banner";
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { getFileAdapter } from "./platform/files";
 import { detectPlatform } from "./platform/runtime";
 
@@ -128,8 +130,9 @@ export default function App() {
     />
   ) : null;
 
-  const commandBar = (
+  const header = (
     <TopBar
+      tabs={activeScreen === "workspace" ? tabStrip : null}
       onOpenSettings={() => setActiveScreen("settings")}
       onOpenKeyboardShortcuts={() => setIsKeyboardShortcutsOpen(true)}
       onOpenAbout={() => setIsAboutDialogOpen(true)}
@@ -213,89 +216,29 @@ export default function App() {
   );
 
   return (
-    <>
+    <TooltipProvider>
       <ErrorBanner message={fileError} onDismiss={clearFileError} />
       <AppShell
         themeMode={theme}
         colorScheme={settings.appearance.colorScheme}
-        tabStrip={activeScreen === "workspace" ? tabStrip : null}
-        commandBar={activeScreen === "workspace" ? commandBar : null}
+        header={activeScreen === "workspace" ? header : null}
+        toolbar={activeScreen === "workspace" && hasOpenDocuments ? <FormattingBar /> : null}
         workspace={workspace}
         statusBar={settings.appearance.showStatusBar && activeScreen === "workspace" && hasOpenDocuments ? statusBar : null}
       />
-      <Dialog
-        open={pendingCloseRequest !== null}
-        title="Discard unsaved changes?"
-        description={
-          pendingCloseRequest?.type === "all"
-            ? "Some open documents have unsaved edits. Discard them and close every tab?"
-            : "This document has unsaved edits. Discard them and close the tab?"
-        }
-        actions={
-          <>
-            <Button onClick={cancelPendingClose}>Cancel</Button>
-            <Button variant="danger" onClick={confirmPendingClose}>
-              Discard
-            </Button>
-          </>
-        }
-      >
-        {pendingCloseRequest?.type === "all"
-          ? "Closing all tabs will remove any unsaved changes across your open documents."
-          : "Closing this tab will remove any unsaved changes in the current document."}
-      </Dialog>
-      <Dialog
-        open={isKeyboardShortcutsOpen}
-        title="Keyboard Shortcuts"
-        description="Quick shortcuts for the current editor workflow."
-        actions={<Button onClick={() => setIsKeyboardShortcutsOpen(false)}>Close</Button>}
-      >
-        <div className="space-y-2 text-sm text-app-text">
-          <p>`Ctrl/Cmd + N` creates a new document.</p>
-          <p>`Ctrl/Cmd + O` opens an existing file.</p>
-          <p>`Ctrl/Cmd + S` saves the current document.</p>
-          <p>`Ctrl/Cmd + Shift + S` opens Save As.</p>
-          <p>`Ctrl + Tab` moves to the next tab.</p>
-          <p>`Ctrl + Shift + Tab` moves to the previous tab.</p>
-        </div>
-      </Dialog>
-      <Dialog
-        open={isAboutDialogOpen}
-        title="About Markora"
-        description="A desktop-first markdown editor built with Tauri, React, and CodeMirror."
-        actions={<Button onClick={() => setIsAboutDialogOpen(false)}>Close</Button>}
-      >
-        <div className="space-y-2 text-sm text-app-text">
-          <p>Version {packageJson.version}</p>
-          <p>Markora keeps writing and reading in dedicated modes for a focused markdown workflow.</p>
-          <a
-            href="https://kelvink96.github.io/markora/privacy"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-app-accent underline"
-          >
-            Privacy Policy
-          </a>
-        </div>
-      </Dialog>
-      <Dialog
-        open={isReleaseNotesOpen}
-        title="Release Notes"
-        description={`Version ${packageJson.version}`}
-        actions={<Button onClick={() => setIsReleaseNotesOpen(false)}>Close</Button>}
-      >
-        <div className="text-sm text-app-text">
-          <p>Release notes are available on the releases page.</p>
-          <a
-            href="https://kelvink96.github.io/markora/versions"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2 inline-block text-app-accent underline"
-          >
-            View all releases
-          </a>
-        </div>
-      </Dialog>
-    </>
+      <AppDialogs
+        version={packageJson.version}
+        pendingCloseRequest={pendingCloseRequest}
+        onCancelClose={cancelPendingClose}
+        onConfirmClose={confirmPendingClose}
+        shortcutsOpen={isKeyboardShortcutsOpen}
+        onShortcutsOpenChange={setIsKeyboardShortcutsOpen}
+        aboutOpen={isAboutDialogOpen}
+        onAboutOpenChange={setIsAboutDialogOpen}
+        releaseNotesOpen={isReleaseNotesOpen}
+        onReleaseNotesOpenChange={setIsReleaseNotesOpen}
+      />
+      <Toaster position="bottom-right" />
+    </TooltipProvider>
   );
 }

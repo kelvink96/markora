@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent } from "react";
 import DOMPurify from "dompurify";
 import { useDocumentStore } from "../../../store/document";
-import { Panel } from "../../shared/panel";
 import { getMarkdownAdapter } from "../../../platform/markdown";
 import { getLinkAdapter } from "../../../platform/links";
 import { classifyLink } from "../../../features/preview/preview-links";
@@ -93,10 +92,11 @@ export function PreviewPane() {
 
   return (
     <section className="preview-pane h-full min-h-0 pl-0 pr-0" aria-label="Preview">
-      <Panel className="preview-pane__surface h-full overflow-auto shadow-[0_1px_0_rgba(255,255,255,0.22)_inset,0_14px_36px_rgba(0,0,0,0.14)]">
+      {/* The scroll container (scroll sync finds it by this class), framed on the preview surface colour. */}
+      <div className="preview-pane__surface h-full overflow-auto rounded-xl border bg-preview shadow-sm">
         <div
           ref={contentRef}
-          className="preview-pane__content prose min-h-full w-full rounded-[calc(var(--radius-sm)-1px)] bg-app-preview p-[calc(var(--space-6)-0.1rem)]"
+          className="preview-pane__content prose min-h-full w-full"
           data-testid="preview-content"
           onClick={handleLinkClick}
           onAuxClick={handleLinkClick}
@@ -109,7 +109,7 @@ export function PreviewPane() {
           // Sanitized with DOMPurify above, whichever platform renderer produced it.
           dangerouslySetInnerHTML={innerHtml}
         />
-      </Panel>
+      </div>
     </section>
   );
 }

@@ -1,10 +1,6 @@
 import type { FileSettings } from "../../features/settings/settings-schema";
-import { Checkbox } from "../shared/checkbox";
-import {
-  SectionActions,
-  SectionCard,
-  hasChanges,
-} from "./settings-page-shared";
+import { Switch } from "@/components/ui/switch";
+import { SectionActions, SectionCard, SettingRow, hasChanges } from "./settings-page-shared";
 
 interface FilesSettingsSectionProps {
   files: FileSettings;
@@ -27,54 +23,40 @@ export function FilesSettingsSection({
       title="Files"
       description="Control document safety prompts and other desktop file behaviors."
     >
-      <div>
-        <Checkbox
-          label="Save changes automatically"
-          aria-describedby="autosave-help"
+      <SettingRow
+        controlId="files-autosave"
+        label="Save changes automatically"
+        description="Saves a moment after you stop typing. Untitled documents are skipped until you save them once."
+      >
+        <Switch
+          id="files-autosave"
+          aria-describedby="files-autosave-description"
           checked={files.autosave}
-          onChange={(event) =>
-            onFilesChange({
-              ...files,
-              autosave: event.target.checked,
-            })
-          }
+          onCheckedChange={(autosave) => onFilesChange({ ...files, autosave })}
         />
-        <p id="autosave-help" className="ml-[1.875rem] mt-1 text-xs text-app-text/60">
-          Saves a moment after you stop typing. Untitled documents are skipped until you save them once.
-        </p>
-      </div>
+      </SettingRow>
       {canRestoreSession ? (
-        <div>
-          <Checkbox
-            label="Reopen last session's files on launch"
-            aria-describedby="restore-session-help"
+        <SettingRow
+          controlId="files-restore-session"
+          label="Reopen last session's files on launch"
+          description="Brings back the saved files you had open, and the one you were on."
+        >
+          <Switch
+            id="files-restore-session"
+            aria-describedby="files-restore-session-description"
             checked={files.restorePreviousSession}
-            onChange={(event) =>
-              onFilesChange({
-                ...files,
-                restorePreviousSession: event.target.checked,
-              })
-            }
+            onCheckedChange={(restorePreviousSession) => onFilesChange({ ...files, restorePreviousSession })}
           />
-          <p id="restore-session-help" className="ml-[1.875rem] mt-1 text-xs text-app-text/60">
-            Brings back the saved files you had open, and the one you were on.
-          </p>
-        </div>
+        </SettingRow>
       ) : null}
-      <Checkbox
-        label="Confirm before closing unsaved tabs"
-        checked={files.confirmOnUnsavedClose}
-        onChange={(event) =>
-          onFilesChange({
-            ...files,
-            confirmOnUnsavedClose: event.target.checked,
-          })
-        }
-      />
-      <SectionActions
-        canSave={hasChanges(files, savedFiles)}
-        onSave={() => onSave(files)}
-      />
+      <SettingRow controlId="files-confirm-close" label="Confirm before closing unsaved tabs">
+        <Switch
+          id="files-confirm-close"
+          checked={files.confirmOnUnsavedClose}
+          onCheckedChange={(confirmOnUnsavedClose) => onFilesChange({ ...files, confirmOnUnsavedClose })}
+        />
+      </SettingRow>
+      <SectionActions canSave={hasChanges(files, savedFiles)} onSave={() => onSave(files)} />
     </SectionCard>
   );
 }

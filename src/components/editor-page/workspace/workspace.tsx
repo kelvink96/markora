@@ -103,7 +103,7 @@ export function Workspace({ sidebar, left, right, viewMode }: WorkspaceProps) {
         {primaryPane}
       </section>
       <div
-        className="workspace__divider h-auto w-3 shrink-0 cursor-col-resize rounded-[999px] bg-[linear-gradient(to_right,transparent,rgba(91,100,120,0.03),rgba(24,43,60,0.14),rgba(91,100,120,0.03),transparent)] outline-none transition-[background,transform] duration-150 hover:scale-y-[1.01] hover:bg-[linear-gradient(to_right,transparent,rgba(91,100,120,0.08),rgba(24,43,60,0.22),rgba(91,100,120,0.08),transparent)] focus-visible:bg-[linear-gradient(to_right,transparent,rgba(45,91,134,0.16),rgba(45,91,134,0.34),rgba(45,91,134,0.16),transparent)]"
+        className="workspace__divider relative h-auto w-3 shrink-0 cursor-col-resize rounded-full outline-none before:absolute before:inset-y-2 before:left-1/2 before:w-0.5 before:-translate-x-1/2 before:rounded-full before:bg-border before:transition-colors hover:before:bg-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:before:bg-primary"
         role="separator"
         aria-orientation="vertical"
         aria-label="Resize editor and preview panes"

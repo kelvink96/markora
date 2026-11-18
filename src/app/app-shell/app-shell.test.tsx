@@ -8,8 +8,7 @@ describe("AppShell", () => {
       <AppShell
         themeMode="light"
         colorScheme="standard"
-        tabStrip={<div>Tab Strip</div>}
-        commandBar={<div>Command Bar</div>}
+        header={<div>Header</div>}
         workspace={<div>Workspace</div>}
         statusBar={<div>Status Bar</div>}
       />,
@@ -21,8 +20,8 @@ describe("AppShell", () => {
     expect(shell).toHaveClass("flex");
     expect(shell).toHaveClass("flex-col");
     expect(shell).toHaveClass("overflow-hidden");
-    expect(shell).toHaveClass("bg-app-bg");
-    expect(shell).toHaveClass("text-app-text");
+    expect(shell).toHaveClass("bg-background");
+    expect(shell).toHaveClass("text-foreground");
     expect(shell).toHaveClass("antialiased");
     expect(shell).not.toHaveClass("theme-dark");
 
@@ -30,8 +29,7 @@ describe("AppShell", () => {
       <AppShell
         themeMode="dark"
         colorScheme="sepia"
-        tabStrip={<div>Tab Strip</div>}
-        commandBar={<div>Command Bar</div>}
+        header={<div>Header</div>}
         workspace={<div>Workspace</div>}
         statusBar={<div>Status Bar</div>}
       />,
@@ -50,8 +48,7 @@ describe("AppShell", () => {
       <AppShell
         themeMode="light"
         colorScheme="standard"
-        tabStrip={<div>Tab Strip</div>}
-        commandBar={<div>Command Bar</div>}
+        header={<div>Header</div>}
         workspace={<div>Workspace</div>}
         statusBar={<div>Status Bar</div>}
       />,
@@ -60,14 +57,14 @@ describe("AppShell", () => {
     expect(document.documentElement).toHaveAttribute("data-theme-mode", "light");
     expect(document.documentElement).toHaveAttribute("data-color-scheme", "standard");
     expect(document.body).not.toHaveClass("theme-dark");
-    expect(themeColorMeta).toHaveAttribute("content", "#f5f7fb");
+    expect(document.documentElement).not.toHaveClass("theme-dark");
+    expect(themeColorMeta).toHaveAttribute("content", "#f9fafe");
 
     rerender(
       <AppShell
         themeMode="dark"
         colorScheme="sepia"
-        tabStrip={<div>Tab Strip</div>}
-        commandBar={<div>Command Bar</div>}
+        header={<div>Header</div>}
         workspace={<div>Workspace</div>}
         statusBar={<div>Status Bar</div>}
       />,
@@ -76,7 +73,8 @@ describe("AppShell", () => {
     expect(document.documentElement).toHaveAttribute("data-theme-mode", "dark");
     expect(document.documentElement).toHaveAttribute("data-color-scheme", "sepia");
     expect(document.body).toHaveClass("theme-dark");
-    expect(themeColorMeta).toHaveAttribute("content", "#111827");
+    expect(document.documentElement).toHaveClass("theme-dark");
+    expect(themeColorMeta).toHaveAttribute("content", "#130d09");
   });
 
   it("renders a footer status bar below the workspace", () => {
@@ -84,15 +82,13 @@ describe("AppShell", () => {
       <AppShell
         themeMode="light"
         colorScheme="standard"
-        tabStrip={<div>Tab Strip</div>}
-        commandBar={<div>Command Bar</div>}
+        header={<div>Header</div>}
         workspace={<div>Workspace</div>}
         statusBar={<div>Status Bar</div>}
       />,
     );
 
-    expect(screen.getByText("Tab Strip")).toBeInTheDocument();
-    expect(screen.getByText("Command Bar")).toBeInTheDocument();
+    expect(screen.getByText("Header")).toBeInTheDocument();
     expect(screen.getByText("Status Bar")).toBeInTheDocument();
     expect(screen.getByText("Workspace").parentElement).toHaveClass(
       "min-h-0",
@@ -101,13 +97,37 @@ describe("AppShell", () => {
     );
   });
 
+  it("renders the optional toolbar row only when one is given", () => {
+    const { rerender } = render(
+      <AppShell
+        themeMode="light"
+        colorScheme="standard"
+        header={<div>Header</div>}
+        workspace={<div>Workspace</div>}
+        statusBar={null}
+      />,
+    );
+    expect(screen.queryByText("Toolbar")).not.toBeInTheDocument();
+
+    rerender(
+      <AppShell
+        themeMode="light"
+        colorScheme="standard"
+        header={<div>Header</div>}
+        toolbar={<div>Toolbar</div>}
+        workspace={<div>Workspace</div>}
+        statusBar={null}
+      />,
+    );
+    expect(screen.getByText("Toolbar")).toBeInTheDocument();
+  });
+
   it("bounds the workspace to the window so the editor and preview scroll on their own (#12)", () => {
     render(
       <AppShell
         themeMode="light"
         colorScheme="standard"
-        tabStrip={<div>Tab Strip</div>}
-        commandBar={<div>Command Bar</div>}
+        header={<div>Header</div>}
         workspace={<div>Workspace</div>}
         statusBar={<div>Status Bar</div>}
       />,

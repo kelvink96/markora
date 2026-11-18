@@ -102,4 +102,18 @@ describe("createEditorSettingsExtensions", () => {
 
     expect(injectedCss()).toMatch(/\.cm-gutters\s*\{[^}]*display:\s*none/);
   });
+
+  it("tells CodeMirror when the theme is dark, and switches on a live editor", () => {
+    const { editor, appearance } = setup();
+    mounted = mount(createEditorSettingsExtensions(editor, appearance, false));
+    const view = mounted.view;
+    expect(view.state.facet(EditorView.darkTheme)).toBe(false);
+
+    view.dispatch({
+      effects: mounted.compartment.reconfigure(createEditorSettingsExtensions(editor, appearance, true)),
+    });
+
+    expect(view.state.facet(EditorView.darkTheme)).toBe(true);
+    expect(view.state.doc.toString()).toBe("hello");
+  });
 });

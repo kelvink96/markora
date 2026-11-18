@@ -39,7 +39,10 @@ describe("preview styles", () => {
 
   it("caps the preview line length for readability (#9)", () => {
     // Grow side padding instead of narrowing the box, so the preview surface stays full width.
+    // The width itself comes from --preview-measure (the Line width setting), 72ch by default.
     const content = declarationsFor(".preview-pane__content.prose");
-    expect(content).toMatch(/padding-inline:\s*max\([^;]*100%\s*-\s*72ch/);
+    expect(content).toMatch(
+      /padding-inline:\s*max\([^;]*100%\s*-\s*var\(--preview-measure,\s*72ch\)/,
+    );
   });
 });

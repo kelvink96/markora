@@ -85,6 +85,21 @@ describe("PreviewPane", () => {
     );
   });
 
+  it.each([
+    ["narrow", "60ch"],
+    ["normal", "72ch"],
+    ["wide", "90ch"],
+  ] as const)("sets the %s line width as %s for the stylesheet (#13)", async (width, measure) => {
+    const settings = createDefaultSettings();
+    settings.preview.contentWidth = width;
+    useSettingsStore.setState({ settings });
+    render(<PreviewPane />);
+
+    await waitFor(() =>
+      expect(screen.getByTestId("preview-content").style.getPropertyValue("--preview-measure")).toBe(measure),
+    );
+  });
+
   it("passes the document path so relative images can resolve (#3)", async () => {
     useDocumentStore.setState({ filePath: "/notes/today.md" });
     render(<PreviewPane />);

@@ -10,6 +10,8 @@ import { useSettingsStore } from "../../../features/settings/settings-store";
 const ALLOWED_URI_REGEXP =
   /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp|matrix|asset):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i;
 
+const CONTENT_WIDTH_MEASURE = { narrow: "60ch", normal: "72ch", wide: "90ch" } as const;
+
 function sanitize(html: string) {
   return DOMPurify.sanitize(html, { ALLOWED_URI_REGEXP });
 }
@@ -31,6 +33,7 @@ export function PreviewPane() {
   const content = useDocumentStore((state) => state.content);
   const documentPath = useDocumentStore((state) => state.filePath);
   const previewFontScale = useSettingsStore((state) => state.settings.appearance.previewFontScale);
+  const contentWidth = useSettingsStore((state) => state.settings.preview.contentWidth);
   const [html, setHtml] = useState("");
   const markdownAdapter = useMemo(() => getMarkdownAdapter(), []);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -63,7 +66,12 @@ export function PreviewPane() {
           ref={contentRef}
           className="preview-pane__content prose min-h-full w-full rounded-[calc(var(--radius-sm)-1px)] bg-app-preview p-[calc(var(--space-6)-0.1rem)]"
           data-testid="preview-content"
-          style={{ "--preview-font-scale": previewFontScale } as CSSProperties}
+          style={
+            {
+              "--preview-font-scale": previewFontScale,
+              "--preview-measure": CONTENT_WIDTH_MEASURE[contentWidth],
+            } as CSSProperties
+          }
           // Sanitized with DOMPurify above, whichever platform renderer produced it.
           dangerouslySetInnerHTML={{ __html: html }}
         />

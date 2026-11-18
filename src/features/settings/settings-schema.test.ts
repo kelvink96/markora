@@ -14,6 +14,14 @@ describe("settings-schema", () => {
     expect(defaultSettings.authoring.newDocumentTemplate.trim().length).toBeGreaterThan(0);
   });
 
+  it("welcomes people with a guide rather than placeholder filler", () => {
+    const template = defaultSettings.authoring.newDocumentTemplate;
+
+    expect(template.startsWith("# Welcome to Markora")).toBe(true);
+    expect(template).toContain("Split view");
+    expect(template).not.toMatch(/Start writing your markdown here|placeholder block|Example Outline/);
+  });
+
   it("returns a fresh copy of defaults each time", () => {
     const first = createDefaultSettings();
     const second = createDefaultSettings();

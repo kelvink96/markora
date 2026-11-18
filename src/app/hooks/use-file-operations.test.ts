@@ -1,8 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook } from "@testing-library/react";
+import { toast } from "sonner";
 import { useFileOperations } from "./use-file-operations";
 import { useDocumentStore } from "../../store/document";
 import type { FileAdapter } from "../../platform/files/types";
+
+vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
 function createAdapter(overrides: Partial<FileAdapter> = {}): FileAdapter {
   return {
@@ -34,6 +37,53 @@ function seedDocument(filePath: string | null, content: string, handle?: FileSys
 describe("useFileOperations", () => {
   beforeEach(() => {
     vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  describe("save feedback", () => {
+    beforeEach(() => {
+      vi.mocked(toast.success).mockClear();
+    });
+
+    it("announces a manual save to an existing path", async () => {
+      const adapter = createAdapter();
+      seedDocument("/notes/a.md", "# A");
+      const { result } = renderHook(() => useFileOperations(adapter));
+
+      await act(() => result.current.handleSave());
+
+      expect(toast.success).toHaveBeenCalledWith("Saved a.md");
+    });
+
+    it("announces a browser download as a download, not a save", async () => {
+      const adapter = createAdapter({ supportsFileExport: () => true, exportFile: vi.fn().mockResolvedValue(undefined) });
+      seedDocument(null, "# My Plan\n\ntext");
+      const { result } = renderHook(() => useFileOperations(adapter));
+
+      await act(() => result.current.handleSave());
+
+      expect(toast.success).toHaveBeenCalledWith("Downloaded my-plan.md");
+    });
+
+    it("does not announce when the user cancels the save dialog", async () => {
+      const adapter = createAdapter();
+      seedDocument(null, "# New");
+      const { result } = renderHook(() => useFileOperations(adapter));
+
+      await act(() => result.current.handleSave());
+
+      expect(toast.success).not.toHaveBeenCalled();
+    });
+
+    it("stays silent for autosave", async () => {
+      const adapter = createAdapter();
+      seedDocument("/notes/a.md", "# A");
+      const { result } = renderHook(() => useFileOperations(adapter));
+
+      await act(() => result.current.handleAutosave());
+
+      expect(adapter.writeFile).toHaveBeenCalledWith("/notes/a.md", "# A");
+      expect(toast.success).not.toHaveBeenCalled();
+    });
   });
 
   it("saves to the existing path and marks the document clean", async () => {

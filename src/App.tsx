@@ -75,7 +75,7 @@ export default function App() {
   const line = useEditorStatusState((state) => state.line);
   const column = useEditorStatusState((state) => state.column);
 
-  const { fileError, clearFileError, handleOpen, handleSave, handleSaveAs, canSaveInPlace } =
+  const { fileError, clearFileError, handleOpen, handleSave, handleAutosave, handleSaveAs, canSaveInPlace } =
     useFileOperations(fileAdapter);
   const {
     pendingCloseRequest,
@@ -92,7 +92,7 @@ export default function App() {
   useThemeSync();
   useWebWorkspacePersistence(isWeb);
   useDocumentTitle();
-  useAutosave({ save: handleSave, canSaveInPlace });
+  useAutosave({ save: handleAutosave, canSaveInPlace });
   useSessionRestore(fileAdapter, !isWeb);
 
   const handleNew = useCallback(() => {

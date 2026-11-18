@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import DOMPurify from "dompurify";
 import { useDocumentStore } from "../../../store/document";
 import { Panel } from "../../shared/panel";
 import { getMarkdownAdapter } from "../../../platform/markdown";
+import { useSettingsStore } from "../../../features/settings/settings-store";
 
 // DOMPurify's default URL allowlist plus Tauri's asset:// scheme, which the desktop
 // renderer uses for images next to the open file (http://asset.localhost passes already).
@@ -29,6 +30,7 @@ export function PreviewPane() {
   // Subscribe only to the fields that change the rendered output.
   const content = useDocumentStore((state) => state.content);
   const documentPath = useDocumentStore((state) => state.filePath);
+  const previewFontScale = useSettingsStore((state) => state.settings.appearance.previewFontScale);
   const [html, setHtml] = useState("");
   const markdownAdapter = useMemo(() => getMarkdownAdapter(), []);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -61,6 +63,7 @@ export function PreviewPane() {
           ref={contentRef}
           className="preview-pane__content prose min-h-full w-full rounded-[calc(var(--radius-sm)-1px)] bg-app-preview p-[calc(var(--space-6)-0.1rem)]"
           data-testid="preview-content"
+          style={{ "--preview-font-scale": previewFontScale } as CSSProperties}
           // Sanitized with DOMPurify above, whichever platform renderer produced it.
           dangerouslySetInnerHTML={{ __html: html }}
         />

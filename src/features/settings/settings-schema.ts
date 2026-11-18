@@ -7,7 +7,6 @@ export interface AppearanceSettings {
   editorFontSize: number;
   previewFontScale: number;
   editorLineHeight: number;
-  splitRatio: number;
   showStatusBar: boolean;
 }
 
@@ -15,15 +14,12 @@ export interface EditorSettings {
   wordWrap: boolean;
   lineNumbers: boolean;
   highlightActiveLine: boolean;
-  tabSize: number;
-  softTabs: boolean;
 }
 
 export interface PreviewSettings {
   syncScroll: boolean;
   openLinksExternally: boolean;
   contentWidth: "narrow" | "normal" | "wide";
-  readerTheme: "paper" | "dark" | "sepia" | "high-contrast";
 }
 
 export interface FileSettings {
@@ -51,24 +47,21 @@ export const defaultSettings: MarkoraSettings = {
   appearance: {
     theme: "system",
     colorScheme: "standard",
-    editorFontSize: 15,
+    // 16px / 1.7 is what the editor has always rendered at.
+    editorFontSize: 16,
     previewFontScale: 1,
-    editorLineHeight: 1.6,
-    splitRatio: 0.5,
+    editorLineHeight: 1.7,
     showStatusBar: true,
   },
   editor: {
     wordWrap: true,
     lineNumbers: false,
     highlightActiveLine: true,
-    tabSize: 2,
-    softTabs: true,
   },
   preview: {
     syncScroll: true,
     openLinksExternally: true,
     contentWidth: "normal",
-    readerTheme: "paper",
   },
   files: {
     autosave: false,
@@ -82,4 +75,93 @@ export const defaultSettings: MarkoraSettings = {
 
 export function createDefaultSettings(): MarkoraSettings {
   return structuredClone(defaultSettings);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/** Copies `raw`'s values over `defaults`, but only for known keys whose type matches. */
+function mergeKnown<T extends object>(defaults: T, raw: unknown): T {
+  const merged = { ...defaults };
+  if (!isRecord(raw)) return merged;
+
+  for (const key of Object.keys(defaults) as Array<keyof T & string>) {
+    const value = raw[key];
+    if (typeof value === typeof defaults[key] && value !== null) {
+      merged[key] = value as T[keyof T & string];
+    }
+  }
+  return merged;
+}
+
+function pick<T extends string>(value: T, allowed: readonly T[], fallback: T): T {
+  return allowed.includes(value) ? value : fallback;
+}
+
+function clamp(value: number, min: number, max: number, fallback: number) {
+  return Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback;
+}
+
+/**
+ * Turns whatever was stored (older versions, other platforms, hand-edited files) into
+ * valid settings: unknown keys are dropped, missing or wrong-typed keys fall back to the
+ * defaults, enums and ranges are checked, and the old desktop fixed-point units
+ * (line height 160, preview scale 100) are converted to the current ones (1.6, 1).
+ */
+export function normalizeSettings(raw: unknown): MarkoraSettings {
+  const defaults = createDefaultSettings();
+  const source = isRecord(raw) ? raw : {};
+
+  const appearance = mergeKnown(defaults.appearance, source.appearance);
+  const rawAppearance = isRecord(source.appearance) ? source.appearance : {};
+  const legacyLineHeight = Number(rawAppearance.editorLineHeight);
+  const legacyScale = Number(rawAppearance.previewFontScale);
+  if (legacyLineHeight > 10) appearance.editorLineHeight = legacyLineHeight / 100;
+  if (legacyScale > 10) appearance.previewFontScale = legacyScale / 100;
+
+  // Earlier versions saved 15px / 1.6 as defaults but never applied them (the editor
+  // rendered at 16px / 1.72) and had no control to change them, so that exact pair is
+  // the old default, not a choice. Move it to the new default so nothing shrinks.
+  if (appearance.editorFontSize === 15 && appearance.editorLineHeight === 1.6) {
+    appearance.editorFontSize = defaults.appearance.editorFontSize;
+    appearance.editorLineHeight = defaults.appearance.editorLineHeight;
+  }
+
+  appearance.theme = pick(appearance.theme, ["system", "light", "dark"], defaults.appearance.theme);
+  appearance.colorScheme = pick(
+    appearance.colorScheme,
+    ["standard", "sepia", "high-contrast"],
+    defaults.appearance.colorScheme,
+  );
+  appearance.editorFontSize = Math.round(
+    clamp(appearance.editorFontSize, 12, 24, defaults.appearance.editorFontSize),
+  );
+  appearance.editorLineHeight = clamp(
+    appearance.editorLineHeight,
+    1.2,
+    2.4,
+    defaults.appearance.editorLineHeight,
+  );
+  appearance.previewFontScale = clamp(
+    appearance.previewFontScale,
+    0.8,
+    1.5,
+    defaults.appearance.previewFontScale,
+  );
+
+  const preview = mergeKnown(defaults.preview, source.preview);
+  preview.contentWidth = pick(
+    preview.contentWidth,
+    ["narrow", "normal", "wide"],
+    defaults.preview.contentWidth,
+  );
+
+  return {
+    appearance,
+    editor: mergeKnown(defaults.editor, source.editor),
+    preview,
+    files: mergeKnown(defaults.files, source.files),
+    authoring: mergeKnown(defaults.authoring, source.authoring),
+  };
 }

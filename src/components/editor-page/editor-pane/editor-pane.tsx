@@ -1,13 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { redo, selectAll, undo } from "@codemirror/commands";
 import { EditorView, basicSetup } from "codemirror";
-import { EditorState } from "@codemirror/state";
+import { Compartment, EditorState } from "@codemirror/state";
 import { EditorView as CMView } from "@codemirror/view";
 import { markdown } from "@codemirror/lang-markdown";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { readText, writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { useDocumentStore } from "../../../store/document";
 import { useEditorCommandState } from "../../../features/editor/editor-command-state";
+import { createEditorSettingsExtensions } from "../../../features/editor/editor-settings-extensions";
 import { applyMarkdownToolbarAction, type MarkdownToolbarAction } from "../../../features/editor/markdown-toolbar-actions";
 import {
   applySlashCommand,
@@ -48,7 +49,12 @@ export function EditorPane({ theme }: EditorPaneProps) {
   // Keep the imperative CodeMirror instance in a ref so React re-renders do not recreate it.
   const viewRef = useRef<EditorView | null>(null);
   const { content, setContent } = useDocumentStore();
-  const lineNumbers = useSettingsStore((state) => state.settings.editor.lineNumbers);
+  const editorSettings = useSettingsStore((state) => state.settings.editor);
+  const editorFontSize = useSettingsStore((state) => state.settings.appearance.editorFontSize);
+  const editorLineHeight = useSettingsStore((state) => state.settings.appearance.editorLineHeight);
+  const lineNumbers = editorSettings.lineNumbers;
+  // Holds the settings-driven extensions so they can be swapped without rebuilding the editor.
+  const settingsCompartment = useMemo(() => new Compartment(), []);
   const setCursorPosition = useEditorStatusState((state) => state.setCursorPosition);
   const setRunToolbarAction = useEditorCommandState((state) => state.setRunToolbarAction);
   const setRunEditAction = useEditorCommandState((state) => state.setRunEditAction);
@@ -152,6 +158,7 @@ export function EditorPane({ theme }: EditorPaneProps) {
       }
     });
 
+    const { settings } = useSettingsStore.getState();
     const state = EditorState.create({
       // Read the latest store value at creation time so the editor boots with current content.
       doc: useDocumentStore.getState().content,
@@ -159,13 +166,9 @@ export function EditorPane({ theme }: EditorPaneProps) {
         basicSetup,
         markdown(),
         updateListener,
-        CMView.lineWrapping,
-        CMView.theme({
-          ".cm-gutters": {
-            display: lineNumbers ? "flex" : "none",
-          },
-        }),
         ...(theme === "dark" ? [oneDark] : []),
+        // Last, so user settings win over the theme where both style the same thing.
+        settingsCompartment.of(createEditorSettingsExtensions(settings.editor, settings.appearance)),
       ],
     });
 
@@ -176,7 +179,19 @@ export function EditorPane({ theme }: EditorPaneProps) {
     return () => {
       viewRef.current?.destroy();
     };
-  }, [lineNumbers, setContent, setCursorPosition, theme]);
+  }, [setContent, setCursorPosition, settingsCompartment, theme]);
+
+  useEffect(() => {
+    // Apply setting changes to the live editor (the creation effect only reads them once).
+    viewRef.current?.dispatch({
+      effects: settingsCompartment.reconfigure(
+        createEditorSettingsExtensions(editorSettings, {
+          editorFontSize,
+          editorLineHeight,
+        }),
+      ),
+    });
+  }, [editorFontSize, editorLineHeight, editorSettings, settingsCompartment]);
 
   useEffect(() => {
     setRunToolbarAction(runMarkdownAction);

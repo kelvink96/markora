@@ -4,6 +4,7 @@ import type {
   ThemePreference,
 } from "../../features/settings/settings-schema";
 import { Checkbox } from "../shared/checkbox";
+import { Select } from "../shared/select";
 import {
   SectionActions,
   SectionCard,
@@ -138,6 +139,21 @@ function ColorSchemeSwatch({
   );
 }
 
+const EDITOR_FONT_SIZES = [12, 13, 14, 15, 16, 18, 20, 24];
+const EDITOR_LINE_HEIGHTS = [
+  { value: 1.5, label: "Compact" },
+  { value: 1.7, label: "Comfortable" },
+  { value: 1.9, label: "Relaxed" },
+  { value: 2.1, label: "Spacious" },
+];
+const PREVIEW_FONT_SCALES = [
+  { value: 0.9, label: "90%" },
+  { value: 1, label: "100%" },
+  { value: 1.1, label: "110%" },
+  { value: 1.25, label: "125%" },
+  { value: 1.5, label: "150%" },
+];
+
 interface AppearanceSettingsSectionProps {
   appearance: AppearanceSettings;
   savedAppearance: AppearanceSettings;
@@ -215,6 +231,55 @@ export function AppearanceSettingsSection({
         <SectionActions
           canSave={hasChanges(appearance, savedAppearance)}
           label="Save theme mode"
+          onSave={() => onSave(appearance)}
+        />
+      </SectionCard>
+
+      <SectionCard
+        title="Text"
+        description="Set how large and how open the editor and preview text are."
+      >
+        <div className="grid gap-3 md:grid-cols-3">
+          <Select
+            id="editor-font-size"
+            label="Editor font size"
+            value={String(appearance.editorFontSize)}
+            onChange={(event) => updateAppearance({ editorFontSize: Number(event.target.value) })}
+          >
+            {EDITOR_FONT_SIZES.map((size) => (
+              <option key={size} value={size}>
+                {size} px
+              </option>
+            ))}
+          </Select>
+          <Select
+            id="editor-line-height"
+            label="Editor line spacing"
+            value={String(appearance.editorLineHeight)}
+            onChange={(event) => updateAppearance({ editorLineHeight: Number(event.target.value) })}
+          >
+            {EDITOR_LINE_HEIGHTS.map(({ value, label }) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </Select>
+          <Select
+            id="preview-font-scale"
+            label="Preview text size"
+            value={String(appearance.previewFontScale)}
+            onChange={(event) => updateAppearance({ previewFontScale: Number(event.target.value) })}
+          >
+            {PREVIEW_FONT_SCALES.map(({ value, label }) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <SectionActions
+          canSave={hasChanges(appearance, savedAppearance)}
+          label="Save text settings"
           onSave={() => onSave(appearance)}
         />
       </SectionCard>

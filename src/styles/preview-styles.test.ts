@@ -31,6 +31,12 @@ describe("preview styles", () => {
     ).toMatch(/list-style-type:\s*none/);
   });
 
+  it("scales the preview font with the user's setting (#13)", () => {
+    expect(declarationsFor(".preview-pane__content.prose")).toMatch(
+      /font-size:\s*calc\(1\.05rem\s*\*\s*var\(--preview-font-scale,\s*1\)\)/,
+    );
+  });
+
   it("caps the preview line length for readability (#9)", () => {
     // Grow side padding instead of narrowing the box, so the preview surface stays full width.
     const content = declarationsFor(".preview-pane__content.prose");

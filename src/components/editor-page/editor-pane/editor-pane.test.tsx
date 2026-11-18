@@ -27,6 +27,7 @@ import { useEditorCommandState } from "../../../features/editor/editor-command-s
 import { createDefaultSettings } from "../../../features/settings/settings-schema";
 import { useDocumentStore } from "../../../store/document";
 import { useSettingsStore } from "../../../features/settings/settings-store";
+import { EditorState } from "@codemirror/state";
 
 const { mockState } = vi.hoisted(() => {
   class HoistedMockEditorView {
@@ -69,6 +70,15 @@ vi.mock("codemirror", () => ({
 }));
 
 vi.mock("@codemirror/state", () => ({
+  Compartment: class {
+    of(extension: unknown) {
+      return extension;
+    }
+
+    reconfigure(extension: unknown) {
+      return { reconfigured: extension };
+    }
+  },
   EditorState: {
     create: vi.fn(({ doc }: { doc: string }) => ({
       doc: {
@@ -149,6 +159,44 @@ describe("EditorPane", () => {
     render(<EditorPane theme="light" />);
 
     expect(screen.getByTestId("editor-surface")).toHaveAttribute("data-line-numbers", "hidden");
+  });
+
+  it("applies a settings change to the live editor without rebuilding it (#13)", () => {
+    vi.mocked(EditorState.create).mockClear();
+    mockState.dispatchSpy.mockClear();
+    render(<EditorPane theme="light" />);
+    expect(EditorState.create).toHaveBeenCalledTimes(1);
+    mockState.dispatchSpy.mockClear();
+
+    act(() => {
+      useSettingsStore.getState().updateAppearance({ editorFontSize: 20 });
+    });
+
+    expect(EditorState.create).toHaveBeenCalledTimes(1);
+    expect(mockState.dispatchSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ effects: expect.objectContaining({ reconfigured: expect.anything() }) }),
+    );
+  });
+
+  it("keeps the editor (and its undo history) when line numbers are toggled (#13)", () => {
+    vi.mocked(EditorState.create).mockClear();
+    render(<EditorPane theme="light" />);
+
+    act(() => {
+      useSettingsStore.getState().updateEditor({ lineNumbers: true });
+    });
+
+    expect(EditorState.create).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId("editor-surface")).toHaveAttribute("data-line-numbers", "visible");
+  });
+
+  it("rebuilds the editor when the theme changes", () => {
+    vi.mocked(EditorState.create).mockClear();
+    const { rerender } = render(<EditorPane theme="light" />);
+
+    rerender(<EditorPane theme="dark" />);
+
+    expect(EditorState.create).toHaveBeenCalledTimes(2);
   });
 
   it("applies toolbar actions to the editor document through the command bridge", () => {

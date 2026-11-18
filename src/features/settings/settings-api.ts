@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { detectPlatform } from "../../platform/runtime";
-import { createDefaultSettings, type MarkoraSettings } from "./settings-schema";
+import { createDefaultSettings, normalizeSettings, type MarkoraSettings } from "./settings-schema";
 
 const SETTINGS_STORAGE_KEY = "markora:web-settings";
 let memorySettings: MarkoraSettings | null = null;
@@ -24,7 +24,8 @@ function loadWebSettings() {
   }
 
   try {
-    const parsed = JSON.parse(raw) as MarkoraSettings;
+    // Older saves may lack newer keys or use old units, so always normalize.
+    const parsed = normalizeSettings(JSON.parse(raw));
     memorySettings = cloneSettings(parsed);
     return cloneSettings(parsed);
   } catch {
@@ -47,7 +48,7 @@ export function loadSettings() {
     return Promise.resolve(loadWebSettings());
   }
 
-  return invoke<MarkoraSettings>("load_settings");
+  return invoke<unknown>("load_settings").then(normalizeSettings);
 }
 
 export function saveSettings(settings: MarkoraSettings) {
@@ -55,7 +56,7 @@ export function saveSettings(settings: MarkoraSettings) {
     return Promise.resolve(saveWebSettings(settings));
   }
 
-  return invoke<MarkoraSettings>("save_settings", { settings });
+  return invoke<unknown>("save_settings", { settings }).then(normalizeSettings);
 }
 
 export function resetSettings() {
@@ -64,7 +65,7 @@ export function resetSettings() {
     return Promise.resolve(saveWebSettings(defaults));
   }
 
-  return invoke<MarkoraSettings>("reset_settings");
+  return invoke<unknown>("reset_settings").then(normalizeSettings);
 }
 
 export function __resetSettingsStorageForTests() {

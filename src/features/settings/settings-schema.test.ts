@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createDefaultSettings, defaultSettings } from "./settings-schema";
+import { createDefaultSettings, defaultSettings, normalizeSettings } from "./settings-schema";
 
 describe("settings-schema", () => {
   it("defaults to the system theme preference", () => {
@@ -8,10 +8,6 @@ describe("settings-schema", () => {
 
   it("defaults to the standard color scheme", () => {
     expect(defaultSettings.appearance.colorScheme).toBe("standard");
-  });
-
-  it("defaults the preview to the paper reader theme", () => {
-    expect(defaultSettings.preview.readerTheme).toBe("paper");
   });
 
   it("includes a non-empty new document template", () => {
@@ -27,5 +23,98 @@ describe("settings-schema", () => {
     expect(second.authoring.newDocumentTemplate).toBe(defaultSettings.authoring.newDocumentTemplate);
     expect(first).not.toBe(second);
     expect(first.appearance).not.toBe(second.appearance);
+  });
+});
+
+describe("normalizeSettings", () => {
+  it("returns the defaults for missing or non-object input", () => {
+    expect(normalizeSettings(undefined)).toEqual(defaultSettings);
+    expect(normalizeSettings(null)).toEqual(defaultSettings);
+    expect(normalizeSettings("nope")).toEqual(defaultSettings);
+    expect(normalizeSettings([])).toEqual(defaultSettings);
+  });
+
+  it("keeps valid stored values", () => {
+    const stored = createDefaultSettings();
+    stored.appearance.theme = "dark";
+    stored.appearance.editorFontSize = 18;
+    stored.editor.wordWrap = false;
+    stored.files.confirmOnUnsavedClose = false;
+    stored.authoring.newDocumentTemplate = "# Mine";
+
+    expect(normalizeSettings(stored)).toEqual(stored);
+  });
+
+  it("fills in keys that older saves don't have", () => {
+    const result = normalizeSettings({ appearance: { theme: "light" }, files: { autosave: true } });
+
+    expect(result.appearance.theme).toBe("light");
+    expect(result.appearance.editorFontSize).toBe(defaultSettings.appearance.editorFontSize);
+    expect(result.files.autosave).toBe(true);
+    expect(result.files.confirmOnUnsavedClose).toBe(true);
+    expect(result.editor).toEqual(defaultSettings.editor);
+  });
+
+  it("drops keys that no longer exist", () => {
+    const result = normalizeSettings({
+      appearance: { splitRatio: 50 },
+      editor: { tabSize: 4, softTabs: false },
+      preview: { readerTheme: "sepia" },
+    });
+
+    expect(result.appearance).not.toHaveProperty("splitRatio");
+    expect(result.editor).not.toHaveProperty("tabSize");
+    expect(result.editor).not.toHaveProperty("softTabs");
+    expect(result.preview).not.toHaveProperty("readerTheme");
+  });
+
+  it("converts the old desktop fixed-point units", () => {
+    const result = normalizeSettings({
+      appearance: { editorLineHeight: 160, previewFontScale: 100 },
+    });
+
+    expect(result.appearance.editorLineHeight).toBe(1.6);
+    expect(result.appearance.previewFontScale).toBe(1);
+  });
+
+  it("leaves current-unit values alone", () => {
+    const result = normalizeSettings({
+      appearance: { editorLineHeight: 1.8, previewFontScale: 1.25 },
+    });
+
+    expect(result.appearance.editorLineHeight).toBe(1.8);
+    expect(result.appearance.previewFontScale).toBe(1.25);
+  });
+
+  it("falls back for wrong types and unknown enum values", () => {
+    const result = normalizeSettings({
+      appearance: { theme: "neon", colorScheme: 3, editorFontSize: "big", showStatusBar: "yes" },
+      editor: { wordWrap: 1 },
+      preview: { contentWidth: "huge" },
+    });
+
+    expect(result.appearance.theme).toBe("system");
+    expect(result.appearance.colorScheme).toBe("standard");
+    expect(result.appearance.editorFontSize).toBe(15);
+    expect(result.appearance.showStatusBar).toBe(true);
+    expect(result.editor.wordWrap).toBe(true);
+    expect(result.preview.contentWidth).toBe("normal");
+  });
+
+  it("clamps out-of-range numbers", () => {
+    const result = normalizeSettings({
+      appearance: { editorFontSize: 400, editorLineHeight: 0.2, previewFontScale: 9 },
+    });
+
+    expect(result.appearance.editorFontSize).toBe(24);
+    expect(result.appearance.editorLineHeight).toBe(1.2);
+    expect(result.appearance.previewFontScale).toBe(1.5);
+  });
+
+  it("does not share objects with the defaults", () => {
+    const result = normalizeSettings({});
+    result.appearance.theme = "dark";
+
+    expect(defaultSettings.appearance.theme).toBe("system");
   });
 });

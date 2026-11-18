@@ -30,9 +30,11 @@ pub struct AppearanceSettings {
     #[serde(default = "default_color_scheme")]
     pub color_scheme: ColorScheme,
     pub editor_font_size: u16,
-    pub preview_font_scale: u16,
-    pub editor_line_height: u16,
-    pub split_ratio: u16,
+    // 1.0 means 100%. Earlier versions stored fixed-point integers (100, 160); the
+    // frontend converts those on load, so floats here accept both.
+    pub preview_font_scale: f32,
+    // Unitless multiplier, e.g. 1.6.
+    pub editor_line_height: f32,
     pub show_status_bar: bool,
 }
 
@@ -42,8 +44,6 @@ pub struct EditorSettings {
     pub word_wrap: bool,
     pub line_numbers: bool,
     pub highlight_active_line: bool,
-    pub tab_size: u8,
-    pub soft_tabs: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -52,8 +52,6 @@ pub struct PreviewSettings {
     pub sync_scroll: bool,
     pub open_links_externally: bool,
     pub content_width: PreviewContentWidth,
-    #[serde(default = "default_reader_theme")]
-    pub reader_theme: PreviewReaderTheme,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -62,15 +60,6 @@ pub enum PreviewContentWidth {
     Narrow,
     Normal,
     Wide,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "kebab-case")]
-pub enum PreviewReaderTheme {
-    Paper,
-    Dark,
-    Sepia,
-    HighContrast,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -97,10 +86,6 @@ pub struct MarkoraSettings {
     pub authoring: AuthoringDefaults,
 }
 
-fn default_reader_theme() -> PreviewReaderTheme {
-    PreviewReaderTheme::Paper
-}
-
 fn default_color_scheme() -> ColorScheme {
     ColorScheme::Standard
 }
@@ -111,23 +96,19 @@ pub fn default_settings() -> MarkoraSettings {
             theme: ThemePreference::System,
             color_scheme: default_color_scheme(),
             editor_font_size: 15,
-            preview_font_scale: 100,
-            editor_line_height: 160,
-            split_ratio: 50,
+            preview_font_scale: 1.0,
+            editor_line_height: 1.6,
             show_status_bar: true,
         },
         editor: EditorSettings {
             word_wrap: true,
             line_numbers: false,
             highlight_active_line: true,
-            tab_size: 2,
-            soft_tabs: true,
         },
         preview: PreviewSettings {
             sync_scroll: true,
             open_links_externally: true,
             content_width: PreviewContentWidth::Normal,
-            reader_theme: default_reader_theme(),
         },
         files: FileSettings {
             autosave: false,
@@ -258,7 +239,7 @@ mod tests {
     }
 
     #[test]
-    fn load_settings_defaults_missing_reader_theme_for_existing_files() {
+    fn load_settings_accepts_files_saved_by_earlier_versions() {
         let temp_dir = temp_settings_dir();
         let path = settings_file_path(&temp_dir);
         let legacy_settings = r##"{
@@ -296,9 +277,34 @@ mod tests {
 
         let settings = load_settings_from_dir(&temp_dir).unwrap();
 
-        assert_eq!(settings.preview.reader_theme, PreviewReaderTheme::Paper);
+        // Removed keys (splitRatio, tabSize, softTabs) are ignored, and the old
+        // fixed-point numbers load as-is for the frontend to convert.
+        assert_eq!(settings.appearance.editor_line_height, 160.0);
+        assert_eq!(settings.appearance.preview_font_scale, 100.0);
+        assert_eq!(settings.authoring.new_document_template, "# Legacy");
 
         fs::remove_dir_all(temp_dir).ok();
+    }
+
+    #[test]
+    fn accepts_the_decimal_values_the_frontend_sends() {
+        // The frontend's defaults use 1.6 and 1 (not 160 and 100); u16 fields rejected these.
+        let payload = r##"{
+  "appearance": {
+    "theme": "dark", "colorScheme": "sepia", "editorFontSize": 18,
+    "previewFontScale": 1.25, "editorLineHeight": 1.6, "showStatusBar": true
+  },
+  "editor": { "wordWrap": false, "lineNumbers": true, "highlightActiveLine": false },
+  "preview": { "syncScroll": true, "openLinksExternally": true, "contentWidth": "wide" },
+  "files": { "autosave": false, "restorePreviousSession": false, "confirmOnUnsavedClose": true },
+  "authoring": { "newDocumentTemplate": "# Hi" }
+}"##;
+
+        let settings: MarkoraSettings = serde_json::from_str(payload).unwrap();
+
+        assert_eq!(settings.appearance.editor_line_height, 1.6);
+        assert_eq!(settings.appearance.preview_font_scale, 1.25);
+        assert!(!settings.editor.word_wrap);
     }
 
     #[test]

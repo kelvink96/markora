@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { toast } from "sonner";
 import { getDocumentExportName } from "../../features/document/document-names";
 import type { FileAdapter } from "../../platform/files/types";
 import { useDocumentStore } from "../../store/document";
@@ -44,12 +45,12 @@ export function useFileOperations(fileAdapter: FileAdapter) {
 
   const exportCurrentDocument = useCallback(async () => {
     if (!fileAdapter.exportFile) {
-      return false;
+      return null;
     }
 
     const { activeDocumentId, content, filePath, openDocuments } = useDocumentStore.getState();
     if (!activeDocumentId) {
-      return false;
+      return null;
     }
 
     const activeDocument = openDocuments.find((document) => document.id === activeDocumentId);
@@ -57,7 +58,7 @@ export function useFileOperations(fileAdapter: FileAdapter) {
 
     await fileAdapter.exportFile(exportName, content);
     markClean();
-    return true;
+    return exportName;
   }, [fileAdapter, markClean]);
 
   const handleOpen = useCallback(async () => {
@@ -84,7 +85,8 @@ export function useFileOperations(fileAdapter: FileAdapter) {
 
     try {
       if (fileAdapter.supportsFileExport() && fileAdapter.exportFile) {
-        await exportCurrentDocument();
+        const exportName = await exportCurrentDocument();
+        if (exportName) toast.success(`Downloaded ${exportName}`);
         return;
       }
 
@@ -93,6 +95,7 @@ export function useFileOperations(fileAdapter: FileAdapter) {
         await fileAdapter.writeFile(savePath, content);
         setFilePath(savePath);
         markClean();
+        toast.success(`Saved ${getDocumentExportName(savePath, content)}`);
       }
     } catch (error) {
       setFileError("Failed to save file. Please try again.");
@@ -100,7 +103,7 @@ export function useFileOperations(fileAdapter: FileAdapter) {
     }
   }, [exportCurrentDocument, fileAdapter, markClean, setFilePath]);
 
-  const handleSave = useCallback(async () => {
+  const saveDocument = useCallback(async (announce: boolean) => {
     const { activeDocumentId, filePath, content, openDocuments } = useDocumentStore.getState();
     if (!activeDocumentId) return;
 
@@ -110,17 +113,20 @@ export function useFileOperations(fileAdapter: FileAdapter) {
       if (activeDocument?.handle && fileAdapter.writeWorkspaceFile) {
         await fileAdapter.writeWorkspaceFile(activeDocument.handle, content);
         markClean();
+        if (announce) toast.success(`Saved ${getDocumentExportName(activeDocument.filePath, content)}`);
         return;
       }
 
       if (fileAdapter.supportsFileExport() && fileAdapter.exportFile) {
-        await exportCurrentDocument();
+        const exportName = await exportCurrentDocument();
+        if (announce && exportName) toast.success(`Downloaded ${exportName}`);
         return;
       }
 
       if (filePath) {
         await fileAdapter.writeFile(filePath, content);
         markClean();
+        if (announce) toast.success(`Saved ${getDocumentExportName(filePath, content)}`);
       } else {
         await handleSaveAs();
       }
@@ -129,6 +135,11 @@ export function useFileOperations(fileAdapter: FileAdapter) {
       console.error("save file failed:", error);
     }
   }, [exportCurrentDocument, fileAdapter, handleSaveAs, markClean]);
+
+  /** Explicit save (menu, shortcut): confirms with a toast. */
+  const handleSave = useCallback(() => saveDocument(true), [saveDocument]);
+  /** Background save: same write, no toast, so typing is never interrupted. */
+  const handleAutosave = useCallback(() => saveDocument(false), [saveDocument]);
 
   /**
    * True when `handleSave` would write the active document straight to its file, with no
@@ -144,5 +155,5 @@ export function useFileOperations(fileAdapter: FileAdapter) {
     return Boolean(filePath);
   }, [fileAdapter]);
 
-  return { fileError, clearFileError, handleOpen, handleSave, handleSaveAs, canSaveInPlace };
+  return { fileError, clearFileError, handleOpen, handleSave, handleAutosave, handleSaveAs, canSaveInPlace };
 }

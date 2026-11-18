@@ -29,7 +29,7 @@ export function EmptyWorkspaceState({
         </div>
         <h1 className="relative text-3xl font-semibold tracking-tight text-foreground">No document open</h1>
         <p className="relative mt-3 max-w-md text-sm leading-6 text-muted-foreground">
-          Create a blank note to keep writing, or open an existing markdown file to jump back in.
+          Create a blank note, or open an existing markdown file. Everything stays on this device.
         </p>
         <div className="relative mt-8 flex flex-col items-center gap-3 sm:flex-row">
           <Button size="lg" onClick={onNewDocument}>

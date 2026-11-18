@@ -23,7 +23,7 @@ describe("Button", () => {
 
     expect(screen.getByRole("button", { name: "Primary" })).toHaveClass(
       "text-sm",
-      "text-[color:var(--surface-panel-strong)]",
+      "bg-[color:var(--accent-strong)]",
     );
     expect(screen.getByRole("button", { name: "Ghost" })).toHaveClass("bg-transparent");
     expect(screen.getByRole("button", { name: "Danger" })).toHaveClass("text-red-700");

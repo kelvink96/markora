@@ -23,8 +23,7 @@ describe("MenuBar", () => {
 
     expect(trigger).toHaveClass(
       "menu-bar__trigger",
-      "rounded-app-md",
-      "shadow-[var(--shadow-crisp)]",
+      "rounded-app-sm",
     );
     expect(screen.getByRole("menuitem", { name: "New" })).toBeInTheDocument();
     expect(screen.getByRole("menu")).toHaveClass(

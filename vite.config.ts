@@ -27,6 +27,9 @@ export default defineConfig(() => {
       environment: "jsdom",
       // Run this once before tests so DOM matchers like toBeInTheDocument are available.
       setupFiles: ["./src/test/setup.ts"],
+      // Role queries over full pages (settings, menus) take several seconds in jsdom;
+      // the 5s default made them time out intermittently.
+      testTimeout: 15000,
     },
   };
 });

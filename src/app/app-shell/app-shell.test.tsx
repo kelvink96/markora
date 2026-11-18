@@ -100,4 +100,22 @@ describe("AppShell", () => {
       "overflow-y-auto",
     );
   });
+
+  it("bounds the workspace to the window so the editor and preview scroll on their own (#12)", () => {
+    render(
+      <AppShell
+        themeMode="light"
+        colorScheme="standard"
+        tabStrip={<div>Tab Strip</div>}
+        commandBar={<div>Command Bar</div>}
+        workspace={<div>Workspace</div>}
+        statusBar={<div>Status Bar</div>}
+      />,
+    );
+
+    // The workspace's flex-1 / min-h-0 only apply inside a flex container. As a plain block
+    // it grew to the full document height and the whole shell scrolled as one page, so
+    // neither pane had a scroll position of its own.
+    expect(screen.getByText("Workspace").parentElement).toHaveClass("flex", "flex-col");
+  });
 });

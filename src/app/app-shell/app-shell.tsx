@@ -44,7 +44,7 @@ export function AppShell({
     >
       <div className="shrink-0">{tabStrip}</div>
       <div className="shrink-0">{commandBar}</div>
-      <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">{workspace}</div>
+      <div className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto">{workspace}</div>
       <div className="shrink-0">{statusBar}</div>
     </div>
   );

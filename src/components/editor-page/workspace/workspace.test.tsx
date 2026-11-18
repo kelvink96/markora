@@ -37,6 +37,41 @@ function renderPanes(viewMode: "split" | "preview" | "edit", syncScroll = true) 
   return { editor, preview };
 }
 
+describe("Workspace with a sidebar (#16)", () => {
+  it("measures the panes beside the sidebar, so the sidebar can't push them out of the window", () => {
+    render(
+      <Workspace
+        viewMode="split"
+        sidebar={<div>Outline</div>}
+        left={<div>Left</div>}
+        right={<div>Right</div>}
+      />,
+    );
+
+    const sidebar = screen.getByText("Outline").parentElement!;
+    const paneBox = screen.getByText("Left").parentElement!.parentElement!;
+    expect(sidebar).toHaveClass("shrink-0");
+    expect(paneBox).toHaveClass("flex-1", "min-w-0");
+    expect(sidebar.nextElementSibling).toBe(paneBox);
+    // Percent widths belong to the panes, not the whole workspace.
+    expect(screen.getByText("Left").parentElement).toHaveStyle({ width: "50%" });
+  });
+
+  it("still resizes with the keyboard when a sidebar is open", () => {
+    render(<Workspace viewMode="split" sidebar={<div>Outline</div>} left={<div>Left</div>} right={<div>Right</div>} />);
+
+    fireEvent.keyDown(screen.getByRole("separator", { name: "Resize editor and preview panes" }), { key: "ArrowRight" });
+
+    expect(screen.getByText("Left").parentElement).toHaveStyle({ width: "55%" });
+  });
+
+  it("shows the sidebar in edit view too", () => {
+    render(<Workspace viewMode="edit" sidebar={<div>Outline</div>} left={<div>Left</div>} right={<div>Right</div>} />);
+
+    expect(screen.getByText("Outline")).toBeInTheDocument();
+  });
+});
+
 describe("Workspace scroll sync (#12)", () => {
   beforeEach(() => useSettingsStore.setState({ settings: createDefaultSettings() }));
 

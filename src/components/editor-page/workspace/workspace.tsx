@@ -83,7 +83,6 @@ export function Workspace({ sidebar, left, right, viewMode }: WorkspaceProps) {
 
   return (
     <div
-      ref={containerRef}
       className="workspace flex min-h-0 flex-1 gap-2 overflow-hidden px-3 pb-3 pt-2.5"
       onMouseMove={onMouseMove}
       onMouseUp={() => {
@@ -94,33 +93,37 @@ export function Workspace({ sidebar, left, right, viewMode }: WorkspaceProps) {
       }}
     >
       {sidebar ? <div className="min-h-0 shrink-0 overflow-hidden">{sidebar}</div> : null}
-      <section
-        className="min-h-0 overflow-hidden"
-        style={primaryStyle}
-        role="region"
-        aria-label={primaryLabel}
-      >
-        {primaryPane}
-      </section>
-      <div
-        className="workspace__divider relative h-auto w-3 shrink-0 cursor-col-resize rounded-full outline-none before:absolute before:inset-y-2 before:left-1/2 before:w-0.5 before:-translate-x-1/2 before:rounded-full before:bg-border before:transition-colors hover:before:bg-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:before:bg-primary"
-        role="separator"
-        aria-orientation="vertical"
-        aria-label="Resize editor and preview panes"
-        tabIndex={0}
-        onKeyDown={onDividerKeyDown}
-        onMouseDown={() => {
-          dragging.current = true;
-        }}
-      />
-      <section
-        className="min-h-0 overflow-hidden"
-        style={secondaryStyle}
-        role="region"
-        aria-label={secondaryLabel}
-      >
-        {secondaryPane}
-      </section>
+      {/* The panes' percentage widths (and the divider drag) are measured against this box, so a
+          sidebar beside it takes its width off the panes instead of pushing them out of the window. */}
+      <div ref={containerRef} className="flex min-h-0 min-w-0 flex-1 gap-2">
+        <section
+          className="min-h-0 overflow-hidden"
+          style={primaryStyle}
+          role="region"
+          aria-label={primaryLabel}
+        >
+          {primaryPane}
+        </section>
+        <div
+          className="workspace__divider relative h-auto w-3 shrink-0 cursor-col-resize rounded-full outline-none before:absolute before:inset-y-2 before:left-1/2 before:w-0.5 before:-translate-x-1/2 before:rounded-full before:bg-border before:transition-colors hover:before:bg-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:before:bg-primary"
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Resize editor and preview panes"
+          tabIndex={0}
+          onKeyDown={onDividerKeyDown}
+          onMouseDown={() => {
+            dragging.current = true;
+          }}
+        />
+        <section
+          className="min-h-0 overflow-hidden"
+          style={secondaryStyle}
+          role="region"
+          aria-label={secondaryLabel}
+        >
+          {secondaryPane}
+        </section>
+      </div>
     </div>
   );
 }

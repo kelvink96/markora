@@ -90,6 +90,9 @@ vi.mock("@codemirror/state", () => ({
           number: 1,
           from: 0,
         }),
+        // A 20-line document where line n starts at (n - 1) * 10.
+        lines: 20,
+        line: (n: number) => ({ number: n, from: (n - 1) * 10 }),
       },
       selection: {
         main: {
@@ -118,6 +121,7 @@ vi.mock("@codemirror/view", () => ({
       }),
     },
     lineWrapping: {},
+    scrollIntoView: vi.fn((position: number, options: unknown) => ({ scrollIntoView: { position, options } })),
     darkTheme: { of: vi.fn((isDark: boolean) => ({ dark: isDark })) },
   },
 }));
@@ -458,6 +462,35 @@ describe("EditorPane", () => {
       await user.click(screen.getByRole("button", { name: "close-find" }));
 
       expect(screen.queryByRole("search")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("go to line (#16)", () => {
+    const goTo = (line: number) => {
+      mockState.dispatchSpy.mockClear();
+      act(() => useEditorCommandState.getState().goToLine(line));
+      return mockState.dispatchSpy.mock.calls[0]?.[0];
+    };
+
+    it("puts the cursor at the start of the line and scrolls it into view", () => {
+      render(<EditorPane theme="light" />);
+
+      expect(goTo(3)).toMatchObject({
+        selection: { anchor: 20 },
+        effects: { scrollIntoView: { position: 20, options: { y: "start", yMargin: 24 } } },
+      });
+    });
+
+    it("clamps a line past the end to the last line", () => {
+      render(<EditorPane theme="light" />);
+
+      expect(goTo(999)).toMatchObject({ selection: { anchor: 190 } });
+    });
+
+    it("clamps a line before the start to the first line", () => {
+      render(<EditorPane theme="light" />);
+
+      expect(goTo(0)).toMatchObject({ selection: { anchor: 0 } });
     });
   });
 });

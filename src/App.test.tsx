@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import packageJson from "../package.json";
 import App from "./App";
@@ -7,6 +7,7 @@ import { untitledStarterContent, useDocumentStore } from "./store/document";
 import { createDefaultSettings } from "./features/settings/settings-schema";
 import { useSettingsStore } from "./features/settings/settings-store";
 import { useWorkspaceState } from "./features/workspace/workspace-state";
+import { useEditorCommandState } from "./features/editor/editor-command-state";
 import { useThemeStore } from "./features/theme/theme-store";
 
 const { invokeMock, openMock, saveMock, readFileMock, writeFileMock } = vi.hoisted(() => ({
@@ -68,8 +69,9 @@ vi.mock("./components/editor-page/preview-pane", () => ({
 }));
 
 vi.mock("./components/editor-page/workspace", () => ({
-  Workspace: ({ left, right }: { left: React.ReactNode; right: React.ReactNode }) => (
+  Workspace: ({ sidebar, left, right }: { sidebar?: React.ReactNode; left: React.ReactNode; right: React.ReactNode }) => (
     <div>
+      {sidebar}
       {left}
       {right}
     </div>
@@ -603,5 +605,63 @@ describe("App", () => {
     expect(readFileMock).not.toHaveBeenCalled();
     expect(useDocumentStore.getState().openDocuments).toHaveLength(2);
     localStorage.clear();
+  });
+
+  describe("outline (#16)", () => {
+    afterEach(() => useWorkspaceState.setState({ showOutline: false }));
+
+    const withHeadings = () => {
+      const markdown = "# Title\n\n## Setup\n\ntext\n\n## Usage\n";
+      useDocumentStore.setState({
+        openDocuments: [{ id: "document-1", content: markdown, filePath: "D:\\notes\\a.md", isDirty: false }],
+        activeDocumentId: "document-1",
+        content: markdown,
+        filePath: "D:\\notes\\a.md",
+        isDirty: false,
+      });
+    };
+
+    it("is closed by default", () => {
+      withHeadings();
+
+      render(<App />);
+
+      expect(screen.queryByRole("complementary", { name: "Outline" })).not.toBeInTheDocument();
+    });
+
+    it("lists the document's headings when opened", () => {
+      withHeadings();
+      useWorkspaceState.setState({ showOutline: true });
+
+      render(<App />);
+
+      const nav = screen.getByRole("navigation", { name: "Document headings" });
+      expect(within(nav).getAllByRole("button").map((button) => button.textContent)).toEqual(["Title", "Setup", "Usage"]);
+    });
+
+    it("jumps the editor to a heading's line when it is clicked", async () => {
+      const user = userEvent.setup();
+      const goToLine = vi.fn();
+      useEditorCommandState.setState({ goToLine });
+      withHeadings();
+      useWorkspaceState.setState({ showOutline: true });
+
+      render(<App />);
+      await user.click(screen.getByRole("button", { name: "Usage" }));
+
+      expect(goToLine).toHaveBeenCalledWith(7);
+    });
+
+    it("closes from its close button", async () => {
+      const user = userEvent.setup();
+      withHeadings();
+      useWorkspaceState.setState({ showOutline: true });
+
+      render(<App />);
+      await user.click(screen.getByRole("button", { name: "Close outline" }));
+
+      expect(screen.queryByRole("complementary", { name: "Outline" })).not.toBeInTheDocument();
+      expect(useWorkspaceState.getState().showOutline).toBe(false);
+    });
   });
 });

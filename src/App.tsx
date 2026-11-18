@@ -25,6 +25,10 @@ import { FooterStatusBar } from "./components/editor-page/footer-status-bar";
 import { AppDialogs } from "./components/editor-page/app-dialogs";
 import { EmptyWorkspaceState } from "./components/editor-page/empty-workspace-state";
 import { getWordCount } from "./features/document/document-actions";
+import { extractHeadings, findActiveHeadingIndex } from "./features/outline/extract-headings";
+import { scrollPreviewToHeading } from "./features/outline/scroll-to-heading";
+import { useEditorCommandState } from "./features/editor/editor-command-state";
+import { OutlinePanel } from "./components/editor-page/outline-panel";
 import { resetSettings, saveSettings } from "./features/settings/settings-api";
 import { createDefaultSettings } from "./features/settings/settings-schema";
 import { useSettingsStore } from "./features/settings/settings-store";
@@ -56,6 +60,9 @@ export default function App() {
   const toggleTheme = useThemeStore((state) => state.toggleTheme);
   const viewMode = useWorkspaceState((state) => state.viewMode);
   const setViewMode = useWorkspaceState((state) => state.setViewMode);
+  const showOutline = useWorkspaceState((state) => state.showOutline);
+  const toggleOutline = useWorkspaceState((state) => state.toggleOutline);
+  const goToLine = useEditorCommandState((state) => state.goToLine);
   const settings = useSettingsStore((state) => state.settings);
   const hydrateSettings = useSettingsStore((state) => state.hydrate);
   const updateAppearance = useSettingsStore((state) => state.updateAppearance);
@@ -118,6 +125,8 @@ export default function App() {
   }, [selectProject, selectDocument]);
 
   const hasOpenDocuments = openDocuments.length > 0;
+  const headings = useMemo(() => extractHeadings(content), [content]);
+  const activeHeadingIndex = findActiveHeadingIndex(headings, line);
   const wordCount = getWordCount(content);
 
   const tabStrip = hasOpenDocuments ? (
@@ -147,6 +156,8 @@ export default function App() {
       onCloseTab={requestCloseCurrentTab}
       onExportHtml={() => void exportHtml()}
       onExportPdf={() => void exportPdf()}
+      showOutline={showOutline}
+      onToggleOutline={toggleOutline}
       recentFiles={recentDocuments.slice(0, 8)}
       onOpenRecent={handleOpenRecent}
       canInstallApp={canInstall}
@@ -205,6 +216,22 @@ export default function App() {
           left={<EditorPane theme={theme} />}
           right={<PreviewPane />}
           viewMode={viewMode}
+          sidebar={
+            showOutline ? (
+              <OutlinePanel
+                headings={headings}
+                activeIndex={activeHeadingIndex}
+                onClose={toggleOutline}
+                onSelect={(heading) => {
+                  goToLine(heading.line);
+                  // With synced scrolling the preview follows the editor; otherwise take it there too.
+                  if (!settings.preview.syncScroll) {
+                    scrollPreviewToHeading(heading.index, headings.length);
+                  }
+                }}
+              />
+            ) : undefined
+          }
         />
       ) : (
         <EmptyWorkspaceState

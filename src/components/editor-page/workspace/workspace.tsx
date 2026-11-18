@@ -1,4 +1,6 @@
 import { type KeyboardEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { useSettingsStore } from "../../../features/settings/settings-store";
+import { useScrollSync } from "../../../features/workspace/use-scroll-sync";
 import type { WorkspaceViewMode } from "../../../features/workspace/workspace-state";
 
 interface WorkspaceProps {
@@ -12,6 +14,9 @@ export function Workspace({ sidebar, left, right, viewMode }: WorkspaceProps) {
   const [splitPct, setSplitPct] = useState(50);
   const containerRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
+  const syncScroll = useSettingsStore((state) => state.settings.preview.syncScroll);
+  // Edit view shows no preview, so there is nothing to keep in step there.
+  useScrollSync(containerRef, viewMode !== "edit" && syncScroll);
 
   useEffect(() => {
     if (viewMode === "split") {

@@ -58,7 +58,7 @@ export function PreviewSettingsSection({
           }
         />
         <p id="sync-scroll-help" className="ml-[1.875rem] mt-1 text-xs text-app-text/60">
-          Only in split view.
+          Applies whenever the editor and preview are side by side.
         </p>
       </div>
       <div>

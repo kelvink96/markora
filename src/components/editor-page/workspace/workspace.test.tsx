@@ -1,6 +1,90 @@
-import { describe, expect, it } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it } from "vitest";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { Workspace } from "./workspace";
+import { createDefaultSettings } from "../../../features/settings/settings-schema";
+import { useSettingsStore } from "../../../features/settings/settings-store";
+
+// jsdom has no layout: give a scroller a fixed content height and a window onto it.
+function stubScroller(element: HTMLElement, scrollHeight: number, clientHeight: number) {
+  let scrollTop = 0;
+  Object.defineProperty(element, "scrollHeight", { configurable: true, value: scrollHeight });
+  Object.defineProperty(element, "clientHeight", { configurable: true, value: clientHeight });
+  Object.defineProperty(element, "scrollTop", {
+    configurable: true,
+    get: () => scrollTop,
+    set: (value: number) => {
+      scrollTop = value;
+    },
+  });
+}
+
+function renderPanes(viewMode: "split" | "preview" | "edit", syncScroll = true) {
+  const settings = createDefaultSettings();
+  settings.preview.syncScroll = syncScroll;
+  useSettingsStore.setState({ settings });
+
+  render(
+    <Workspace
+      viewMode={viewMode}
+      left={<div className="cm-scroller" data-testid="editor-scroller" />}
+      right={<div className="preview-pane__surface" data-testid="preview-scroller" />}
+    />,
+  );
+  const editor = screen.getByTestId("editor-scroller");
+  stubScroller(editor, 2000, 500);
+  const preview = screen.queryByTestId("preview-scroller");
+  if (preview) stubScroller(preview, 3000, 600);
+  return { editor, preview };
+}
+
+describe("Workspace scroll sync (#12)", () => {
+  beforeEach(() => useSettingsStore.setState({ settings: createDefaultSettings() }));
+
+  it("scrolls the preview along with the editor in split view", () => {
+    const { editor, preview } = renderPanes("split");
+
+    editor.scrollTop = 750;
+    fireEvent.scroll(editor);
+
+    expect(preview!.scrollTop).toBe(1200);
+  });
+
+  it("also syncs in preview view, where both panes are showing", () => {
+    const { editor, preview } = renderPanes("preview");
+
+    editor.scrollTop = 750;
+    fireEvent.scroll(editor);
+
+    expect(preview!.scrollTop).toBe(1200);
+  });
+
+  it("leaves the panes independent when the setting is off", () => {
+    const { editor, preview } = renderPanes("split", false);
+
+    editor.scrollTop = 750;
+    fireEvent.scroll(editor);
+
+    expect(preview!.scrollTop).toBe(0);
+  });
+
+  it("has no preview to sync with in edit view", () => {
+    const { editor, preview } = renderPanes("edit");
+
+    editor.scrollTop = 750;
+    expect(() => fireEvent.scroll(editor)).not.toThrow();
+    expect(preview).toBeNull();
+  });
+
+  it("follows the setting being switched off while open", () => {
+    const { editor, preview } = renderPanes("split");
+
+    act(() => useSettingsStore.getState().updatePreview({ syncScroll: false }));
+    editor.scrollTop = 750;
+    fireEvent.scroll(editor);
+
+    expect(preview!.scrollTop).toBe(0);
+  });
+});
 
 describe("Workspace", () => {
   it("renders a split layout with a resizable divider", () => {

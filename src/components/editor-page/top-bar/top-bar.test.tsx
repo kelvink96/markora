@@ -18,6 +18,8 @@ function renderBar(props: Partial<Parameters<typeof TopBar>[0]> = {}) {
     onSave: vi.fn(),
     onSaveAs: vi.fn(),
     onCloseTab: vi.fn(),
+    onExportHtml: vi.fn(),
+    onExportPdf: vi.fn(),
     onOpenRecent: vi.fn(),
     onViewModeChange: vi.fn(),
   };
@@ -95,6 +97,8 @@ describe("TopBar", () => {
       ["Save", /^Save\b(?! As)/, "onSave"],
       ["Save As", /^Save As\b/, "onSaveAs"],
       ["Close Tab", /^Close Tab/, "onCloseTab"],
+      ["Export as HTML", /^Export as HTML/, "onExportHtml"],
+      ["Export as PDF", /^Export as PDF/, "onExportPdf"],
       ["Settings", /^Settings/, "onOpenSettings"],
     ] as const)("%s calls %s", async (_label, name, handler) => {
       const user = userEvent.setup();
@@ -116,6 +120,7 @@ describe("TopBar", () => {
 
       expect(within(menu).queryByRole("menuitem", { name: /^Save/ })).not.toBeInTheDocument();
       expect(within(menu).queryByRole("menuitem", { name: /Close Tab/ })).not.toBeInTheDocument();
+      expect(within(menu).queryByRole("menuitem", { name: /^Export/ })).not.toBeInTheDocument();
       expect(within(menu).getByRole("menuitem", { name: /^New/ })).toBeInTheDocument();
     });
 

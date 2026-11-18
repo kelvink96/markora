@@ -5,6 +5,7 @@ import {
   useAutosave,
   useCloseConfirmation,
   useDocumentTitle,
+  useExport,
   useFileOperations,
   useInstallPrompt,
   useKeyboardShortcuts,
@@ -78,6 +79,7 @@ export default function App() {
     confirmPendingClose,
   } = useCloseConfirmation();
   const { canInstall, install } = useInstallPrompt(isWeb);
+  const { exportHtml, exportPdf } = useExport(fileAdapter);
 
   useSettingsHydration();
   useThemeSync();
@@ -143,6 +145,8 @@ export default function App() {
       onSave={handleSave}
       onSaveAs={handleSaveAs}
       onCloseTab={requestCloseCurrentTab}
+      onExportHtml={() => void exportHtml()}
+      onExportPdf={() => void exportPdf()}
       recentFiles={recentDocuments.slice(0, 8)}
       onOpenRecent={handleOpenRecent}
       canInstallApp={canInstall}

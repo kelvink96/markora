@@ -7,9 +7,13 @@ export const desktopFileAdapter: FileAdapter = {
     const { invoke } = await import("@tauri-apps/api/core");
     return invoke<string | null>("pick_open_path");
   },
-  async pickSavePath(defaultPath) {
+  async pickSavePath(defaultPath, options) {
     const { invoke } = await import("@tauri-apps/api/core");
-    return invoke<string | null>("pick_save_path", { defaultPath });
+    return invoke<string | null>("pick_save_path", {
+      defaultPath,
+      extensions: options?.extensions,
+      filterName: options?.filterName,
+    });
   },
   async readFile(path) {
     const { invoke } = await import("@tauri-apps/api/core");

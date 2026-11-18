@@ -6,6 +6,7 @@ import {
   Copy,
   Download,
   Eye,
+  FileCode2,
   FileInput,
   FileOutput,
   FolderOpen,
@@ -13,6 +14,7 @@ import {
   Moon,
   PanelLeftClose,
   PanelsTopLeft,
+  Printer,
   Redo2,
   Replace,
   Save,
@@ -60,6 +62,8 @@ interface TopBarProps {
   onSave?: () => void;
   onSaveAs?: () => void;
   onCloseTab?: () => void;
+  onExportHtml?: () => void;
+  onExportPdf?: () => void;
   recentFiles?: Array<{ documentId: string; projectId: string; title: string }>;
   onOpenRecent?: (projectId: string, documentId: string) => void;
   canInstallApp?: boolean;
@@ -80,6 +84,8 @@ export function TopBar({
   onSave = () => {},
   onSaveAs = () => {},
   onCloseTab = () => {},
+  onExportHtml = () => {},
+  onExportPdf = () => {},
   recentFiles = [],
   onOpenRecent = () => {},
   canInstallApp = false,
@@ -116,6 +122,13 @@ export function TopBar({
                   </MenubarItem>
                   <MenubarItem onSelect={onSaveAs}>
                     <FileOutput className={iconClass} /> Save As <MenubarShortcut>{mod}+Shift+S</MenubarShortcut>
+                  </MenubarItem>
+                  <MenubarSeparator />
+                  <MenubarItem onSelect={onExportHtml}>
+                    <FileCode2 className={iconClass} /> Export as HTML
+                  </MenubarItem>
+                  <MenubarItem onSelect={onExportPdf}>
+                    <Printer className={iconClass} /> Export as PDF
                   </MenubarItem>
                 </>
               ) : null}

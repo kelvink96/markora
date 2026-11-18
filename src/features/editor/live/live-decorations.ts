@@ -3,6 +3,7 @@ import { syntaxTree } from "@codemirror/language";
 import { Decoration, type DecorationSet } from "@codemirror/view";
 import type { SyntaxNodeRef } from "@lezer/common";
 import { blockHandlers } from "./block-handlers";
+import { inlineHandlers } from "./inline-handlers";
 
 /*
  * Live mode decorates the markdown source in place, from the editor's own Lezer syntax tree, and
@@ -10,7 +11,7 @@ import { blockHandlers } from "./block-handlers";
  * visible ranges and lets per-node handlers say what to do through a small LiveContext.
  *
  * To render another element, add a handler for its Lezer node name (see block-handlers.ts and,
- * for inline elements, the follow-up that extends `liveHandlers`). Handlers never touch the
+ * inline-handlers.ts for inline elements). Handlers never touch the
  * decoration set directly, so the reveal rule and the visible-range clamping stay in one place.
  */
 
@@ -37,8 +38,8 @@ export interface LiveContext {
 export type LiveNodeHandler = (node: SyntaxNodeRef, context: LiveContext) => boolean | void;
 export type LiveHandlers = Readonly<Record<string, LiveNodeHandler>>;
 
-/** Every handler Live mode runs. Extend this with further records (for example inline elements). */
-export const liveHandlers: LiveHandlers = { ...blockHandlers };
+/** Every handler Live mode runs. Extend this with further records. */
+export const liveHandlers: LiveHandlers = { ...blockHandlers, ...inlineHandlers };
 
 const hiddenDecoration = Decoration.replace({});
 

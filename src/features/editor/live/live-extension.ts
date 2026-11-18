@@ -78,4 +78,15 @@ const liveTheme = EditorView.baseTheme({
   ".cm-live-code-end": { borderBottomLeftRadius: "6px", borderBottomRightRadius: "6px" },
   // An unfocused fence collapses to a thin edge of the code block.
   ".cm-live-fence": { fontSize: "0", height: "0.5rem", overflow: "hidden" },
+
+  ".cm-live-strong": { fontWeight: "700" },
+  ".cm-live-em": { fontStyle: "italic" },
+  ".cm-live-strike": { textDecoration: "line-through", color: "var(--muted-foreground)" },
+  ".cm-live-code-inline": {
+    fontSize: "0.92em",
+    padding: "0.1em 0.3em",
+    borderRadius: "4px",
+    backgroundColor: "color-mix(in oklab, var(--muted) 70%, transparent)",
+  },
+  ".cm-live-link": { color: "var(--primary)", textDecoration: "underline" },
 });

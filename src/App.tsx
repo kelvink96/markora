@@ -32,6 +32,8 @@ import { useWorkspaceState } from "./features/workspace/workspace-state";
 import { useDocumentStore } from "./store/document";
 import { useThemeStore } from "./features/theme/theme-store";
 import { ErrorBanner } from "./components/editor-page/error-banner";
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { getFileAdapter } from "./platform/files";
 import { detectPlatform } from "./platform/runtime";
 
@@ -213,7 +215,7 @@ export default function App() {
   );
 
   return (
-    <>
+    <TooltipProvider>
       <ErrorBanner message={fileError} onDismiss={clearFileError} />
       <AppShell
         themeMode={theme}
@@ -296,6 +298,7 @@ export default function App() {
           </a>
         </div>
       </Dialog>
-    </>
+      <Toaster position="bottom-right" />
+    </TooltipProvider>
   );
 }

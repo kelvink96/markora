@@ -60,7 +60,8 @@ describe("AppShell", () => {
     expect(document.documentElement).toHaveAttribute("data-theme-mode", "light");
     expect(document.documentElement).toHaveAttribute("data-color-scheme", "standard");
     expect(document.body).not.toHaveClass("theme-dark");
-    expect(themeColorMeta).toHaveAttribute("content", "#f5f7fb");
+    expect(document.documentElement).not.toHaveClass("theme-dark");
+    expect(themeColorMeta).toHaveAttribute("content", "#f9fafe");
 
     rerender(
       <AppShell
@@ -76,7 +77,8 @@ describe("AppShell", () => {
     expect(document.documentElement).toHaveAttribute("data-theme-mode", "dark");
     expect(document.documentElement).toHaveAttribute("data-color-scheme", "sepia");
     expect(document.body).toHaveClass("theme-dark");
-    expect(themeColorMeta).toHaveAttribute("content", "#111827");
+    expect(document.documentElement).toHaveClass("theme-dark");
+    expect(themeColorMeta).toHaveAttribute("content", "#130d09");
   });
 
   it("renders a footer status bar below the workspace", () => {

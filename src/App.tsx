@@ -224,6 +224,8 @@ export default function App() {
                 onClose={toggleOutline}
                 onSelect={(heading) => {
                   goToLine(heading.line);
+                  // Below the md breakpoint the outline floats over the editor, so get it out of the way.
+                  if (window.matchMedia?.("(max-width: 767px)").matches) toggleOutline();
                   // With synced scrolling the preview follows the editor; otherwise take it there too.
                   if (!settings.preview.syncScroll) {
                     scrollPreviewToHeading(heading.index, headings.length);

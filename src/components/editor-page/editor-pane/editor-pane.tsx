@@ -4,10 +4,10 @@ import { EditorView, basicSetup } from "codemirror";
 import { Compartment, EditorState } from "@codemirror/state";
 import { EditorView as CMView } from "@codemirror/view";
 import { markdown } from "@codemirror/lang-markdown";
-import { oneDark } from "@codemirror/theme-one-dark";
 import { readText, writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { useDocumentStore } from "../../../store/document";
 import { useEditorCommandState } from "../../../features/editor/editor-command-state";
+import { markoraEditorTheme } from "../../../features/editor/editor-theme";
 import { createEditorSettingsExtensions } from "../../../features/editor/editor-settings-extensions";
 import { applyMarkdownToolbarAction, type MarkdownToolbarAction } from "../../../features/editor/markdown-toolbar-actions";
 import {
@@ -18,7 +18,6 @@ import {
 } from "../../../features/editor/slash-commands";
 import { useEditorStatusState } from "../../../features/workspace/editor-status-state";
 import { useSettingsStore } from "../../../features/settings/settings-store";
-import { Panel } from "../../shared/panel";
 import { InlineFormattingMenu } from "../inline-formatting-menu";
 import { SlashCommandMenu } from "../slash-command-menu/slash-command-menu";
 
@@ -166,9 +165,11 @@ export function EditorPane({ theme }: EditorPaneProps) {
         basicSetup,
         markdown(),
         updateListener,
-        ...(theme === "dark" ? [oneDark] : []),
+        ...markoraEditorTheme,
         // Last, so user settings win over the theme where both style the same thing.
-        settingsCompartment.of(createEditorSettingsExtensions(settings.editor, settings.appearance)),
+        settingsCompartment.of(
+          createEditorSettingsExtensions(settings.editor, settings.appearance, theme === "dark"),
+        ),
       ],
     });
 
@@ -179,19 +180,22 @@ export function EditorPane({ theme }: EditorPaneProps) {
     return () => {
       viewRef.current?.destroy();
     };
-  }, [setContent, setCursorPosition, settingsCompartment, theme]);
+    // The theme is read once here and then kept current by the effect below, so switching
+    // light/dark doesn't rebuild the editor (which would lose undo history and the cursor).
+  }, [setContent, setCursorPosition, settingsCompartment]);
 
   useEffect(() => {
     // Apply setting changes to the live editor (the creation effect only reads them once).
     viewRef.current?.dispatch({
       effects: settingsCompartment.reconfigure(
-        createEditorSettingsExtensions(editorSettings, {
-          editorFontSize,
-          editorLineHeight,
-        }),
+        createEditorSettingsExtensions(
+          editorSettings,
+          { editorFontSize, editorLineHeight },
+          theme === "dark",
+        ),
       ),
     });
-  }, [editorFontSize, editorLineHeight, editorSettings, settingsCompartment]);
+  }, [editorFontSize, editorLineHeight, editorSettings, settingsCompartment, theme]);
 
   useEffect(() => {
     setRunToolbarAction(runMarkdownAction);
@@ -314,11 +318,11 @@ export function EditorPane({ theme }: EditorPaneProps) {
         }
       }}
     >
-      <Panel className="editor-pane__panel flex h-full flex-col overflow-hidden">
+      <div className="editor-pane__panel flex h-full flex-col overflow-hidden rounded-xl border bg-editor shadow-sm">
         <div className="relative min-h-0 flex-1">
           <div
             ref={containerRef}
-            className="editor-pane__surface min-h-0 h-full flex-1 overflow-hidden rounded-[calc(var(--radius-sm)-1px)] border border-[color:var(--glass-border-strong)] bg-[color:var(--glass-elevated)] shadow-[0_1px_0_rgba(255,255,255,0.16)_inset]"
+            className="editor-pane__surface h-full min-h-0 flex-1 overflow-hidden"
             data-testid="editor-surface"
             data-line-numbers={lineNumbers ? "visible" : "hidden"}
           />
@@ -334,7 +338,7 @@ export function EditorPane({ theme }: EditorPaneProps) {
             <InlineFormattingMenu position={inlineMenu.position} onSelect={runMarkdownAction} />
           ) : null}
         </div>
-      </Panel>
+      </div>
     </section>
   );
 }

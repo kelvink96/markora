@@ -99,7 +99,7 @@ describe("Workspace", () => {
     expect(screen.getByRole("region", { name: "Preview workspace" })).toBeInTheDocument();
     expect(screen.getByRole("separator", { name: "Resize editor and preview panes" })).toHaveClass(
       "cursor-col-resize",
-      "rounded-[999px]",
+      "rounded-full",
     );
   });
 

@@ -1,5 +1,7 @@
 import { FilePlus2, FolderOpen } from "lucide-react";
-import { Button } from "../../shared/button";
+import { Button } from "@/components/ui/button";
+import { Kbd } from "@/components/ui/kbd";
+import { getModifierLabel } from "../../../features/shortcuts/modifier-label";
 
 interface EmptyWorkspaceStateProps {
   onNewDocument: () => void;
@@ -12,34 +14,34 @@ export function EmptyWorkspaceState({
   onOpenFile,
   openFileLabel = "Open file",
 }: EmptyWorkspaceStateProps) {
+  const mod = getModifierLabel();
+
   return (
-    <section className="flex min-h-full items-center justify-center px-6 py-10" aria-label="Empty workspace">
-      <div className="flex w-full max-w-2xl flex-col items-center rounded-[28px] border border-[color:var(--glass-border-strong)] bg-[color:color-mix(in_srgb,var(--glass-panel-strong)_84%,var(--surface-panel-strong))] px-8 py-12 text-center shadow-[var(--shadow-soft)] backdrop-blur-[var(--glass-blur-strong)]">
-        <div className="mb-5 inline-flex size-14 items-center justify-center rounded-full border border-[color:var(--glass-border)] bg-[color:color-mix(in_srgb,var(--accent)_14%,var(--surface-panel-strong))] text-[color:var(--accent-strong)]">
-          <FilePlus2 className="size-6" aria-hidden="true" />
+    <section className="flex min-h-full flex-1 items-center justify-center px-6 py-10" aria-label="Empty workspace">
+      <div className="relative flex w-full max-w-xl flex-col items-center overflow-hidden rounded-3xl border bg-card/80 px-8 py-12 text-center shadow-xl backdrop-blur-sm">
+        {/* A soft pool of the brand colours behind the icon; decorative, so hidden from assistive tech. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-24 left-1/2 size-64 -translate-x-1/2 rounded-full bg-linear-to-br from-brand-from to-brand-to opacity-20 blur-3xl"
+        />
+        <div className="relative mb-6 inline-flex size-16 items-center justify-center rounded-2xl bg-linear-to-br from-brand-from to-brand-to text-primary-foreground shadow-lg">
+          <FilePlus2 className="size-7" aria-hidden="true" />
         </div>
-        <h1 className="mt-3 text-3xl font-semibold tracking-[-0.02em] text-app-text">
-          No document open
-        </h1>
-        <p className="mt-3 max-w-lg text-sm leading-6 text-app-text-secondary">
+        <h1 className="relative text-3xl font-semibold tracking-tight text-foreground">No document open</h1>
+        <p className="relative mt-3 max-w-md text-sm leading-6 text-muted-foreground">
           Create a blank note to keep writing, or open an existing markdown file to jump back in.
         </p>
-        <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
-          <Button
-            variant="primary"
-            leftSection={<FilePlus2 className="size-4" />}
-            onClick={onNewDocument}
-          >
-            New document
+        <div className="relative mt-8 flex flex-col items-center gap-3 sm:flex-row">
+          <Button size="lg" onClick={onNewDocument}>
+            <FilePlus2 aria-hidden="true" /> New document
           </Button>
-          <Button
-            variant="secondary"
-            leftSection={<FolderOpen className="size-4" />}
-            onClick={onOpenFile}
-          >
-            {openFileLabel}
+          <Button size="lg" variant="outline" onClick={onOpenFile}>
+            <FolderOpen aria-hidden="true" /> {openFileLabel}
           </Button>
         </div>
+        <p className="relative mt-6 flex items-center gap-2 text-xs text-muted-foreground">
+          <Kbd>{mod}+N</Kbd> new <span aria-hidden="true">·</span> <Kbd>{mod}+O</Kbd> open
+        </p>
       </div>
     </section>
   );

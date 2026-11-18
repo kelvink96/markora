@@ -40,17 +40,10 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Logo } from "../../shared/logo";
 import { ViewModeSwitcher } from "../view-mode-switcher";
 import { useEditorCommandState } from "../../../features/editor/editor-command-state";
+import { getModifierLabel } from "../../../features/shortcuts/modifier-label";
 import { useThemeStore } from "../../../features/theme/theme-store";
 import type { WorkspaceViewMode } from "../../../features/workspace/workspace-state";
 import { useDocumentStore } from "../../../store/document";
-
-function getModifierLabel() {
-  if (typeof navigator === "undefined") {
-    return "Ctrl";
-  }
-
-  return /Mac|iPhone|iPad|iPod/i.test(navigator.platform) ? "Cmd" : "Ctrl";
-}
 
 interface TopBarProps {
   /** The document tabs, shown between the menus and the view controls. */

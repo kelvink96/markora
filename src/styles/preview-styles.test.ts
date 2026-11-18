@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 // jsdom doesn't apply stylesheets, so these tests read the preview CSS directly.
-const compatCss = readFileSync(path.resolve(import.meta.dirname, "compat.css"), "utf8").replace(
+const compatCss = readFileSync(path.resolve(import.meta.dirname, "content.css"), "utf8").replace(
   /\/\*[\s\S]*?\*\//g,
   "",
 );

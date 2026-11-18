@@ -3,10 +3,11 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const rootDirectory = path.resolve(import.meta.dirname, "..", "..");
+const read = (...parts: string[]) => readFileSync(path.join(rootDirectory, ...parts), "utf8");
 
 describe("theme fonts", () => {
   it("loads the typography stack from Google Fonts", () => {
-    const indexHtml = readFileSync(path.join(rootDirectory, "index.html"), "utf8");
+    const indexHtml = read("index.html");
 
     expect(indexHtml).toContain("fonts.googleapis.com");
     expect(indexHtml).toContain("family=Geist");
@@ -14,55 +15,34 @@ describe("theme fonts", () => {
     expect(indexHtml).toContain("family=Source+Serif+4");
   });
 
-  it("uses Geist as the primary UI font token", () => {
-    const tailwindCss = readFileSync(
-      path.join(rootDirectory, "src", "styles", "tailwind.css"),
-      "utf8",
-    );
+  it("uses Geist for the interface, Plex Mono for the editor and Source Serif for the preview", () => {
+    const tailwindCss = read("src", "styles", "tailwind.css");
 
-    expect(tailwindCss).toContain('--font-ui: "Geist"');
+    expect(tailwindCss).toContain('--font-sans: "Geist"');
+    expect(tailwindCss).toContain('--font-mono: "IBM Plex Mono"');
+    expect(tailwindCss).toContain('--font-serif: "Source Serif 4"');
+  });
+});
+
+describe("theme wiring", () => {
+  const tailwindCss = read("src", "styles", "tailwind.css");
+
+  it("keys dark mode off the .theme-dark class the app sets, not the OS", () => {
+    expect(tailwindCss).toContain("@custom-variant dark");
+    expect(tailwindCss).toContain(".theme-dark");
   });
 
-  it("defines an atmospheric background field for the acrylic surfaces", () => {
-    const tailwindCss = readFileSync(
-      path.join(rootDirectory, "src", "styles", "tailwind.css"),
-      "utf8",
-    );
-
-    expect(tailwindCss).toContain("--bg-atmosphere-base");
-    expect(tailwindCss).toContain("--bg-atmosphere-top");
-    expect(tailwindCss).toContain("--bg-atmosphere-bottom");
-    expect(tailwindCss).toContain("--bg-atmosphere-glow");
-    expect(tailwindCss).toContain("radial-gradient(at 18% 18%");
-    expect(tailwindCss).toContain("radial-gradient(at 82% 68%");
-    expect(tailwindCss).toContain("radial-gradient(at 50% 50%");
-    expect(tailwindCss).toContain("var(--bg-atmosphere-base)");
+  it("bridges every token the components use to a Tailwind colour", () => {
+    for (const token of ["background", "foreground", "card", "popover", "primary", "muted", "accent", "border", "ring", "editor", "preview"]) {
+      expect(tailwindCss).toContain(`--color-${token}: var(--${token})`);
+    }
   });
 
-  it("uses dark surface tokens for the standard dark theme", () => {
-    const tailwindCss = readFileSync(
-      path.join(rootDirectory, "src", "styles", "tailwind.css"),
-      "utf8",
-    );
-
-    expect(tailwindCss).toContain(':root[data-color-scheme="standard"][data-theme-mode="dark"]');
-    expect(tailwindCss).toContain("--surface-base: #151515");
-    expect(tailwindCss).toContain("--surface-subtle: #252525");
-    expect(tailwindCss).toContain("--text-secondary: #c7c7c7");
-    expect(tailwindCss).toContain("--accent: #62b09c");
+  it("turns off decorative backgrounds in high contrast", () => {
+    expect(tailwindCss).toContain('[data-color-scheme="high-contrast"] body');
   });
 
-  it("defines paired light and dark tokens for every supported color scheme", () => {
-    const tailwindCss = readFileSync(
-      path.join(rootDirectory, "src", "styles", "tailwind.css"),
-      "utf8",
-    );
-
-    expect(tailwindCss).toContain(':root[data-color-scheme="standard"][data-theme-mode="light"]');
-    expect(tailwindCss).toContain(':root[data-color-scheme="sepia"][data-theme-mode="light"]');
-    expect(tailwindCss).toContain(':root[data-color-scheme="sepia"][data-theme-mode="dark"]');
-    expect(tailwindCss).toContain(':root[data-color-scheme="high-contrast"][data-theme-mode="light"]');
-    expect(tailwindCss).toContain(':root[data-color-scheme="high-contrast"][data-theme-mode="dark"]');
-    expect(tailwindCss).toContain("--shadow-ambient");
+  it("respects the OS reduced-motion setting", () => {
+    expect(tailwindCss).toContain("prefers-reduced-motion: reduce");
   });
 });

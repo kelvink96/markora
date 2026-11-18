@@ -44,13 +44,14 @@ describe("PreviewPane", () => {
     render(<PreviewPane />);
 
     await waitFor(() => expect(screen.getByTestId("preview-content")).toBeInTheDocument());
+    // The framed, scrolling surface that scroll sync looks for, holding a full-width prose body.
     expect(screen.getByRole("region", { name: "Preview" }).firstElementChild).toHaveClass(
-      "app-surface",
+      "preview-pane__surface",
+      "overflow-auto",
+      "border",
+      "bg-preview",
     );
-    expect(screen.getByTestId("preview-content")).toHaveClass(
-      "w-full",
-      "rounded-[calc(var(--radius-sm)-1px)]",
-    );
+    expect(screen.getByTestId("preview-content")).toHaveClass("w-full", "prose");
   });
 
   it("uses the shared app preview surface tokens instead of a preview-only theme class", async () => {
@@ -59,7 +60,7 @@ describe("PreviewPane", () => {
     const content = await screen.findByTestId("preview-content");
     expect(content).not.toHaveAttribute("data-reader-theme");
     expect(content).not.toHaveClass("preview-reader-theme");
-    expect(content).toHaveClass("bg-app-preview");
+    expect(content.closest(".preview-pane__surface")).toHaveClass("bg-preview");
   });
 
   it("strips script tags from rendered HTML", async () => {

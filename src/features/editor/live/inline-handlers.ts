@@ -12,16 +12,33 @@ export const LIVE_HREF = "data-live-href";
  * has no emphasis nodes inside them, so nothing looks there.
  */
 
-/** Styles a node line by line, so a mark wrapping across lines stays styled when only one line is revealed. */
+/** Styles `from..to` line by line, so a mark wrapping across lines stays styled when only one line is revealed. */
+function markLines(
+  context: LiveContext,
+  from: number,
+  to: number,
+  className: string,
+  attributes?: Record<string, string>,
+) {
+  context.eachLine(from, to, (line) => {
+    context.mark(Math.max(from, line.from), Math.min(to, line.to), className, attributes);
+  });
+}
+
+/** Hides `from..to` line by line: a replaced range may not contain a line break, and each line reveals on its own. */
+function hideLines(context: LiveContext, from: number, to: number) {
+  context.eachLine(from, to, (line) => {
+    context.hide(Math.max(from, line.from), Math.min(to, line.to));
+  });
+}
+
 function markNode(
   node: SyntaxNodeRef,
   context: LiveContext,
   className: string,
   attributes?: Record<string, string>,
 ) {
-  context.eachLine(node.from, node.to, (line) => {
-    context.mark(Math.max(node.from, line.from), Math.min(node.to, line.to), className, attributes);
-  });
+  markLines(context, node.from, node.to, className, attributes);
 }
 
 function hideChildren(node: SyntaxNodeRef, context: LiveContext, markerName: string) {
@@ -35,18 +52,30 @@ function styled(className: string, markerName: string) {
   };
 }
 
+const NAMED_ENTITIES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" };
+
+/** The destination as a browser should see it: no angle brackets, backslash escapes and entities decoded. */
+export function decodeLinkDestination(raw: string): string {
+  const inner = raw.startsWith("<") && raw.endsWith(">") ? raw.slice(1, -1) : raw;
+  return inner.replace(/\\([!-/:-@[-`{-~])|&(?:#(\d{1,7})|#[xX]([0-9a-fA-F]{1,6})|([a-zA-Z]+));/g, (match, escaped, dec, hex, name) => {
+    if (escaped) return escaped;
+    if (name) return NAMED_ENTITIES[name] ?? match;
+    const code = dec ? Number(dec) : parseInt(hex, 16);
+    return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : match;
+  });
+}
+
 /** `[text](destination "title")`: the text is the link, everything else is hidden. */
 function link(node: SyntaxNodeRef, context: LiveContext) {
   const marks = node.node.getChildren("LinkMark");
-  // Reference links (`[text][ref]`) have no destination in place; leave them as written.
-  if (marks.length < 4 || !node.node.getChild("URL")) return;
-  const open = marks[0];
-  const close = marks[1];
-  context.hide(open.from, open.to);
   const url = node.node.getChild("URL");
-  const href = url ? context.state.sliceDoc(url.from, url.to) : "";
-  context.mark(open.to, close.from, "cm-live-link", { [LIVE_HREF]: href });
-  context.hide(close.from, node.to);
+  // Reference links (`[text][ref]`) have no destination in place; leave them as written.
+  if (marks.length < 4 || !url) return;
+  const [open, close] = marks;
+  const href = decodeLinkDestination(context.state.sliceDoc(url.from, url.to));
+  hideLines(context, open.from, open.to);
+  markLines(context, open.to, close.from, "cm-live-link", { [LIVE_HREF]: href });
+  hideLines(context, close.from, node.to);
 }
 
 export const inlineHandlers: LiveHandlers = {

@@ -100,6 +100,34 @@ function click(target: Element, init: MouseEventInit = {}) {
   return pointer(target, "click", init);
 }
 
+describe("links that span lines", () => {
+  it.each([
+    ["destination on the next line", "[a](\n  http://x) tail"],
+    ["title wrapped onto the next line", '[a](http://x "one\ntwo") tail'],
+  ])("mounts without throwing when the %s", (_name, text) => {
+    expect(() => mount(`${text}${AWAY}`, text.length + 2)).not.toThrow();
+  });
+});
+
+describe("link destinations", () => {
+  function opened(link: string) {
+    const doc = `${link}${AWAY}`;
+    const { view, onOpenLink } = mount(doc, doc.length);
+    click(view.dom.querySelector(".cm-live-link")!, { ctrlKey: true });
+    return onOpenLink.mock.calls.map(([href]) => href);
+  }
+
+  it("drops the angle brackets around a destination with spaces", () => {
+    expect(opened("[a](<https://x.dev/a b>)")).toEqual(["https://x.dev/a b"]);
+  });
+
+  it("decodes entities and backslash escapes", () => {
+    expect(opened("[a](https://x.dev/?a=1&amp;b=2)")).toEqual(["https://x.dev/?a=1&b=2"]);
+    expect(opened("[a](https://x.dev/\\_a\\_)")).toEqual(["https://x.dev/_a_"]);
+    expect(opened("[a](https://x.dev/&#65;&#x42;)")).toEqual(["https://x.dev/AB"]);
+  });
+});
+
 describe("link clicks", () => {
   const doc = `see [docs](https://example.com/a) and <https://auto.dev>${AWAY}`;
   const links = (view: EditorView) => Array.from(view.dom.querySelectorAll(".cm-live-link"));

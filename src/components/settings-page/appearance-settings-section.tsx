@@ -5,7 +5,7 @@ import type {
 } from "../../features/settings/settings-schema";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { SectionActions, SectionCard, SettingRow, hasChanges } from "./settings-page-shared";
+import { SectionCard, SettingRow } from "./settings-page-shared";
 import { SwatchGroup, SwatchPreview } from "./swatches";
 
 const EDITOR_FONT_SIZES = [12, 13, 14, 15, 16, 18, 20, 24];
@@ -57,23 +57,19 @@ function NumberSelect({
 
 interface AppearanceSettingsSectionProps {
   appearance: AppearanceSettings;
-  savedAppearance: AppearanceSettings;
   previewThemeMode: "light" | "dark";
-  onAppearanceChange: (appearance: AppearanceSettings) => void;
-  onSave: (appearance: AppearanceSettings) => void;
+  /** Called with the full new settings on every change; the caller applies and saves them straight away. */
+  onChange: (appearance: AppearanceSettings) => void;
 }
 
 export function AppearanceSettingsSection({
   appearance,
-  savedAppearance,
   previewThemeMode,
-  onAppearanceChange,
-  onSave,
+  onChange,
 }: AppearanceSettingsSectionProps) {
   const updateAppearance = (updates: Partial<AppearanceSettings>) => {
-    onAppearanceChange({ ...appearance, ...updates });
+    onChange({ ...appearance, ...updates });
   };
-  const canSave = hasChanges(appearance, savedAppearance);
   const scheme = appearance.colorScheme;
 
   return (
@@ -125,7 +121,6 @@ export function AppearanceSettingsSection({
             ]}
           />
         </div>
-        <SectionActions canSave={canSave} label="Save theme mode" onSave={() => onSave(appearance)} />
       </SectionCard>
 
       <SectionCard
@@ -153,7 +148,6 @@ export function AppearanceSettingsSection({
           options={PREVIEW_FONT_SCALES}
           onChange={(previewFontScale) => updateAppearance({ previewFontScale })}
         />
-        <SectionActions canSave={canSave} label="Save text settings" onSave={() => onSave(appearance)} />
       </SectionCard>
 
       <SectionCard title="Status Bar" description="Show or hide footer metrics.">
@@ -164,7 +158,6 @@ export function AppearanceSettingsSection({
             onCheckedChange={(showStatusBar) => updateAppearance({ showStatusBar })}
           />
         </SettingRow>
-        <SectionActions canSave={canSave} label="Save status bar" onSave={() => onSave(appearance)} />
       </SectionCard>
 
       <SectionCard
@@ -200,7 +193,6 @@ export function AppearanceSettingsSection({
             },
           ]}
         />
-        <SectionActions canSave={canSave} label="Save color scheme" onSave={() => onSave(appearance)} />
       </SectionCard>
     </div>
   );

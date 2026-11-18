@@ -14,19 +14,8 @@ export function useSettingsPageState({
   templateDraft,
 }: UseSettingsPageStateOptions) {
   const [activeSection, setActiveSection] = useState<SettingsSection>(DEFAULT_SETTINGS_SECTION);
-  const [appearanceDraft, setAppearanceDraft] = useState(settings.appearance);
-  const [editorDraft, setEditorDraft] = useState(settings.editor);
-  const [previewDraft, setPreviewDraft] = useState(settings.preview);
-  const [filesDraft, setFilesDraft] = useState(settings.files);
   const [templateDraftValue, setTemplateDraftValue] = useState(templateDraft);
   const [systemThemeMode, setSystemThemeMode] = useState<"light" | "dark">(getSystemThemeMode);
-
-  useEffect(() => {
-    setAppearanceDraft(settings.appearance);
-    setEditorDraft(settings.editor);
-    setPreviewDraft(settings.preview);
-    setFilesDraft(settings.files);
-  }, [settings]);
 
   useEffect(() => {
     setTemplateDraftValue(templateDraft);
@@ -45,20 +34,12 @@ export function useSettingsPageState({
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
 
-  const previewThemeMode = appearanceDraft.theme === "system" ? systemThemeMode : appearanceDraft.theme;
+  const previewThemeMode = settings.appearance.theme === "system" ? systemThemeMode : settings.appearance.theme;
 
   return {
     activeSection,
-    appearanceDraft,
-    editorDraft,
-    filesDraft,
-    previewDraft,
     previewThemeMode,
     setActiveSection,
-    setAppearanceDraft,
-    setEditorDraft,
-    setFilesDraft,
-    setPreviewDraft,
     setTemplateDraftValue,
     templateDraftValue,
   };

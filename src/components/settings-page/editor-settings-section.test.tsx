@@ -8,7 +8,7 @@ import { EditorSettingsSection } from "./editor-settings-section";
 function renderSection() {
   const user = userEvent.setup();
   const settings = createDefaultSettings();
-  const onSave = vi.fn();
+  const onChange = vi.fn();
 
   function TestHarness() {
     const [editor, setEditor] = useState(settings.editor);
@@ -16,15 +16,16 @@ function renderSection() {
     return (
       <EditorSettingsSection
         editor={editor}
-        savedEditor={settings.editor}
-        onEditorChange={setEditor}
-        onSave={onSave}
+        onChange={(next) => {
+          setEditor(next);
+          onChange(next);
+        }}
       />
     );
   }
 
   render(<TestHarness />);
-  return { user, onSave, defaults: settings.editor };
+  return { user, onChange, defaults: settings.editor };
 }
 
 describe("EditorSettingsSection", () => {
@@ -36,17 +37,14 @@ describe("EditorSettingsSection", () => {
     expect(screen.getByRole("switch", { name: "Highlight the current line" })).toBeChecked();
   });
 
-  it("saves the toggled options", async () => {
-    const { user, onSave, defaults } = renderSection();
+  it("applies each toggle as soon as it is flipped, with no Save step", async () => {
+    const { user, onChange, defaults } = renderSection();
 
     await user.click(screen.getByRole("switch", { name: "Wrap long lines" }));
-    await user.click(screen.getByRole("switch", { name: "Highlight the current line" }));
-    await user.click(screen.getByRole("button", { name: /save/i }));
+    expect(onChange).toHaveBeenLastCalledWith({ ...defaults, wordWrap: false });
 
-    expect(onSave).toHaveBeenCalledWith({
-      ...defaults,
-      wordWrap: false,
-      highlightActiveLine: false,
-    });
+    await user.click(screen.getByRole("switch", { name: "Highlight the current line" }));
+    expect(onChange).toHaveBeenLastCalledWith({ ...defaults, wordWrap: false, highlightActiveLine: false });
+    expect(screen.queryByRole("button", { name: /save/i })).not.toBeInTheDocument();
   });
 });

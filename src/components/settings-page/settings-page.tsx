@@ -22,10 +22,11 @@ interface SettingsPageProps {
   templateDraft: string;
   version: string;
   onClose: () => void;
-  onSaveAppearance: (appearance: AppearanceSettings) => void;
-  onSaveEditor: (editor: EditorSettings) => void;
-  onSaveFiles: (files: FileSettings) => void;
-  onSavePreview: (preview: PreviewSettings) => void;
+  /** These four apply and persist on every change; only the template below keeps an explicit Save. */
+  onChangeAppearance: (appearance: AppearanceSettings) => void;
+  onChangeEditor: (editor: EditorSettings) => void;
+  onChangeFiles: (files: FileSettings) => void;
+  onChangePreview: (preview: PreviewSettings) => void;
   onSaveTemplate: (value: string) => void;
   onResetTemplate: () => void;
   onResetAll: () => void;
@@ -38,10 +39,10 @@ export function SettingsPage({
   templateDraft,
   version,
   onClose,
-  onSaveAppearance,
-  onSaveEditor,
-  onSaveFiles,
-  onSavePreview,
+  onChangeAppearance,
+  onChangeEditor,
+  onChangeFiles,
+  onChangePreview,
   onSaveTemplate,
   onResetTemplate,
   onResetAll,
@@ -49,16 +50,8 @@ export function SettingsPage({
 }: SettingsPageProps) {
   const {
     activeSection,
-    appearanceDraft,
-    editorDraft,
-    filesDraft,
-    previewDraft,
     previewThemeMode,
     setActiveSection,
-    setAppearanceDraft,
-    setEditorDraft,
-    setFilesDraft,
-    setPreviewDraft,
     setTemplateDraftValue,
     templateDraftValue,
   } = useSettingsPageState({
@@ -68,35 +61,27 @@ export function SettingsPage({
   const sectionContent: Record<SettingsSection, ReactNode> = {
     appearance: (
       <AppearanceSettingsSection
-        appearance={appearanceDraft}
-        savedAppearance={settings.appearance}
+        appearance={settings.appearance}
         previewThemeMode={previewThemeMode}
-        onAppearanceChange={setAppearanceDraft}
-        onSave={onSaveAppearance}
+        onChange={onChangeAppearance}
       />
     ),
     editor: (
       <EditorSettingsSection
-        editor={editorDraft}
-        savedEditor={settings.editor}
-        onEditorChange={setEditorDraft}
-        onSave={onSaveEditor}
+        editor={settings.editor}
+        onChange={onChangeEditor}
       />
     ),
     preview: (
       <PreviewSettingsSection
-        preview={previewDraft}
-        savedPreview={settings.preview}
-        onPreviewChange={setPreviewDraft}
-        onSave={onSavePreview}
+        preview={settings.preview}
+        onChange={onChangePreview}
       />
     ),
     files: (
       <FilesSettingsSection
-        files={filesDraft}
-        savedFiles={settings.files}
-        onFilesChange={setFilesDraft}
-        onSave={onSaveFiles}
+        files={settings.files}
+        onChange={onChangeFiles}
         canRestoreSession={canRestoreSession}
       />
     ),
@@ -126,7 +111,7 @@ export function SettingsPage({
           onSectionChange={setActiveSection}
         />
         <div className="min-h-0 overflow-auto">
-          <div className="w-full max-w-3xl pb-6">{sectionContent[activeSection]}</div>
+          <div className="mx-auto w-full max-w-3xl pb-6">{sectionContent[activeSection]}</div>
         </div>
       </div>
     </section>

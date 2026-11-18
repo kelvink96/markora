@@ -200,7 +200,7 @@ describe("App", () => {
     render(<App />);
     await user.click(screen.getByRole("button", { name: "close-active" }));
 
-    expect(screen.getByRole("dialog", { name: "Discard unsaved changes?" })).toBeInTheDocument();
+    expect(screen.getByRole("alertdialog", { name: "Discard unsaved changes?" })).toBeInTheDocument();
     expect(confirmSpy).not.toHaveBeenCalled();
   });
 
@@ -232,7 +232,7 @@ describe("App", () => {
     render(<App />);
     await user.click(screen.getByRole("button", { name: "close-all" }));
 
-    expect(screen.getByRole("dialog", { name: "Discard unsaved changes?" })).toBeInTheDocument();
+    expect(screen.getByRole("alertdialog", { name: "Discard unsaved changes?" })).toBeInTheDocument();
     expect(useDocumentStore.getState().openDocuments).toHaveLength(2);
   });
 
@@ -283,7 +283,7 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "close-active" }));
 
     expect(useDocumentStore.getState().openDocuments).toHaveLength(1);
-    expect(screen.queryByRole("dialog", { name: "Discard unsaved changes?" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("alertdialog", { name: "Discard unsaved changes?" })).not.toBeInTheDocument();
   });
 
   it("closes all tabs without confirmation when the unsaved-close setting is disabled", async () => {
@@ -303,7 +303,7 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "close-all" }));
 
     expect(useDocumentStore.getState().openDocuments).toHaveLength(0);
-    expect(screen.queryByRole("dialog", { name: "Discard unsaved changes?" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("alertdialog", { name: "Discard unsaved changes?" })).not.toBeInTheDocument();
   });
 
   it("closes a clean active tab without confirmation", async () => {
@@ -320,7 +320,7 @@ describe("App", () => {
 
     expect(useDocumentStore.getState().openDocuments).toHaveLength(0);
     expect(useDocumentStore.getState().activeDocumentId).toBe("");
-    expect(screen.queryByRole("dialog", { name: "Discard unsaved changes?" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("alertdialog", { name: "Discard unsaved changes?" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "No document open" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "New document" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Open file" })).toBeInTheDocument();
@@ -369,7 +369,7 @@ describe("App", () => {
 
     expect(useDocumentStore.getState().openDocuments).toHaveLength(3);
     expect(useDocumentStore.getState().activeDocumentId).not.toBe("document-2");
-    expect(screen.queryByRole("dialog", { name: "Discard unsaved changes?" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("alertdialog", { name: "Discard unsaved changes?" })).not.toBeInTheDocument();
   });
 
   it("creates a new document from the empty state CTA", async () => {
@@ -474,7 +474,7 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "open-shortcuts" }));
 
     expect(screen.getByRole("dialog", { name: "Keyboard Shortcuts" })).toBeInTheDocument();
-    expect(screen.getByText(/Ctrl\/Cmd \+ N/i)).toBeInTheDocument();
+    expect(screen.getByText("Ctrl+N")).toBeInTheDocument();
   });
 
   it("opens the about dialog from the help menu action", async () => {
@@ -493,7 +493,7 @@ describe("App", () => {
     render(<App />);
     await user.click(screen.getByRole("button", { name: "close-from-menu" }));
 
-    expect(screen.getByRole("dialog", { name: "Discard unsaved changes?" })).toBeInTheDocument();
+    expect(screen.getByRole("alertdialog", { name: "Discard unsaved changes?" })).toBeInTheDocument();
   });
 
   it("persists editor settings only after the section save action", async () => {

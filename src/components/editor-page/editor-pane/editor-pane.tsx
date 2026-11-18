@@ -3,7 +3,7 @@ import { redo, selectAll, undo } from "@codemirror/commands";
 import { EditorView, basicSetup } from "codemirror";
 import { Compartment, EditorState, Prec } from "@codemirror/state";
 import { EditorView as CMView, keymap } from "@codemirror/view";
-import { markdown } from "@codemirror/lang-markdown";
+import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { readText, writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { useDocumentStore } from "../../../store/document";
 import { useEditorCommandState } from "../../../features/editor/editor-command-state";
@@ -204,7 +204,8 @@ export function EditorPane({ theme, viewMode = "edit" }: EditorPaneProps) {
       doc: useDocumentStore.getState().content,
       extensions: [
         basicSetup,
-        markdown(),
+        // The GFM base adds strikethrough, tables, task lists and bare-URL links to the tree.
+        markdown({ base: markdownLanguage }),
         updateListener,
         ...findExtensions,
         // Highest precedence, so these beat CodeMirror's own search panel bindings.

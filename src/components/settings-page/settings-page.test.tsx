@@ -26,6 +26,7 @@ describe("SettingsPage", () => {
         onSaveAppearance={() => {}}
         onSaveEditor={() => {}}
         onSaveFiles={() => {}}
+        onSavePreview={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
         onResetAll={() => {}}
@@ -44,7 +45,7 @@ describe("SettingsPage", () => {
     );
     expect(screen.getByRole("button", { name: "Appearance" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Editor" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Preview" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Preview" })).toBeInTheDocument();
     expect(within(screen.getByRole("button", { name: "Appearance" })).getByTestId("settings-tab-icon-appearance")).toBeInTheDocument();
     expect(within(screen.getByRole("button", { name: "Advanced" })).getByTestId("settings-tab-icon-advanced")).toBeInTheDocument();
     expect(within(screen.getByRole("button", { name: "New Document Template" })).getByTestId("settings-tab-icon-template")).toBeInTheDocument();
@@ -75,6 +76,7 @@ describe("SettingsPage", () => {
         onSaveAppearance={() => {}}
         onSaveEditor={() => {}}
         onSaveFiles={() => {}}
+        onSavePreview={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
         onResetAll={() => {}}
@@ -104,6 +106,7 @@ describe("SettingsPage", () => {
         onSaveAppearance={() => {}}
         onSaveEditor={() => {}}
         onSaveFiles={() => {}}
+        onSavePreview={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
         onResetAll={() => {}}
@@ -134,6 +137,7 @@ describe("SettingsPage", () => {
         onSaveAppearance={() => {}}
         onSaveEditor={() => {}}
         onSaveFiles={() => {}}
+        onSavePreview={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
         onResetAll={() => {}}
@@ -165,6 +169,7 @@ describe("SettingsPage", () => {
         onSaveAppearance={() => {}}
         onSaveEditor={() => {}}
         onSaveFiles={() => {}}
+        onSavePreview={() => {}}
         onSaveTemplate={onSaveTemplate}
         onResetTemplate={() => {}}
         onResetAll={() => {}}
@@ -193,6 +198,7 @@ describe("SettingsPage", () => {
         onSaveAppearance={() => {}}
         onSaveEditor={() => {}}
         onSaveFiles={() => {}}
+        onSavePreview={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
         onResetAll={onResetAll}
@@ -221,6 +227,7 @@ describe("SettingsPage", () => {
         onSaveAppearance={() => {}}
         onSaveEditor={onSaveEditor}
         onSaveFiles={() => {}}
+        onSavePreview={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
         onResetAll={() => {}}
@@ -251,6 +258,7 @@ describe("SettingsPage", () => {
         onSaveAppearance={onSaveAppearance}
         onSaveEditor={() => {}}
         onSaveFiles={() => {}}
+        onSavePreview={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
         onResetAll={() => {}}
@@ -279,6 +287,7 @@ describe("SettingsPage", () => {
         onSaveAppearance={() => {}}
         onSaveEditor={() => {}}
         onSaveFiles={() => {}}
+        onSavePreview={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
         onResetAll={() => {}}
@@ -308,6 +317,7 @@ describe("SettingsPage", () => {
         onSaveAppearance={() => {}}
         onSaveEditor={() => {}}
         onSaveFiles={() => {}}
+        onSavePreview={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
         onResetAll={() => {}}
@@ -332,6 +342,7 @@ describe("SettingsPage", () => {
         onSaveAppearance={() => {}}
         onSaveEditor={() => {}}
         onSaveFiles={() => {}}
+        onSavePreview={() => {}}
         onSaveTemplate={() => {}}
         onResetTemplate={() => {}}
         onResetAll={() => {}}

@@ -516,6 +516,26 @@ describe("App", () => {
     );
   });
 
+  it("persists preview settings after the section save action (#12)", async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "open-settings" }));
+    await user.click(screen.getByRole("button", { name: "Preview" }));
+    await user.click(screen.getByRole("checkbox", { name: "Open links in your browser" }));
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    expect(invokeMock).toHaveBeenCalledWith(
+      "save_settings",
+      expect.objectContaining({
+        settings: expect.objectContaining({
+          preview: expect.objectContaining({ openLinksExternally: false }),
+        }),
+      }),
+    );
+    expect(useSettingsStore.getState().settings.preview.openLinksExternally).toBe(false);
+  });
+
   it("saves a dirty file automatically when autosave is on (#11)", async () => {
     const autosaveSettings = createDefaultSettings();
     autosaveSettings.files.autosave = true;

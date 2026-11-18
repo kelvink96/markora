@@ -40,8 +40,9 @@
   font-size: calc(1.05rem * var(--preview-font-scale, 1));
   line-height: 1.78;
   letter-spacing: 0;
-  /* Keep lines near 72 characters on wide panels without shrinking the surface. */
-  padding-inline: max(calc(var(--space-6) - 0.1rem), calc((100% - 72ch) / 2));
+  /* Keep lines near the chosen width on wide panels without shrinking the surface.
+     --preview-measure comes from the Line width setting. */
+  padding-inline: max(calc(var(--space-6) - 0.1rem), calc((100% - var(--preview-measure, 72ch)) / 2));
 }
 
 .preview-pane__content.prose h1,

@@ -3,6 +3,7 @@ import type { SettingsSection } from "./settings-page-types";
 export type SettingsNavigationIcon =
   | "palette"
   | "pen-square"
+  | "eye"
   | "folder-open"
   | "info"
   | "sliders-horizontal"
@@ -27,6 +28,7 @@ export const SETTINGS_NAVIGATION_GROUPS: SettingsNavigationGroup[] = [
     items: [
       { id: "appearance", label: "Appearance", icon: "palette" },
       { id: "editor", label: "Editor", icon: "pen-square" },
+      { id: "preview", label: "Preview", icon: "eye" },
       { id: "files", label: "Files", icon: "folder-open" },
       { id: "about", label: "About", icon: "info" },
       { id: "advanced", label: "Advanced", icon: "sliders-horizontal" },

@@ -13,6 +13,7 @@ describe("settings-navigation", () => {
         items: [
           { id: "appearance", label: "Appearance", icon: "palette" },
           { id: "editor", label: "Editor", icon: "pen-square" },
+          { id: "preview", label: "Preview", icon: "eye" },
           { id: "files", label: "Files", icon: "folder-open" },
           { id: "about", label: "About", icon: "info" },
           { id: "advanced", label: "Advanced", icon: "sliders-horizontal" },

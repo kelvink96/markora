@@ -3,6 +3,7 @@ import type {
   EditorSettings,
   FileSettings,
   MarkoraSettings,
+  PreviewSettings,
 } from "../../features/settings/settings-schema";
 import type { ReactNode } from "react";
 import { AboutSettingsSection } from "./about-settings-section";
@@ -10,6 +11,7 @@ import { AdvancedSettingsSection } from "./advanced-settings-section";
 import { AppearanceSettingsSection } from "./appearance-settings-section";
 import { EditorSettingsSection } from "./editor-settings-section";
 import { FilesSettingsSection } from "./files-settings-section";
+import { PreviewSettingsSection } from "./preview-settings-section";
 import type { SettingsSection } from "./settings-page-types";
 import { SettingsSidebar } from "./settings-sidebar";
 import { TemplateSettingsSection } from "./template-settings-section";
@@ -23,6 +25,7 @@ interface SettingsPageProps {
   onSaveAppearance: (appearance: AppearanceSettings) => void;
   onSaveEditor: (editor: EditorSettings) => void;
   onSaveFiles: (files: FileSettings) => void;
+  onSavePreview: (preview: PreviewSettings) => void;
   onSaveTemplate: (value: string) => void;
   onResetTemplate: () => void;
   onResetAll: () => void;
@@ -38,6 +41,7 @@ export function SettingsPage({
   onSaveAppearance,
   onSaveEditor,
   onSaveFiles,
+  onSavePreview,
   onSaveTemplate,
   onResetTemplate,
   onResetAll,
@@ -48,11 +52,13 @@ export function SettingsPage({
     appearanceDraft,
     editorDraft,
     filesDraft,
+    previewDraft,
     previewThemeMode,
     setActiveSection,
     setAppearanceDraft,
     setEditorDraft,
     setFilesDraft,
+    setPreviewDraft,
     setTemplateDraftValue,
     templateDraftValue,
   } = useSettingsPageState({
@@ -75,6 +81,14 @@ export function SettingsPage({
         savedEditor={settings.editor}
         onEditorChange={setEditorDraft}
         onSave={onSaveEditor}
+      />
+    ),
+    preview: (
+      <PreviewSettingsSection
+        preview={previewDraft}
+        savedPreview={settings.preview}
+        onPreviewChange={setPreviewDraft}
+        onSave={onSavePreview}
       />
     ),
     files: (

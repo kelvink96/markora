@@ -29,7 +29,8 @@ describe("view mode storage", () => {
   it("ignores an unknown stored mode and falls back by the install rule", () => {
     localStorage.setItem("markora:view-mode", "sideways");
     expect(loadViewMode()).toBe("live");
-
+    localStorage.clear();
+    localStorage.setItem("markora:view-mode", "sideways");
     localStorage.setItem("markora:session", "{}");
     expect(loadViewMode()).toBe("edit");
   });

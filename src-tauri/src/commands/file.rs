@@ -143,14 +143,23 @@ pub async fn pick_open_path(
     remember(&app, &allowed, picked)
 }
 
+/// The file type a save dialog offers when the caller doesn't ask for another.
+const DEFAULT_SAVE_FILTER: (&str, &str) = ("Markdown", "md");
+
 // Shows the native save dialog and remembers the chosen file so it can be written.
+// `extensions` / `filter_name` pick another file type (for example HTML for an export).
 #[tauri::command]
 pub async fn pick_save_path(
     app: AppHandle,
     allowed: State<'_, AllowedPaths>,
     default_path: Option<String>,
+    extensions: Option<Vec<String>>,
+    filter_name: Option<String>,
 ) -> Result<Option<String>, String> {
-    let mut dialog = app.dialog().file().add_filter("Markdown", &["md"]);
+    let extensions = extensions.unwrap_or_else(|| vec![DEFAULT_SAVE_FILTER.1.to_string()]);
+    let extension_refs: Vec<&str> = extensions.iter().map(String::as_str).collect();
+    let filter_name = filter_name.unwrap_or_else(|| DEFAULT_SAVE_FILTER.0.to_string());
+    let mut dialog = app.dialog().file().add_filter(filter_name, &extension_refs);
     if let Some(name) = default_path {
         dialog = dialog.set_file_name(name);
     }

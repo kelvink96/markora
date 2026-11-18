@@ -150,12 +150,12 @@ export const webFileAdapter: FileAdapter = {
       input.click();
     });
   },
-  async exportFile(fileName, content) {
+  async exportFile(fileName, content, mimeType = "text/markdown") {
     if (!supportsFileExport()) {
       throw new Error("Browser file export is not supported.");
     }
 
-    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+    const blob = new Blob([content], { type: `${mimeType};charset=utf-8` });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;

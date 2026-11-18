@@ -15,6 +15,18 @@ describe("desktopFileAdapter", () => {
     expect(invokeMock).toHaveBeenCalledWith("pick_open_path");
   });
 
+  it("asks for another file type when exporting (#15)", async () => {
+    invokeMock.mockResolvedValue("/out/notes.html");
+
+    await desktopFileAdapter.pickSavePath("notes.html", { filterName: "HTML", extensions: ["html"] });
+
+    expect(invokeMock).toHaveBeenCalledWith("pick_save_path", {
+      defaultPath: "notes.html",
+      extensions: ["html"],
+      filterName: "HTML",
+    });
+  });
+
   it("opens the save picker through Rust with the suggested file name (#21)", async () => {
     invokeMock.mockResolvedValue(null);
 

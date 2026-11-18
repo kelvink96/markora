@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { redo, selectAll, undo } from "@codemirror/commands";
 import { EditorView, basicSetup } from "codemirror";
-import { Compartment, EditorState } from "@codemirror/state";
-import { EditorView as CMView } from "@codemirror/view";
+import { Compartment, EditorState, Prec } from "@codemirror/state";
+import { EditorView as CMView, keymap } from "@codemirror/view";
 import { markdown } from "@codemirror/lang-markdown";
 import { readText, writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { useDocumentStore } from "../../../store/document";
 import { useEditorCommandState } from "../../../features/editor/editor-command-state";
+import { findExtensions } from "../../../features/editor/find-replace";
 import { markoraEditorTheme } from "../../../features/editor/editor-theme";
 import { createEditorSettingsExtensions } from "../../../features/editor/editor-settings-extensions";
 import { applyMarkdownToolbarAction, type MarkdownToolbarAction } from "../../../features/editor/markdown-toolbar-actions";
@@ -18,6 +19,7 @@ import {
 } from "../../../features/editor/slash-commands";
 import { useEditorStatusState } from "../../../features/workspace/editor-status-state";
 import { useSettingsStore } from "../../../features/settings/settings-store";
+import { FindBar } from "../find-bar";
 import { InlineFormattingMenu } from "../inline-formatting-menu";
 import { SlashCommandMenu } from "../slash-command-menu/slash-command-menu";
 
@@ -34,6 +36,13 @@ interface SlashMenuState {
     top: number;
     left: number;
   };
+}
+
+interface FindState {
+  mode: "find" | "replace";
+  initialSearch: string;
+  /** Changes on every open, so pressing Ctrl+F again refocuses and refills the bar. */
+  openCount: number;
 }
 
 interface InlineMenuState {
@@ -59,6 +68,24 @@ export function EditorPane({ theme }: EditorPaneProps) {
   const setRunEditAction = useEditorCommandState((state) => state.setRunEditAction);
   const [slashMenu, setSlashMenu] = useState<SlashMenuState | null>(null);
   const [inlineMenu, setInlineMenu] = useState<InlineMenuState | null>(null);
+  const [find, setFind] = useState<FindState | null>(null);
+  // Bumped when the document or selection changes while the find bar is open, so its count stays current.
+  const [findVersion, setFindVersion] = useState(0);
+  const findOpen = useRef(false);
+  findOpen.current = find !== null;
+  const openFind = (mode: FindState["mode"]) => {
+    const view = viewRef.current;
+    const { from, to } = view?.state.selection.main ?? { from: 0, to: 0 };
+    const selected = view && to > from ? view.state.sliceDoc(from, to) : "";
+    // A one-line selection becomes the search; a multi-line one is probably not what you want to find.
+    const initialSearch = selected && !selected.includes("\n") && selected.length <= 200 ? selected : "";
+    setFind((current) => ({ mode, initialSearch, openCount: (current?.openCount ?? 0) + 1 }));
+    return true;
+  };
+  const closeFind = () => {
+    setFind(null);
+    viewRef.current?.focus();
+  };
 
   const applyEditResult = (text: string, selectionStart: number, selectionEnd: number) => {
     const view = viewRef.current;
@@ -120,6 +147,10 @@ export function EditorPane({ theme }: EditorPaneProps) {
         setContent(update.state.doc.toString());
       }
 
+      if (findOpen.current && (update.docChanged || update.selectionSet)) {
+        setFindVersion((version) => version + 1);
+      }
+
       if (update.docChanged || update.selectionSet || update.focusChanged) {
         const cursor = update.state.selection.main.head;
         const line = update.state.doc.lineAt(cursor);
@@ -165,6 +196,14 @@ export function EditorPane({ theme }: EditorPaneProps) {
         basicSetup,
         markdown(),
         updateListener,
+        ...findExtensions,
+        // Highest precedence, so these beat CodeMirror's own search panel bindings.
+        Prec.highest(
+          keymap.of([
+            { key: "Mod-f", run: () => openFind("find"), preventDefault: true },
+            { key: "Mod-h", run: () => openFind("replace"), preventDefault: true },
+          ]),
+        ),
         ...markoraEditorTheme,
         // Last, so user settings win over the theme where both style the same thing.
         settingsCompartment.of(
@@ -204,10 +243,15 @@ export function EditorPane({ theme }: EditorPaneProps) {
 
   useEffect(() => {
     const runEditAction = async (
-      action: "undo" | "redo" | "cut" | "copy" | "paste" | "selectAll",
+      action: "undo" | "redo" | "cut" | "copy" | "paste" | "selectAll" | "find" | "replace",
     ) => {
       const view = viewRef.current;
       if (!view) return;
+
+      if (action === "find" || action === "replace") {
+        openFind(action);
+        return;
+      }
 
       const { from, to } = view.state.selection.main;
       const selectedText = view.state.doc.toString().slice(from, to);
@@ -326,6 +370,16 @@ export function EditorPane({ theme }: EditorPaneProps) {
             data-testid="editor-surface"
             data-line-numbers={lineNumbers ? "visible" : "hidden"}
           />
+          {find ? (
+            <FindBar
+              key={find.openCount}
+              view={viewRef.current}
+              initialMode={find.mode}
+              initialSearch={find.initialSearch}
+              version={findVersion}
+              onClose={closeFind}
+            />
+          ) : null}
           {slashMenu ? (
             <SlashCommandMenu
               commands={slashMenu.commands}

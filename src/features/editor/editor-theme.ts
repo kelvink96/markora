@@ -34,6 +34,8 @@ const editorTheme = EditorView.theme({
     padding: "1.1rem 1.5rem 2rem",
   },
   ".cm-cursor, .cm-dropCursor": { borderLeftColor: "var(--primary)", borderLeftWidth: "2px" },
+  // CodeMirror's own search panel is replaced by the app's find bar; keep its (empty) shell out of sight.
+  ".cm-panels": { display: "none" },
   ".cm-gutters": {
     backgroundColor: "transparent",
     color: "var(--muted-foreground)",
@@ -46,6 +48,16 @@ const editorTheme = EditorView.theme({
   },
   "&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground": {
     backgroundColor: "color-mix(in oklab, var(--primary) 28%, transparent)",
+  },
+  // Find results: every match softly tinted, the selected one stronger with an outline.
+  ".cm-searchMatch": {
+    backgroundColor: "color-mix(in oklab, var(--primary) 22%, transparent)",
+    outline: "1px solid color-mix(in oklab, var(--primary) 45%, transparent)",
+    borderRadius: "2px",
+  },
+  ".cm-searchMatch.cm-searchMatch-selected": {
+    backgroundColor: "color-mix(in oklab, var(--primary) 45%, transparent)",
+    outline: "2px solid var(--primary)",
   },
   ".cm-selectionMatch": { backgroundColor: "color-mix(in oklab, var(--primary) 16%, transparent)" },
 });

@@ -14,8 +14,10 @@ import {
   PanelLeftClose,
   PanelsTopLeft,
   Redo2,
+  Replace,
   Save,
   Scissors,
+  Search,
   Settings2,
   SquarePen,
   Sun,
@@ -175,6 +177,13 @@ export function TopBar({
                 <MenubarSeparator />
                 <MenubarItem onSelect={() => void runEditAction("selectAll")}>
                   <Type className={iconClass} /> Select All <MenubarShortcut>{mod}+A</MenubarShortcut>
+                </MenubarItem>
+                <MenubarSeparator />
+                <MenubarItem onSelect={() => void runEditAction("find")}>
+                  <Search className={iconClass} /> Find <MenubarShortcut>{mod}+F</MenubarShortcut>
+                </MenubarItem>
+                <MenubarItem onSelect={() => void runEditAction("replace")}>
+                  <Replace className={iconClass} /> Replace <MenubarShortcut>{mod}+H</MenubarShortcut>
                 </MenubarItem>
               </MenubarContent>
             </MenubarMenu>

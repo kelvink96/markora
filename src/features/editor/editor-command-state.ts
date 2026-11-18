@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { MarkdownToolbarAction } from "./markdown-toolbar-actions";
 
-export type EditorEditAction = "undo" | "redo" | "cut" | "copy" | "paste" | "selectAll";
+export type EditorEditAction = "undo" | "redo" | "cut" | "copy" | "paste" | "selectAll" | "find" | "replace";
 
 interface EditorCommandState {
   runToolbarAction: (action: MarkdownToolbarAction) => void;

@@ -1,4 +1,4 @@
-import { Eye, FileInput, PanelsTopLeft, type LucideIcon } from "lucide-react";
+import { Eye, FileInput, PanelsTopLeft, Sparkles, type LucideIcon } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { WorkspaceViewMode } from "../../../features/workspace/workspace-state";
@@ -9,6 +9,7 @@ interface ViewModeSwitcherProps {
 }
 
 const modes: Array<{ value: WorkspaceViewMode; label: string; ariaLabel: string; icon: LucideIcon }> = [
+  { value: "live", label: "Live", ariaLabel: "Live view", icon: Sparkles },
   { value: "edit", label: "Edit", ariaLabel: "Edit view", icon: FileInput },
   { value: "split", label: "Split", ariaLabel: "Split view", icon: PanelsTopLeft },
   { value: "preview", label: "Preview", ariaLabel: "Preview view", icon: Eye },

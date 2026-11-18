@@ -74,6 +74,17 @@ describe("PreviewPane", () => {
     );
   });
 
+  it("exposes the preview font scale setting to the stylesheet (#13)", async () => {
+    const settings = createDefaultSettings();
+    settings.appearance.previewFontScale = 1.25;
+    useSettingsStore.setState({ settings });
+    render(<PreviewPane />);
+
+    await waitFor(() =>
+      expect(screen.getByTestId("preview-content").style.getPropertyValue("--preview-font-scale")).toBe("1.25"),
+    );
+  });
+
   it("passes the document path so relative images can resolve (#3)", async () => {
     useDocumentStore.setState({ filePath: "/notes/today.md" });
     render(<PreviewPane />);

@@ -31,6 +31,20 @@ export function EditorSettingsSection({
           onEditorChange({ ...editor, lineNumbers: event.target.checked })
         }
       />
+      <Checkbox
+        label="Wrap long lines"
+        checked={editor.wordWrap}
+        onChange={(event) =>
+          onEditorChange({ ...editor, wordWrap: event.target.checked })
+        }
+      />
+      <Checkbox
+        label="Highlight the current line"
+        checked={editor.highlightActiveLine}
+        onChange={(event) =>
+          onEditorChange({ ...editor, highlightActiveLine: event.target.checked })
+        }
+      />
       <SectionActions
         canSave={hasChanges(editor, savedEditor)}
         onSave={() => onSave(editor)}

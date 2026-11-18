@@ -38,7 +38,8 @@
 .preview-pane__content.prose {
   color: var(--text-primary);
   font-family: var(--font-prose);
-  font-size: 1.05rem;
+  /* --preview-font-scale comes from the Appearance setting (1 = 100%). */
+  font-size: calc(1.05rem * var(--preview-font-scale, 1));
   line-height: 1.78;
   letter-spacing: 0;
   /* Keep lines near 72 characters on wide panels without shrinking the surface. */

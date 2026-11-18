@@ -1,3 +1,5 @@
+use tauri::Manager;
+
 mod commands;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -10,8 +12,18 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         // Clipboard access is routed through Tauri so editor actions use the native desktop clipboard.
         .plugin(tauri_plugin_clipboard_manager::init())
-        // Shared state: the files the user picked this session (read/write allowlist).
-        .manage(commands::file::AllowedPaths::default())
+        // Shared state: the files the user has picked (read/write allowlist), remembered
+        // across restarts so "restore previous session" can reopen them.
+        .setup(|app| {
+            let store = app.path().app_config_dir()?.join("allowed-paths.json");
+            let allowed = commands::file::AllowedPaths::persistent(store);
+            // Remembered files may have images next to them, so re-open their folders too.
+            for path in allowed.paths() {
+                commands::file::allow_images_near(app.handle(), &path);
+            }
+            app.manage(allowed);
+            Ok(())
+        })
         // Register the commands that the frontend is allowed to invoke by name.
         .invoke_handler(tauri::generate_handler![
             commands::markdown::parse_markdown,

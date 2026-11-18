@@ -10,7 +10,13 @@ function hideMarker(node: SyntaxNodeRef, context: LiveContext) {
 
 function heading(node: SyntaxNodeRef, context: LiveContext) {
   const level = Number(node.name.slice(-1));
-  context.lineClass(node.from, `cm-live-h${level}`);
+  // A setext heading's `===` / `---` underline is hidden, so it must not be styled as heading text.
+  const underline = node.node.getChild("HeaderMark");
+  const underlineFrom = node.name.startsWith("Setext") && underline ? underline.from : -1;
+  context.eachLine(node.from, node.to, (line) => {
+    if (line.from <= underlineFrom && underlineFrom <= line.to) return;
+    context.lineClass(line.from, `cm-live-h${level}`);
+  });
 }
 
 function fencedCode(node: SyntaxNodeRef, context: LiveContext) {
@@ -59,7 +65,7 @@ export const blockHandlers: LiveHandlers = {
   },
 
   ListItem: (node, context) => {
-    context.lineClass(node.from, "cm-live-li");
+    context.eachLine(node.from, node.to, (line) => context.lineClass(line.from, "cm-live-li"));
   },
   ListMark: (node, context) => {
     const bullet = node.node.parent?.parent?.name === "BulletList";

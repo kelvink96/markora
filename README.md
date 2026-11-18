@@ -130,6 +130,33 @@ src-tauri/
       file.rs                     Rust file I/O commands
 ```
 
+## UI And Themes
+
+The interface is built on [shadcn/ui](https://ui.shadcn.com) (Radix primitives + Tailwind CSS v4). The shadcn components live in `src/components/ui/` and are owned by this repo, so edit them directly.
+
+**Themes.** `src/styles/themes.css` defines three colour schemes, each in light and dark, in OKLCH:
+
+| Scheme (setting value) | Look |
+| --- | --- |
+| Aurora (`standard`) | Cool indigo ink with a violet to cyan brand gradient |
+| Ember (`sepia`) | Warm graphite and amber; cream paper with a burnt-orange accent in light |
+| High Contrast (`high-contrast`) | Black and white, strong borders, no decoration |
+
+To change a colour, edit it in `themes.css`. `src/styles/theme-contrast.test.ts` then checks every scheme and mode for WCAG AA contrast (4.5:1 text, 3:1 focus rings) and that no token is missing, so a bad tweak fails in `npx vitest run`. Dark mode is the `.theme-dark` class that `AppShell` sets on `<html>`; the editor's syntax colours are the `--syntax-*` tokens, so the editor follows the theme with no rebuild.
+
+Any element can preview a scheme with `data-swatch-scheme` and `data-swatch-mode` (the Settings swatches use this).
+
+**Adding a shadcn component:**
+
+```bash
+npx shadcn@latest add <component> --yes
+```
+
+The CLI needs two follow-ups in this project:
+
+1. It rewrites `import { cn } from "@/lib/utils"` to `from "cn"` and installs an unrelated npm package called `cn`. Change the imports back to `@/lib/utils` and run `npm uninstall cn`.
+2. Remove any `"use client"` line it adds, and any Next.js-only dependency (for example `next-themes`).
+
 ## Platform Notes
 
 - On desktop, markdown rendering and file I/O go through Rust Tauri commands.

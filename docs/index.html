@@ -4,431 +4,416 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Markora MD — Free Markdown Editor for Windows</title>
-  <meta name="description" content="Markora MD is a free, fast markdown editor for Windows with live split-pane preview, native file dialogs, and light/dark themes. Built with Tauri and Rust.">
+  <title>Markora MD — A quiet markdown editor for Windows</title>
+  <meta name="description" content="Markora MD is a free, open-source markdown editor for Windows. Live split preview, outline, find and replace, light and dark themes. Native app built with Tauri and Rust. Download the MSI installer.">
   <meta name="keywords" content="markdown editor, windows markdown editor, free markdown editor, tauri, desktop markdown, live preview markdown">
   <link rel="canonical" href="https://kelvink96.github.io/markora/">
 
   <!-- Open Graph -->
-  <meta property="og:title" content="Markora MD — Free Markdown Editor for Windows">
-  <meta property="og:description" content="A free, fast markdown editor for Windows with live split-pane preview, native file dialogs, and light/dark themes.">
-  <meta property="og:image" content="https://kelvink96.github.io/markora/assets/showcase.png">
+  <meta property="og:title" content="Markora MD — A quiet markdown editor for Windows">
+  <meta property="og:description" content="Free, open-source markdown editor for Windows with live split preview, outline and find and replace.">
+  <meta property="og:image" content="https://kelvink96.github.io/markora/assets/shot-split-dark.png">
   <meta property="og:url" content="https://kelvink96.github.io/markora/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Markora MD">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Markora MD — Free Markdown Editor for Windows">
-  <meta name="twitter:description" content="A free, fast markdown editor for Windows with live split-pane preview, native file dialogs, and light/dark themes.">
-  <meta name="twitter:image" content="https://kelvink96.github.io/markora/assets/showcase.png">
+  <meta name="twitter:title" content="Markora MD — A quiet markdown editor for Windows">
+  <meta name="twitter:description" content="Free, open-source markdown editor for Windows with live split preview, outline and find and replace.">
+  <meta name="twitter:image" content="https://kelvink96.github.io/markora/assets/shot-split-dark.png">
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,600&family=Geist:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
+      --paper: #f6f1e7;
+      --paper-2: #efe8d9;
+      --ink: #17150f;
+      --ink-2: #4a463b;
+      --ink-3: #6f6a5c;
+      --rule: #d9d0bc;
+      --accent: #5b4bdb;
+      --accent-ink: #ffffff;
+      --night: #0b0d17;
+      --night-2: #151827;
+      --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
       --font-ui: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      --font-mono: 'IBM Plex Mono', 'Cascadia Code', 'Consolas', monospace;
-      --dark-bg: #0f172a;
-      --dark-surface: #1e293b;
-      --dark-border: #334155;
-      --accent: #6366f1;
-      --accent-light: #818cf8;
-      --text-primary: #f8fafc;
-      --text-muted: #94a3b8;
-      --text-subtle: #475569;
-      --light-bg: #f8fafc;
-      --light-surface: #ffffff;
-      --light-border: #e2e8f0;
-      --body-text: #0f172a;
-      --body-muted: #64748b;
+      --font-mono: 'IBM Plex Mono', 'Cascadia Code', Consolas, monospace;
+      --wrap: 1120px;
     }
 
     html { scroll-behavior: smooth; }
 
     body {
       font-family: var(--font-ui);
-      background: var(--light-surface);
-      color: var(--body-text);
+      font-size: 17px; line-height: 1.6;
+      background: var(--paper);
+      color: var(--ink);
       -webkit-font-smoothing: antialiased;
     }
 
-    /* ── NAV ── */
-    nav {
-      position: sticky; top: 0; z-index: 100;
-      background: var(--dark-bg);
-      border-bottom: 1px solid var(--dark-surface);
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 48px; height: 56px;
-    }
+    a { color: inherit; }
+    :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
 
-    .nav-logo {
-      display: flex; align-items: center; gap: 9px;
-      color: var(--text-primary); font-weight: 700; font-size: 15px;
+    .wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 28px; }
+
+    .skip {
+      position: absolute; left: 12px; top: -48px; z-index: 200;
+      background: var(--ink); color: var(--paper); padding: 10px 16px; border-radius: 8px;
+    }
+    .skip:focus { top: 12px; }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      position: sticky; top: 0; z-index: 100;
+      background: color-mix(in srgb, var(--paper) 88%, transparent);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--rule);
+    }
+    .topbar .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+
+    .brand {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-family: var(--font-display); font-weight: 700; font-size: 20px;
       letter-spacing: -0.3px; text-decoration: none;
     }
+    .brand img { width: 28px; height: 28px; border-radius: 7px; display: block; }
 
-    .nav-logo-icon {
-      width: 28px; height: 28px;
-      background: linear-gradient(135deg, var(--accent-light), var(--accent));
-      border-radius: 7px;
-      display: flex; align-items: center; justify-content: center;
-      color: white; font-size: 13px; font-weight: 800;
-      font-family: var(--font-mono);
-    }
+    .topnav { display: flex; align-items: center; gap: 28px; font-size: 15px; }
+    .topnav a { text-decoration: none; color: var(--ink-2); }
+    .topnav a:hover { color: var(--ink); }
+    .topnav a.btn { color: var(--paper); }
+    .topnav a.btn:hover { color: var(--accent-ink); }
 
-    .nav-cta {
-      background: var(--accent); color: #fff;
-      border: none; border-radius: 7px;
-      padding: 8px 18px; font-size: 13px; font-weight: 600;
-      cursor: pointer; font-family: var(--font-ui);
-      letter-spacing: -0.2px; text-decoration: none;
-      transition: background 0.15s;
+    .btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      font: 600 15px/1 var(--font-ui);
+      padding: 14px 22px; border-radius: 10px; text-decoration: none;
+      border: 1.5px solid var(--ink); color: var(--ink); background: transparent;
+      transition: transform .15s ease, background .15s ease, color .15s ease;
     }
-    .nav-cta:hover { background: #4f46e5; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-solid { background: var(--ink); color: var(--paper); }
+    .btn-solid:hover { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+    .btn-sm { padding: 10px 16px; font-size: 14px; }
 
     /* ── HERO ── */
-    .hero {
-      background: linear-gradient(180deg, var(--dark-bg) 0%, #131f35 100%);
-      padding: 88px 48px 0;
-      text-align: center;
-    }
+    .hero { padding: 88px 0 56px; }
 
-    .hero-badge {
-      display: inline-block;
-      background: var(--dark-surface); color: var(--accent-light);
-      border: 1px solid #312e81; border-radius: 20px;
-      padding: 5px 16px; font-size: 11px; font-weight: 500;
-      margin-bottom: 28px; letter-spacing: 0.3px;
-      font-family: var(--font-mono);
+    .eyebrow {
+      font-family: var(--font-mono); font-size: 13px; letter-spacing: .04em;
+      color: var(--ink-3); margin-bottom: 22px;
     }
+    .eyebrow b { color: var(--accent); font-weight: 500; }
 
     .hero h1 {
-      color: var(--text-primary);
-      font-size: clamp(32px, 5vw, 52px);
-      font-weight: 800; line-height: 1.1;
-      letter-spacing: -2px;
-      margin-bottom: 18px;
-      max-width: 640px; margin-left: auto; margin-right: auto;
+      font-family: var(--font-display); font-weight: 600;
+      font-size: clamp(44px, 8vw, 96px); line-height: .98; letter-spacing: -0.035em;
+      max-width: 13ch;
+      font-variation-settings: "opsz" 144;
+    }
+    .hero h1 em { font-style: italic; font-weight: 400; color: var(--accent); }
+
+    .hero-lede {
+      margin-top: 28px; max-width: 46ch;
+      font-size: 20px; line-height: 1.55; color: var(--ink-2);
     }
 
-    .hero h1 span { color: var(--accent-light); }
+    .hero-actions { margin-top: 36px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px 20px; }
+    .hero-meta { font-family: var(--font-mono); font-size: 13px; color: var(--ink-3); }
 
-    .hero-sub {
-      color: var(--text-muted); font-size: 16px;
-      max-width: 460px; margin: 0 auto 36px;
-      line-height: 1.7; font-weight: 400;
+    /* load-in */
+    @media (prefers-reduced-motion: no-preference) {
+      .rise { opacity: 0; transform: translateY(14px); animation: rise .7s cubic-bezier(.2,.7,.2,1) forwards; }
+      .d1 { animation-delay: .05s } .d2 { animation-delay: .15s } .d3 { animation-delay: .25s } .d4 { animation-delay: .38s } .d5 { animation-delay: .5s }
+      @keyframes rise { to { opacity: 1; transform: none; } }
     }
 
-    .hero-actions {
-      display: flex; gap: 12px;
-      justify-content: center; align-items: center;
-      flex-wrap: wrap;
+    /* ── PRODUCT SHOT ── */
+    .stage { padding: 8px 0 96px; }
+    .stage-frame {
+      background: var(--night); border-radius: 16px; padding: 14px;
+      box-shadow: 0 2px 0 var(--ink), 0 40px 80px -30px rgba(23,21,15,.45);
     }
+    .stage-frame img { display: block; width: 100%; height: auto; border-radius: 8px; }
+    .caption { margin-top: 16px; font-family: var(--font-mono); font-size: 13px; color: var(--ink-3); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 
-    .btn-primary {
-      background: var(--accent); color: #fff;
-      border-radius: 9px; padding: 13px 26px;
-      font-size: 14px; font-weight: 600;
-      display: inline-flex; align-items: center; gap: 9px;
-      text-decoration: none; letter-spacing: -0.2px;
-      transition: background 0.15s;
-    }
-    .btn-primary:hover { background: #4f46e5; }
+    /* ── TYPE THIS / READ THAT ── */
+    .band { background: var(--paper-2); border-block: 1px solid var(--rule); padding: 96px 0; }
+    .section-head { max-width: 640px; margin-bottom: 48px; }
+    .kicker { font-family: var(--font-mono); font-size: 13px; color: var(--accent); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 14px; }
+    h2 { font-family: var(--font-display); font-weight: 600; font-size: clamp(32px, 4.6vw, 52px); line-height: 1.05; letter-spacing: -0.025em; }
+    .section-head p { margin-top: 16px; color: var(--ink-2); font-size: 18px; }
 
-    .btn-secondary {
-      background: transparent; color: var(--text-muted);
-      border: 1px solid var(--dark-border); border-radius: 9px;
-      padding: 13px 22px; font-size: 14px;
-      display: inline-flex; align-items: center; gap: 8px;
-      text-decoration: none;
-      transition: border-color 0.15s, color 0.15s;
-    }
-    .btn-secondary:hover { border-color: var(--text-muted); color: var(--text-primary); }
-
-    .hero-meta {
-      margin-top: 24px; margin-bottom: 52px;
-      color: var(--text-subtle); font-size: 11px;
-      font-family: var(--font-mono); letter-spacing: 0.2px;
-    }
-
-    /* ── SCREENSHOT ── */
-    .screenshot-section {
-      background: linear-gradient(180deg, #131f35 0%, var(--dark-bg) 100%);
-      padding: 0 48px 72px;
-      text-align: center;
-    }
-
-    .app-window {
-      max-width: 900px; margin: 0 auto;
-      border-radius: 12px; overflow: hidden;
-      border: 1px solid var(--dark-surface);
-      box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6);
-    }
-
-    .window-bar {
-      background: var(--dark-surface);
-      padding: 11px 16px;
-      display: flex; align-items: center; gap: 7px;
-    }
-
-    .dot { width: 11px; height: 11px; border-radius: 50%; }
-
-    .dot-red   { background: #ff5f57; }
-    .dot-yellow { background: #febc2e; }
-    .dot-green  { background: #28c840; }
-
-    .window-title {
-      color: var(--text-subtle); font-size: 11px;
-      font-family: var(--font-mono);
-      margin: 0 auto;
-    }
-
-    .app-window img {
-      display: block; width: 100%;
-      border-top: none;
-    }
+    .pair { display: grid; grid-template-columns: 1fr 1fr; border: 1.5px solid var(--ink); border-radius: 14px; overflow: hidden; background: var(--paper); }
+    .pair > div { padding: 30px 32px; min-width: 0; }
+    .pair-src { background: var(--night); color: #d9dcf0; font-family: var(--font-mono); font-size: 14.5px; line-height: 1.8; white-space: pre-wrap; }
+    .pair-src .h { color: #a79bff; font-weight: 500; }
+    .pair-src .k { color: #7a7fa0; }
+    .pair-src .s { color: #6ee7a8; }
+    .pair-out { font-family: var(--font-display); font-size: 18px; line-height: 1.6; }
+    .pair-out h3 { font-size: 34px; line-height: 1.1; letter-spacing: -0.02em; font-weight: 600; margin-bottom: 14px; }
+    .pair-out ul { margin: 10px 0 14px 1.2em; }
+    .pair-out code { font-family: var(--font-mono); font-size: .8em; background: var(--paper-2); border: 1px solid var(--rule); padding: 1px 6px; border-radius: 5px; }
+    .pair-out blockquote { border-left: 3px solid var(--accent); padding-left: 16px; color: var(--ink-2); font-style: italic; }
+    .pair-label { display: block; font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 14px; opacity: .65; }
 
     /* ── FEATURES ── */
-    .features {
-      background: var(--light-bg);
-      padding: 88px 48px;
-      text-align: center;
-    }
+    .features { padding: 104px 0; }
+    .feature-list { list-style: none; display: grid; grid-template-columns: repeat(2, 1fr); column-gap: 64px; }
+    .feature-list li { display: grid; grid-template-columns: 44px 1fr; gap: 6px 14px; padding: 28px 0; border-top: 1px solid var(--rule); }
+    .feature-list .n { font-family: var(--font-mono); font-size: 13px; color: var(--accent); padding-top: 6px; }
+    .feature-list h3 { font-family: var(--font-display); font-weight: 600; font-size: 24px; letter-spacing: -0.015em; line-height: 1.2; }
+    .feature-list p { grid-column: 2; color: var(--ink-2); font-size: 16px; }
 
-    .features h2 {
-      font-size: clamp(24px, 3vw, 34px);
-      font-weight: 800; color: var(--body-text);
-      letter-spacing: -1px; margin-bottom: 10px;
-    }
+    /* ── THEMES ── */
+    .themes { padding: 0 0 104px; }
+    .theme-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .theme-grid figure { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 14px; padding: 12px; }
+    .theme-grid img { display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--rule); }
+    .theme-grid figcaption { padding: 14px 6px 4px; font-family: var(--font-mono); font-size: 13px; color: var(--ink-3); }
 
-    .features-sub {
-      color: var(--body-muted); font-size: 16px;
-      margin-bottom: 52px;
-    }
+    /* ── DOWNLOAD ── */
+    .download { background: var(--night); color: #eceefb; padding: 104px 0; }
+    .download .kicker { color: #a79bff; }
+    .download h2 { color: #fff; }
+    .dl-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 64px; align-items: start; }
+    .dl-lede { margin-top: 16px; color: #aeb2cc; font-size: 18px; max-width: 44ch; }
 
-    .feature-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 20px; max-width: 940px; margin: 0 auto;
-    }
+    .dl-card { margin-top: 32px; background: var(--night-2); border: 1px solid #2a2f48; border-radius: 16px; padding: 28px; }
+    .dl-card .btn { background: #fff; color: var(--night); border-color: #fff; font-size: 16px; padding: 16px 26px; }
+    .dl-card .btn:hover { background: #a79bff; border-color: #a79bff; color: var(--night); }
+    .dl-meta { margin-top: 16px; font-family: var(--font-mono); font-size: 13px; color: #9aa0bd; display: flex; flex-wrap: wrap; gap: 6px 18px; }
+    .dl-alt { margin-top: 18px; font-size: 14px; color: #9aa0bd; }
+    .dl-alt a { color: #cfd2ea; }
 
-    .feature-card {
-      background: var(--light-surface); border-radius: 12px;
-      padding: 26px 20px; border: 1px solid var(--light-border);
-      text-align: left;
-      transition: box-shadow 0.15s;
+    .steps { list-style: none; counter-reset: s; }
+    .steps li { counter-increment: s; position: relative; padding: 0 0 26px 52px; color: #aeb2cc; font-size: 16px; }
+    .steps li::before {
+      content: counter(s); position: absolute; left: 0; top: -2px;
+      width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid #3b4166;
+      display: grid; place-items: center; font-family: var(--font-mono); font-size: 13px; color: #cfd2ea;
     }
-    .feature-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.07); }
-
-    .feature-icon {
-      width: 40px; height: 40px; border-radius: 10px;
-      background: #ede9fe;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px; margin-bottom: 14px;
-    }
-
-    .feature-card h3 {
-      font-size: 14px; font-weight: 700; color: var(--body-text);
-      margin-bottom: 7px; letter-spacing: -0.2px;
-    }
-
-    .feature-card p {
-      font-size: 13px; color: var(--body-muted); line-height: 1.6;
-    }
-
-    /* ── CTA ── */
-    .cta-section {
-      background: var(--light-surface);
-      padding: 88px 48px; text-align: center;
-      border-top: 1px solid var(--light-border);
-    }
-
-    .cta-section h2 {
-      font-size: clamp(24px, 3vw, 34px);
-      font-weight: 800; color: var(--body-text);
-      letter-spacing: -1px; margin-bottom: 10px;
-    }
-
-    .cta-section p {
-      color: var(--body-muted); font-size: 16px;
-      margin-bottom: 36px;
-    }
-
-    .store-btn {
-      display: inline-flex; flex-direction: column; align-items: center;
-      background: var(--dark-bg); color: var(--text-primary);
-      border-radius: 12px; padding: 15px 32px;
-      text-decoration: none; margin-bottom: 16px;
-      transition: background 0.15s;
-    }
-    .store-btn:hover { background: #1e293b; }
-
-    .store-btn-label {
-      font-size: 10px; color: var(--text-muted);
-      font-family: var(--font-mono); margin-bottom: 3px;
-    }
-
-    .store-btn-name {
-      font-size: 16px; font-weight: 700; letter-spacing: -0.3px;
-    }
-
-    .cta-note {
-      display: block; font-size: 12px; color: var(--body-muted);
-      font-family: var(--font-mono);
-    }
+    .steps strong { display: block; color: #fff; font-weight: 600; margin-bottom: 2px; }
+    .note { margin-top: 8px; padding: 16px 18px; border: 1px dashed #3b4166; border-radius: 12px; font-size: 14.5px; color: #aeb2cc; }
+    .note strong { color: #fff; }
 
     /* ── FOOTER ── */
-    footer {
-      background: var(--dark-bg);
-      padding: 28px 48px;
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: 16px;
-    }
-
-    .footer-logo {
-      color: var(--text-primary); font-weight: 700; font-size: 14px;
-      letter-spacing: -0.3px; text-decoration: none;
-    }
-
-    .footer-links {
-      display: flex; gap: 24px;
-    }
-
-    .footer-links a {
-      color: var(--text-muted); font-size: 13px;
-      text-decoration: none; transition: color 0.15s;
-    }
-    .footer-links a:hover { color: var(--text-muted); }
-
-    .footer-copy {
-      color: var(--text-subtle); font-size: 11px;
-      font-family: var(--font-mono);
-    }
+    .site-footer { background: var(--paper); padding: 40px 0; border-top: 1px solid var(--rule); }
+    .site-footer .wrap { display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: center; justify-content: space-between; }
+    .footer-links { display: flex; flex-wrap: wrap; gap: 8px 24px; font-size: 15px; }
+    .footer-links a { color: var(--ink-2); text-decoration: none; }
+    .footer-links a:hover { color: var(--ink); text-decoration: underline; }
+    .footer-copy { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); }
 
     /* ── RESPONSIVE ── */
-    @media (max-width: 640px) {
-      nav { padding: 0 20px; }
-      .hero { padding: 64px 20px 0; }
-      .screenshot-section { padding: 0 20px 52px; }
-      .features { padding: 64px 20px; }
-      .cta-section { padding: 64px 20px; }
-      footer { padding: 24px 20px; flex-direction: column; align-items: flex-start; }
-      .hero h1 { letter-spacing: -1px; }
+    @media (max-width: 860px) {
+      .pair, .theme-grid, .dl-grid, .feature-list { grid-template-columns: 1fr; }
+      .dl-grid { gap: 40px; }
+      .topnav .hide-sm { display: none; }
+    }
+    @media (max-width: 560px) {
+      body { font-size: 16px; }
+      .wrap { padding: 0 20px; }
+      .hero { padding: 56px 0 40px; }
+      .hero-lede { font-size: 18px; }
+      .band, .features, .download { padding: 72px 0; }
+      .themes { padding-bottom: 72px; }
+      .pair > div { padding: 22px 20px; }
+      .btn { width: 100%; justify-content: center; }
+      .topnav .btn { width: auto; }
     }
   </style>
 </head>
 <body>
+  <a class="skip" href="#main">Skip to content</a>
 
-  <!-- NAV -->
-  <nav>
-    <a class="nav-logo" href="index.html">
-      <div class="nav-logo-icon">M</div>
-      Markora MD
-    </a>
-    <a class="nav-cta" href="https://apps.microsoft.com/detail/9NJDGX8KZDS1" target="_blank" rel="noopener">
-      Get it Free →
-    </a>
-  </nav>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="./">
+        <img src="assets/logo.png" alt="" width="28" height="28">
+        Markora
+      </a>
+      <nav class="topnav" aria-label="Primary">
+        <a class="hide-sm" href="#features">Features</a>
+        <a class="hide-sm" href="https://github.com/kelvink96/markora" target="_blank" rel="noopener">GitHub</a>
+        <a class="btn btn-solid btn-sm" href="#download">Download</a>
+      </nav>
+    </div>
+  </header>
 
-  <main>
+  <main id="main">
 
     <!-- HERO -->
-    <section class="hero" aria-label="Hero">
-      <div class="hero-badge">✦ free on microsoft store</div>
-      <h1>The markdown editor<br>built for <span>Windows</span>.</h1>
-      <p class="hero-sub">
-        Live split-pane preview, native file dialogs, light &amp; dark themes —
-        no Electron, no browser tab. Just your words.
-      </p>
-      <div class="hero-actions">
-        <a class="btn-primary" href="https://apps.microsoft.com/detail/9NJDGX8KZDS1" target="_blank" rel="noopener">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>
-          Download on Microsoft Store
-        </a>
-        <a class="btn-secondary" href="https://github.com/kelvink96/markora" target="_blank" rel="noopener">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
-          View on GitHub
-        </a>
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="wrap">
+        <p class="eyebrow rise d1"><b>v<span data-version>1.1.5</span></b> · free · open source · Windows 10 &amp; 11</p>
+        <h1 id="hero-title" class="rise d2">Markdown, <em>quietly</em> rendered.</h1>
+        <p class="hero-lede rise d3">
+          A fast, native editor for the files you actually write: notes, READMEs, docs.
+          Type on the left, read on the right. No account, no cloud, no browser tab.
+        </p>
+        <div class="hero-actions rise d4">
+          <a class="btn btn-solid" href="https://github.com/kelvink96/markora/releases/latest" data-msi-link>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 20h16"/></svg>
+            Download for Windows (.msi)
+          </a>
+          <span class="hero-meta">Installer · <span data-size>MSI package</span></span>
+        </div>
       </div>
-      <p class="hero-meta">free forever · windows 10/11 · no account required</p>
     </section>
 
-    <!-- APP SCREENSHOT -->
-    <section class="screenshot-section" aria-label="App screenshot">
-      <div class="app-window">
-        <div class="window-bar">
-          <div class="dot dot-red"></div>
-          <div class="dot dot-yellow"></div>
-          <div class="dot dot-green"></div>
-          <span class="window-title">readme.md — Markora MD</span>
+    <!-- PRODUCT SHOT -->
+    <section class="stage rise d5" aria-label="Markora in split view">
+      <div class="wrap">
+        <div class="stage-frame">
+          <img src="assets/shot-split-dark.png" width="1440" height="900"
+               alt="Markora in split view: raw markdown on the left, the rendered document on the right, with the formatting toolbar above.">
         </div>
-        <img
-          src="assets/showcase.png"
-          alt="Markora MD editor showing the split markdown editor on the left and live HTML preview on the right"
-          width="900"
-          loading="lazy"
-        >
+        <p class="caption"><span>Split view, dark theme</span><span>Editor on the left · live preview on the right</span></p>
+      </div>
+    </section>
+
+    <!-- TYPE THIS / READ THAT -->
+    <section class="band" aria-labelledby="pair-title">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="kicker">How it works</p>
+          <h2 id="pair-title">Type this. Read that.</h2>
+          <p>The preview updates as you type, so you always see what the page will look like. Code blocks are syntax highlighted.</p>
+        </div>
+        <div class="pair">
+          <div class="pair-src" aria-label="Markdown source"><span class="pair-label">Markdown</span><span class="h"># Release notes</span>
+
+<span class="k">-</span> <span class="h">**Faster**</span> startup
+<span class="k">-</span> Open <span class="s">`.md`</span> files from anywhere
+
+<span class="k">&gt;</span> Write first, refine later.</div>
+          <div class="pair-out" aria-label="Rendered result"><span class="pair-label">Preview</span>
+            <h3>Release notes</h3>
+            <ul>
+              <li><strong>Faster</strong> startup</li>
+              <li>Open <code>.md</code> files from anywhere</li>
+            </ul>
+            <blockquote>Write first, refine later.</blockquote>
+          </div>
+        </div>
       </div>
     </section>
 
     <!-- FEATURES -->
-    <section class="features" aria-label="Features">
-      <h2>Everything you need. Nothing you don't.</h2>
-      <p class="features-sub">Built for writers and developers who want to focus on the words.</p>
-      <div class="feature-grid">
-        <div class="feature-card">
-          <div class="feature-icon" aria-hidden="true">⚡</div>
-          <h3>Live Preview</h3>
-          <p>Side-by-side editor and rendered output, updated as you type.</p>
+    <section class="features" id="features" aria-labelledby="features-title">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="kicker">What you get</p>
+          <h2 id="features-title">Everything a writing tool needs. Nothing it doesn't.</h2>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon" aria-hidden="true">🦀</div>
-          <h3>Rust-Powered</h3>
-          <p>Markdown parsing in Rust via pulldown-cmark — fast and reliable.</p>
+        <ul class="feature-list">
+          <li><span class="n">01</span><h3>Live split preview</h3><p>Switch between editor, split and preview with one click.</p></li>
+          <li><span class="n">02</span><h3>Outline of your headings</h3><p>A navigable outline of the document, so long files stay easy to move around.</p></li>
+          <li><span class="n">03</span><h3>Find and replace</h3><p>Search with case, whole-word and regex options, and replace across the document.</p></li>
+          <li><span class="n">04</span><h3>Slash commands and a formatting toolbar</h3><p>Insert headings, lists, tables and code blocks without remembering the syntax.</p></li>
+          <li><span class="n">05</span><h3>Tabs and recent files</h3><p>Keep several documents open, and jump back into what you were working on.</p></li>
+          <li><span class="n">06</span><h3>Native and local</h3><p>A Tauri and Rust app that opens and saves plain <code>.md</code> files with native Windows dialogs. Your files never leave your machine.</p></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- THEMES -->
+    <section class="themes" aria-labelledby="themes-title">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="kicker">Light or dark</p>
+          <h2 id="themes-title">Easy on the eyes, any hour.</h2>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon" aria-hidden="true">🗂️</div>
-          <h3>Native Files</h3>
-          <p>Open and save .md files using native Windows file dialogs.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon" aria-hidden="true">🌙</div>
-          <h3>Dark &amp; Light</h3>
-          <p>Switch between themes instantly. Easy on the eyes, day or night.</p>
+        <div class="theme-grid">
+          <figure>
+            <img src="assets/shot-split-light.png" width="1440" height="900" loading="lazy" alt="Markora in the light theme, split view.">
+            <figcaption>Light theme</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/shot-outline.png" width="1440" height="900" loading="lazy" alt="Markora with the outline panel open beside the editor and preview.">
+            <figcaption>Outline panel, dark theme</figcaption>
+          </figure>
         </div>
       </div>
     </section>
 
-    <!-- DOWNLOAD CTA -->
-    <section class="cta-section" aria-label="Download">
-      <h2>Ready to write?</h2>
-      <p>Free on the Microsoft Store. No subscription, no sign-up.</p>
-      <a class="store-btn" href="https://apps.microsoft.com/detail/9NJDGX8KZDS1" target="_blank" rel="noopener">
-        <span class="store-btn-label">Download on the</span>
-        <span class="store-btn-name">Microsoft Store</span>
-      </a>
-      <span class="cta-note">windows 10 / 11 · free forever · open source on github</span>
+    <!-- DOWNLOAD -->
+    <section class="download" id="download" aria-labelledby="download-title">
+      <div class="wrap dl-grid">
+        <div>
+          <p class="kicker">Download</p>
+          <h2 id="download-title">Install Markora in under a minute.</h2>
+          <p class="dl-lede">Free and open source. A standard Windows installer, no account needed.</p>
+
+          <div class="dl-card">
+            <a class="btn" href="https://github.com/kelvink96/markora/releases/latest" data-msi-link>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 20h16"/></svg>
+              Download Markora <span data-version-label>(latest)</span> .msi
+            </a>
+            <p class="dl-meta">
+              <span>Windows 10 / 11 · 64-bit</span>
+              <span data-size>MSI installer</span>
+              <span data-date></span>
+            </p>
+            <p class="dl-alt">Need an older build? See <a href="versions.html">all versions</a> or the <a href="https://github.com/kelvink96/markora/releases" target="_blank" rel="noopener">GitHub releases</a>.</p>
+          </div>
+        </div>
+
+        <div>
+          <ol class="steps">
+            <li><strong>Download the .msi</strong>Save it anywhere. It is the only file you need.</li>
+            <li><strong>Double-click to install</strong>Follow the installer. It takes a few seconds.</li>
+            <li><strong>Open any .md file</strong>Launch Markora from the Start menu, or press Ctrl+O to open a file.</li>
+          </ol>
+          <p class="note"><strong>Seeing a SmartScreen prompt?</strong> If Windows shows "Windows protected your PC" for a new release, choose <em>More info</em>, then <em>Run anyway</em>. The installer is built and signed by a GitHub Actions workflow in the <a href="https://github.com/kelvink96/markora" target="_blank" rel="noopener" style="color:#cfd2ea">public repository</a>.</p>
+        </div>
+      </div>
     </section>
 
   </main>
 
-  <!-- FOOTER -->
-  <footer>
-    <a class="footer-logo" href="index.html">Markora MD</a>
-    <nav class="footer-links" aria-label="Footer navigation">
-      <a href="privacy.html">Privacy Policy</a>
-      <a href="versions.html">Versions</a>
-      <a href="https://github.com/kelvink96/markora" target="_blank" rel="noopener">GitHub</a>
-      <a href="mailto:kelvin.kiprop96@gmail.com">Contact</a>
-    </nav>
-    <span class="footer-copy">© 2026 Kelvin Kiprop</span>
+  <footer class="site-footer">
+    <div class="wrap">
+      <a class="brand" href="./">Markora</a>
+      <nav class="footer-links" aria-label="Footer">
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="versions.html">Versions</a>
+        <a href="https://github.com/kelvink96/markora" target="_blank" rel="noopener">GitHub</a>
+        <a href="mailto:kelvin.kiprop96@gmail.com">Contact</a>
+      </nav>
+      <span class="footer-copy">© 2026 Kelvin Kiprop</span>
+    </div>
   </footer>
 
+  <script>
+    // Point the download buttons at the latest MSI. Falls back to the releases page if the API is unavailable.
+    (function () {
+      fetch('https://api.github.com/repos/kelvink96/markora/releases/latest', { headers: { Accept: 'application/vnd.github+json' } })
+        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then(function (rel) {
+          var msi = (rel.assets || []).find(function (a) { return /\.msi$/i.test(a.name); });
+          if (!msi) return;
+          var version = String(rel.tag_name || '').replace(/^v/, '');
+          document.querySelectorAll('[data-msi-link]').forEach(function (a) { a.href = msi.browser_download_url; });
+          document.querySelectorAll('[data-version]').forEach(function (el) { el.textContent = version; });
+          document.querySelectorAll('[data-version-label]').forEach(function (el) { el.textContent = 'v' + version; });
+          var mb = (msi.size / 1048576).toFixed(1) + ' MB';
+          document.querySelectorAll('[data-size]').forEach(function (el) { el.textContent = el.closest('.dl-meta') ? 'MSI · ' + mb : mb; });
+          var d = new Date(rel.published_at);
+          if (!isNaN(d)) document.querySelectorAll('[data-date]').forEach(function (el) {
+            el.textContent = 'Released ' + d.toLocaleDateString('en', { year: 'numeric', month: 'short', day: 'numeric' });
+          });
+        })
+        .catch(function () { /* keep static fallback */ });
+    })();
+  </script>
 </body>
 </html>

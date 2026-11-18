@@ -126,7 +126,7 @@ vi.mock("@codemirror/view", () => ({
   },
 }));
 
-vi.mock("@codemirror/lang-markdown", () => ({ markdown: vi.fn(() => ({})) }));
+vi.mock("@codemirror/lang-markdown", () => ({ markdown: vi.fn(() => ({})), markdownLanguage: {} }));
 // The real theme is exercised in editor-settings-extensions.test.ts and in the browser.
 vi.mock("../../../features/editor/editor-theme", () => ({ markoraEditorTheme: [] }));
 // The real Live extension is exercised in features/editor/live/*.test.ts.

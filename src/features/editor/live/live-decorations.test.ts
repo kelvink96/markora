@@ -68,6 +68,16 @@ describe("reveal rule", () => {
     expect(hiddenFroms(build(doc, 5))).toEqual([7, 15]);
   });
 
+  it("does not reveal the line a selection only reaches the start of (triple-click, Shift+Down)", () => {
+    const text = "**a**\n**b**";
+    // 0..6 selects line one and its newline: the caret ends at column 0 of line two.
+    expect(hiddenFroms(build(text, 0, 6))).toEqual([6, 9]);
+  });
+
+  it("still reveals a line a plain caret sits at the start of", () => {
+    expect(hiddenFroms(build("**a**\n**b**", 6))).toEqual([0, 3]);
+  });
+
   it("reveals nothing extra for several cursors on separate lines", () => {
     const state = stateFor(doc, EditorSelection.create([EditorSelection.cursor(2), EditorSelection.cursor(20)]));
     const found = collect(buildLiveDecorations(state, [{ from: 0, to: doc.length }]), doc.length);
@@ -121,6 +131,18 @@ describe("lists", () => {
   it("styles each item line for a hanging indent, revealed or not", () => {
     const found = build("- one\n- two", 2);
     expect(found.filter((f) => f.class === "cm-live-li").map((f) => f.from)).toEqual([0, 6]);
+  });
+});
+
+describe("continuation lines", () => {
+  it("styles every line of a list item, not just the first", () => {
+    const found = build("- one\n  two\n- next\n\nx", 20);
+    expect(found.filter((f) => f.class === "cm-live-li").map((f) => f.from)).toEqual([0, 6, 12]);
+  });
+
+  it("styles every text line of a multi-line setext heading, but not its underline", () => {
+    const found = build("Foo\nbar\n===\n\nx", 14);
+    expect(found.filter((f) => f.class === "cm-live-h1").map((f) => f.from)).toEqual([0, 4]);
   });
 });
 

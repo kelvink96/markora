@@ -137,6 +137,18 @@ describe("links", () => {
     expect(hidden(found)).toEqual([]);
   });
 
+  it("hides and styles a multi-line link per line, so each line reveals on its own", () => {
+    const doc = `[foo\nbar](url)${AWAY}`;
+    // Caret on the second line: its `](url)` is raw, but the first line's `[` stays hidden.
+    const second = build(doc, 6);
+    expect(hidden(second)).toEqual([[0, 1]]);
+    expect(marks(second, "cm-live-link")).toEqual([[1, 4]]);
+    // Caret away: both lines are rendered.
+    const away = build(doc, doc.length);
+    expect(hidden(away)).toEqual([[0, 1], [8, 14]]);
+    expect(marks(away, "cm-live-link")).toEqual([[1, 4], [5, 8]]);
+  });
+
   it("leaves images and reference links untouched", () => {
     const doc = `![alt](a.png) [ref][r]\n\n[r]: http://z${AWAY}`;
     const found = build(doc, doc.length);

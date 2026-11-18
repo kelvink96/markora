@@ -108,10 +108,16 @@ export function buildLiveDecorations(
   return Decoration.set(decorations, true);
 }
 
-/** The whole-line spans touched by the selection: a multi-line selection reveals every line in it. */
+/**
+ * The whole-line spans touched by the selection: a multi-line selection reveals every line in it.
+ * A selection that ends at column 0 of a line (triple-click, Shift+Down) has not entered that line.
+ */
 function revealedSpans(state: EditorState): LiveRange[] {
-  return state.selection.ranges.map((range) => ({
-    from: state.doc.lineAt(range.from).from,
-    to: state.doc.lineAt(range.to).to,
-  }));
+  return state.selection.ranges.map((range) => {
+    const endsAtLineStart = !range.empty && range.to === state.doc.lineAt(range.to).from;
+    return {
+      from: state.doc.lineAt(range.from).from,
+      to: state.doc.lineAt(endsAtLineStart ? range.to - 1 : range.to).to,
+    };
+  });
 }

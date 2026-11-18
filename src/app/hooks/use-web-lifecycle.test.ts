@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { useWebWorkspacePersistence } from "./use-web-lifecycle";
+import { loadViewMode } from "../../features/workspace/view-mode-storage";
+import { useWorkspaceState } from "../../features/workspace/workspace-state";
 import { useDocumentStore } from "../../store/document";
 import type { WorkspaceSnapshot } from "../../platform/persistence/web";
 import { loadWorkspaceSnapshot, saveWorkspaceSnapshot } from "../../platform/persistence/web";
@@ -41,6 +43,19 @@ describe("useWebWorkspacePersistence", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  it("keeps Edit for an upgrading web user whose only older data is the IndexedDB workspace", async () => {
+    localStorage.clear();
+    useWorkspaceState.setState({ viewMode: loadViewMode() });
+    expect(useWorkspaceState.getState().viewMode).toBe("live");
+    loadMock.mockResolvedValue(storedSnapshot());
+
+    renderHook(() => useWebWorkspacePersistence(true));
+
+    await waitFor(() => expect(useWorkspaceState.getState().viewMode).toBe("edit"));
+    expect(localStorage.getItem("markora:view-mode")).toBe("edit");
+    localStorage.clear();
   });
 
   it("does not overwrite the stored snapshot before it has been loaded", async () => {

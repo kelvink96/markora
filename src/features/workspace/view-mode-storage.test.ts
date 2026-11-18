@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { loadViewMode, saveViewMode } from "./view-mode-storage";
+import { keepEditForPreexistingData, loadViewMode, saveViewMode } from "./view-mode-storage";
 
 describe("view mode storage", () => {
   beforeEach(() => localStorage.clear());
@@ -29,7 +29,8 @@ describe("view mode storage", () => {
   it("ignores an unknown stored mode and falls back by the install rule", () => {
     localStorage.setItem("markora:view-mode", "sideways");
     expect(loadViewMode()).toBe("live");
-
+    localStorage.clear();
+    localStorage.setItem("markora:view-mode", "sideways");
     localStorage.setItem("markora:session", "{}");
     expect(loadViewMode()).toBe("edit");
   });
@@ -44,5 +45,38 @@ describe("view mode storage", () => {
 
     expect(loadViewMode()).toBe("live");
     expect(() => saveViewMode("split")).not.toThrow();
+  });
+
+  it("remembers the default it picked, so saving a session later does not flip a new user to edit", () => {
+    expect(loadViewMode()).toBe("live");
+
+    localStorage.setItem("markora:session", "{}");
+
+    expect(loadViewMode()).toBe("live");
+  });
+
+  describe("keepEditForPreexistingData", () => {
+    it("moves a launch that defaulted to live back to edit when older data turns up", () => {
+      expect(loadViewMode()).toBe("live");
+
+      expect(keepEditForPreexistingData()).toBe("edit");
+      expect(loadViewMode()).toBe("edit");
+    });
+
+    it("does nothing once the user has chosen a mode", () => {
+      expect(loadViewMode()).toBe("live");
+      saveViewMode("live");
+
+      expect(keepEditForPreexistingData()).toBeNull();
+      expect(loadViewMode()).toBe("live");
+    });
+
+    it("does nothing on a launch that restored a stored mode", () => {
+      saveViewMode("live");
+      localStorage.setItem("markora:view-mode-default", "1");
+      loadViewMode();
+
+      expect(keepEditForPreexistingData()).toBeNull();
+    });
   });
 });

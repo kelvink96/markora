@@ -3,7 +3,7 @@ import { fireEvent, renderHook } from "@testing-library/react";
 import { useKeyboardShortcuts } from "./use-keyboard-shortcuts";
 
 function handlers() {
-  return { onNew: vi.fn(), onOpen: vi.fn(), onSave: vi.fn(), onSaveAs: vi.fn() };
+  return { onNew: vi.fn(), onOpen: vi.fn(), onSave: vi.fn(), onSaveAs: vi.fn(), onCommandPalette: vi.fn() };
 }
 
 describe("useKeyboardShortcuts", () => {
@@ -12,6 +12,8 @@ describe("useKeyboardShortcuts", () => {
     ["o", {}, "onOpen"],
     ["s", {}, "onSave"],
     ["s", { shiftKey: true }, "onSaveAs"],
+    ["k", {}, "onCommandPalette"],
+    ["P", { shiftKey: true }, "onCommandPalette"],
   ] as const)("Ctrl+%s %j calls %s", (key, extra, handlerName) => {
     const fns = handlers();
     renderHook(() => useKeyboardShortcuts(fns));

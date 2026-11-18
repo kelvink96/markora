@@ -195,6 +195,23 @@ describe("App", () => {
     readFileMock.mockResolvedValue("# Preview");
   });
 
+  it("opens the command palette with Ctrl+K and runs a command from it", async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+    expect(screen.queryByRole("dialog", { name: "Command palette" })).not.toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: "k", ctrlKey: true });
+    const palette = await screen.findByRole("dialog", { name: "Command palette" });
+    expect(within(palette).getByRole("option", { name: /Save as/ })).toBeInTheDocument();
+
+    await user.type(within(palette).getByPlaceholderText("Type a command..."), "split");
+    await user.keyboard("{Enter}");
+
+    await waitFor(() => expect(useWorkspaceState.getState().viewMode).toBe("split"));
+    expect(screen.queryByRole("dialog", { name: "Command palette" })).not.toBeInTheDocument();
+  });
+
   it("opens a custom discard dialog for dirty active tabs", async () => {
     const user = userEvent.setup();
     const confirmSpy = vi.spyOn(window, "confirm");

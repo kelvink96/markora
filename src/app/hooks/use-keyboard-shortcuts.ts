@@ -6,10 +6,12 @@ interface ShortcutHandlers {
   onOpen: () => void | Promise<void>;
   onSave: () => void | Promise<void>;
   onSaveAs: () => void | Promise<void>;
+  /** Ctrl/Cmd+K or Ctrl/Cmd+Shift+P. */
+  onCommandPalette?: () => void;
 }
 
-/** Global Ctrl/Cmd shortcuts: N, O, S, Shift+S and Ctrl+Tab / Ctrl+Shift+Tab tab cycling. */
-export function useKeyboardShortcuts({ onNew, onOpen, onSave, onSaveAs }: ShortcutHandlers) {
+/** Global Ctrl/Cmd shortcuts: N, O, S, Shift+S, K / Shift+P (command palette) and Ctrl+Tab / Ctrl+Shift+Tab tab cycling. */
+export function useKeyboardShortcuts({ onNew, onOpen, onSave, onSaveAs, onCommandPalette }: ShortcutHandlers) {
   const selectDocument = useDocumentStore((state) => state.selectDocument);
 
   useEffect(() => {
@@ -17,6 +19,12 @@ export function useKeyboardShortcuts({ onNew, onOpen, onSave, onSaveAs }: Shortc
       // Support both Windows/Linux Ctrl shortcuts and macOS Command shortcuts.
       const mod = event.ctrlKey || event.metaKey;
       if (!mod) return;
+
+      const key = event.key.toLowerCase();
+      if ((key === "k" && !event.shiftKey) || (key === "p" && event.shiftKey)) {
+        event.preventDefault();
+        onCommandPalette?.();
+      }
 
       if (event.key === "n") {
         event.preventDefault();
@@ -52,5 +60,5 @@ export function useKeyboardShortcuts({ onNew, onOpen, onSave, onSaveAs }: Shortc
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onNew, onOpen, onSave, onSaveAs, selectDocument]);
+  }, [onCommandPalette, onNew, onOpen, onSave, onSaveAs, selectDocument]);
 }

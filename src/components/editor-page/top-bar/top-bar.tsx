@@ -1,6 +1,7 @@
 import {
   BookOpen,
   CircleHelp,
+  Command,
   Clipboard,
   Clock,
   Copy,
@@ -55,6 +56,7 @@ interface TopBarProps {
   /** The document tabs, shown between the menus and the view controls. */
   tabs?: ReactNode;
   onOpenSettings?: () => void;
+  onOpenCommandPalette?: () => void;
   onOpenKeyboardShortcuts?: () => void;
   onOpenAbout?: () => void;
   onOpenReleaseNotes?: () => void;
@@ -79,6 +81,7 @@ interface TopBarProps {
 export function TopBar({
   tabs,
   onOpenSettings = () => {},
+  onOpenCommandPalette = () => {},
   onOpenKeyboardShortcuts = () => {},
   onOpenAbout = () => {},
   onOpenReleaseNotes = () => {},
@@ -238,6 +241,9 @@ export function TopBar({
           <MenubarMenu>
             <MenubarTrigger>Help</MenubarTrigger>
             <MenubarContent>
+              <MenubarItem onSelect={onOpenCommandPalette}>
+                <Command className={iconClass} /> Command Palette <MenubarShortcut>{mod}+K</MenubarShortcut>
+              </MenubarItem>
               <MenubarItem onSelect={onOpenKeyboardShortcuts}>
                 <CircleHelp className={iconClass} /> Keyboard Shortcuts
               </MenubarItem>

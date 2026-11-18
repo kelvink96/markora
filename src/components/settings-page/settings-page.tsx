@@ -26,6 +26,8 @@ interface SettingsPageProps {
   onSaveTemplate: (value: string) => void;
   onResetTemplate: () => void;
   onResetAll: () => void;
+  /** Desktop only: shows the "reopen last session" option. */
+  canRestoreSession?: boolean;
 }
 
 export function SettingsPage({
@@ -39,6 +41,7 @@ export function SettingsPage({
   onSaveTemplate,
   onResetTemplate,
   onResetAll,
+  canRestoreSession = false,
 }: SettingsPageProps) {
   const {
     activeSection,
@@ -80,6 +83,7 @@ export function SettingsPage({
         savedFiles={settings.files}
         onFilesChange={setFilesDraft}
         onSave={onSaveFiles}
+        canRestoreSession={canRestoreSession}
       />
     ),
     about: (

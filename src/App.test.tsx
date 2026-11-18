@@ -515,4 +515,66 @@ describe("App", () => {
       }),
     );
   });
+
+  it("saves a dirty file automatically when autosave is on (#11)", async () => {
+    const autosaveSettings = createDefaultSettings();
+    autosaveSettings.files.autosave = true;
+    invokeMock.mockImplementation(async (command: string) =>
+      command === "load_settings" ? autosaveSettings : undefined,
+    );
+
+    render(<App />);
+
+    await waitFor(() => expect(writeFileMock).toHaveBeenCalledWith("D:\\notes\\dirty.md", "# Dirty"), {
+      timeout: 4000,
+    });
+    await waitFor(() => expect(useDocumentStore.getState().isDirty).toBe(false));
+  });
+
+  it("does not save automatically when autosave is off (#11)", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      render(<App />);
+      await vi.advanceTimersByTimeAsync(5000);
+
+      expect(writeFileMock).not.toHaveBeenCalled();
+      expect(useDocumentStore.getState().isDirty).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("reopens last session's files when restore is on (#11)", async () => {
+    localStorage.setItem(
+      "markora:session",
+      JSON.stringify({ openPaths: ["D:\\notes\\restored.md"], activePath: "D:\\notes\\restored.md" }),
+    );
+    const restoreSettings = createDefaultSettings();
+    restoreSettings.files.restorePreviousSession = true;
+    invokeMock.mockImplementation(async (command: string) =>
+      command === "load_settings" ? restoreSettings : undefined,
+    );
+    readFileMock.mockResolvedValue("# Restored");
+
+    render(<App />);
+
+    await waitFor(() => expect(useDocumentStore.getState().filePath).toBe("D:\\notes\\restored.md"));
+    expect(readFileMock).toHaveBeenCalledWith("D:\\notes\\restored.md");
+    expect(useDocumentStore.getState().content).toBe("# Restored");
+    localStorage.clear();
+  });
+
+  it("leaves the tabs alone on launch when restore is off (#11)", async () => {
+    localStorage.setItem(
+      "markora:session",
+      JSON.stringify({ openPaths: ["D:\\notes\\restored.md"], activePath: null }),
+    );
+
+    render(<App />);
+    await waitFor(() => expect(useSettingsStore.getState().isHydrated).toBe(true));
+
+    expect(readFileMock).not.toHaveBeenCalled();
+    expect(useDocumentStore.getState().openDocuments).toHaveLength(2);
+    localStorage.clear();
+  });
 });

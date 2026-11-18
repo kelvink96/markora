@@ -13,6 +13,8 @@ export function useWebWorkspacePersistence(isWeb: boolean) {
   const activeProjectId = useDocumentStore((state) => state.activeProjectId);
   const recentDocuments = useDocumentStore((state) => state.recentDocuments);
   const hydrateWorkspace = useDocumentStore((state) => state.hydrateWorkspace);
+  // Saving before the stored snapshot has been read would overwrite it with the empty initial state.
+  const [hasLoaded, setHasLoaded] = useState(false);
 
   useEffect(() => {
     let isActive = true;
@@ -26,7 +28,10 @@ export function useWebWorkspacePersistence(isWeb: boolean) {
         if (!isActive || !snapshot) return;
         hydrateWorkspace(snapshot);
       })
-      .catch((error) => console.error("load_workspace_snapshot failed:", error));
+      .catch((error) => console.error("load_workspace_snapshot failed:", error))
+      .finally(() => {
+        if (isActive) setHasLoaded(true);
+      });
 
     return () => {
       isActive = false;
@@ -34,7 +39,7 @@ export function useWebWorkspacePersistence(isWeb: boolean) {
   }, [hydrateWorkspace, isWeb]);
 
   useEffect(() => {
-    if (!isWeb) {
+    if (!isWeb || !hasLoaded) {
       return;
     }
 
@@ -44,7 +49,7 @@ export function useWebWorkspacePersistence(isWeb: boolean) {
       activeProjectId,
       recentDocuments,
     }).catch((error) => console.error("save_workspace_snapshot failed:", error));
-  }, [activeProjectId, isWeb, projects, recentDocuments]);
+  }, [activeProjectId, hasLoaded, isWeb, projects, recentDocuments]);
 }
 
 /** Web only: captures the browser's install prompt so a button can trigger it later. */

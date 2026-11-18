@@ -82,7 +82,7 @@ export function TabStrip({
                   data-active={isActive}
                   onDoubleClick={() => onRenameTab?.(tab.id)}
                   className={cn(
-                    "group relative flex h-8 max-w-56 min-w-0 shrink-0 items-center rounded-md text-sm transition-colors",
+                    "group relative flex h-8 max-w-56 min-w-0 shrink-0 items-center rounded-md text-sm transition-colors pointer-coarse:h-11",
                     isActive
                       ? "bg-accent text-accent-foreground after:absolute after:inset-x-2 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-linear-to-r after:from-brand-from after:to-brand-to"
                       : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",

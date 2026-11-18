@@ -1,6 +1,9 @@
 import type { SyntaxNodeRef } from "@lezer/common";
 import type { LiveContext, LiveHandlers } from "./live-decorations";
 
+/** Attribute on a rendered link's text carrying its destination, read by the Ctrl/Cmd+click handler. */
+export const LIVE_HREF = "data-live-href";
+
 /*
  * Inline elements. Each one is styled with a class on its text and has its markers hidden, both
  * only on lines the cursor is not on (the context applies the reveal rule). Nothing is replaced
@@ -10,9 +13,14 @@ import type { LiveContext, LiveHandlers } from "./live-decorations";
  */
 
 /** Styles a node line by line, so a mark wrapping across lines stays styled when only one line is revealed. */
-function markNode(node: SyntaxNodeRef, context: LiveContext, className: string) {
+function markNode(
+  node: SyntaxNodeRef,
+  context: LiveContext,
+  className: string,
+  attributes?: Record<string, string>,
+) {
   context.eachLine(node.from, node.to, (line) => {
-    context.mark(Math.max(node.from, line.from), Math.min(node.to, line.to), className);
+    context.mark(Math.max(node.from, line.from), Math.min(node.to, line.to), className, attributes);
   });
 }
 
@@ -35,7 +43,9 @@ function link(node: SyntaxNodeRef, context: LiveContext) {
   const open = marks[0];
   const close = marks[1];
   context.hide(open.from, open.to);
-  context.mark(open.to, close.from, "cm-live-link");
+  const url = node.node.getChild("URL");
+  const href = url ? context.state.sliceDoc(url.from, url.to) : "";
+  context.mark(open.to, close.from, "cm-live-link", { [LIVE_HREF]: href });
   context.hide(close.from, node.to);
 }
 
@@ -58,6 +68,6 @@ export const inlineHandlers: LiveHandlers = {
     // A link's destination is hidden with the link; any other URL (an autolink or a bare one) is styled.
     const parent = node.node.parent?.name;
     if (parent === "Link" || parent === "Image" || parent === "LinkReference") return;
-    markNode(node, context, "cm-live-link");
+    markNode(node, context, "cm-live-link", { [LIVE_HREF]: context.state.sliceDoc(node.from, node.to) });
   },
 };

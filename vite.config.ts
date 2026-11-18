@@ -1,3 +1,4 @@
+import path from "node:path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
@@ -11,6 +12,7 @@ export default defineConfig(() => {
 
   return {
     plugins: [react(), tailwindcss()],
+    resolve: { alias: { "@": path.resolve(import.meta.dirname, "src") } },
     clearScreen: false,
     // Tauri expects the frontend dev server on a fixed port.
     // Force IPv4 here because this Windows environment rejects binding to ::1.

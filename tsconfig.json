@@ -14,6 +14,10 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
+    /* shadcn/ui imports components through the @ alias (also set in vite.config.ts) */
+    "baseUrl": ".",
+    "paths": { "@/*": ["./src/*"] },
+
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,

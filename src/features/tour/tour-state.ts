@@ -5,6 +5,8 @@ export interface TourStop {
   target: string;
   title: string;
   content: string;
+  /** A panel that must be open for this stop; the Tour opens it and restores the layout afterwards. */
+  panel?: "outline";
 }
 
 export const TOUR_STOPS: TourStop[] = [
@@ -13,6 +15,12 @@ export const TOUR_STOPS: TourStop[] = [
     title: "Choose how you write",
     content:
       "Live renders as you type, Edit shows raw markdown, Split shows both, and Preview shows the result.",
+  },
+  {
+    target: '[data-tour="outline"]',
+    title: "Jump around with the outline",
+    content: "The outline lists your headings. Click one to jump straight to that section.",
+    panel: "outline",
   },
 ];
 

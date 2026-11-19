@@ -24,7 +24,7 @@ export function OutlinePanel({ headings, activeIndex, onSelect, onClose }: Outli
   const topLevel = headings.length > 0 ? Math.min(...headings.map((heading) => heading.level)) : 1;
 
   return (
-    <aside aria-label="Outline" className="flex h-full w-64 flex-col overflow-hidden rounded-xl border bg-card/80 shadow-sm backdrop-blur-sm">
+    <aside aria-label="Outline" data-tour="outline"className="flex h-full w-64 flex-col overflow-hidden rounded-xl border bg-card/80 shadow-sm backdrop-blur-sm">
       <div className="flex items-center justify-between gap-2 border-b px-3 py-2">
         <h2 className="flex items-center gap-2 text-sm font-semibold">
           <ListTree aria-hidden="true" className="size-4 text-muted-foreground" />

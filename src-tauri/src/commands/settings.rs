@@ -165,15 +165,16 @@ pub fn reset_settings_in_dir(config_dir: &Path) -> Result<MarkoraSettings, Strin
         .map(|settings| settings.onboarding)
         .unwrap_or_default();
 
-    let path = settings_file_path(config_dir);
-    if path.exists() {
-        fs::remove_file(path).map_err(|error| error.to_string())?;
-    }
-
     let mut defaults = default_settings();
     defaults.onboarding = onboarding;
     if defaults.onboarding != OnboardingSettings::default() {
-        save_settings_to_dir(config_dir, &defaults)?;
+        // Overwrite in one write so a failure cannot lose the tour version.
+        return save_settings_to_dir(config_dir, &defaults);
+    }
+
+    let path = settings_file_path(config_dir);
+    if path.exists() {
+        fs::remove_file(path).map_err(|error| error.to_string())?;
     }
     Ok(defaults)
 }

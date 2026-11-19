@@ -12,8 +12,7 @@ interface TourPromptProps {
   open: boolean;
   /** Skip, Escape and outside clicks all count as skipping: the prompt is one-time. */
   onSkip: () => void;
-  /** Starting the Tour is wired in by the Tour itself; without it only Skip is offered. */
-  onStart?: () => void;
+  onStart: () => void;
 }
 
 /** The one-time "Take a quick tour?" invitation shown to unseen users. */
@@ -32,7 +31,7 @@ export function TourPrompt({ open, onSkip, onStart }: TourPromptProps) {
           <Button variant="outline" onClick={onSkip}>
             Skip
           </Button>
-          {onStart ? <Button onClick={onStart}>Start tour</Button> : null}
+          <Button onClick={onStart}>Start tour</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

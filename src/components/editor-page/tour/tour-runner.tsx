@@ -28,10 +28,13 @@ const buildSteps = (narrow: boolean) => stopsForPlatform(TOUR_STOPS, detectPlatf
  * Hand it back to the editor, where the user was working. Focus the user has moved elsewhere
  * on purpose is left alone.
  */
-function returnFocus() {
+function focusIsOnTour() {
   const active = document.activeElement;
-  const lost = !active || active === document.body || active.closest('[role="alertdialog"]');
-  if (lost) document.querySelector<HTMLElement>(".cm-content")?.focus();
+  return !active || active === document.body || active.closest('[role="alertdialog"]') !== null;
+}
+
+function returnFocus() {
+  if (focusIsOnTour()) document.querySelector<HTMLElement>(".cm-content")?.focus();
 }
 
 interface TourRunnerProps {
@@ -53,10 +56,11 @@ export default function TourRunner({ onEnd }: TourRunnerProps) {
     };
   }, []);
 
-  // Escape ends the tour, the same as the close button.
+  // Escape ends the tour, the same as the close button. Elsewhere (the editor closing its slash
+  // menu or search) Escape belongs to that widget, so only the tooltip or a bare page counts.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !event.defaultPrevented) onEnd("skip");
+      if (event.key === "Escape" && !event.defaultPrevented && focusIsOnTour()) onEnd("skip");
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);

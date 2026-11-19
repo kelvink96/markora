@@ -31,7 +31,7 @@ import { scrollPreviewToHeading } from "./features/outline/scroll-to-heading";
 import { useEditorCommandState } from "./features/editor/editor-command-state";
 import { OutlinePanel } from "./components/editor-page/outline-panel";
 import { resetSettings, saveSettings } from "./features/settings/settings-api";
-import { CURRENT_TOUR_VERSION } from "./features/settings/settings-schema";
+import { CURRENT_TOUR_VERSION, isTourUnseen } from "./features/settings/settings-schema";
 import { initialTourState, shouldOfferTour, tourReducer, type TourEvent } from "./features/tour/tour-state";
 import { TourPrompt } from "./components/editor-page/tour-prompt";
 import { Tour } from "./components/editor-page/tour";
@@ -139,7 +139,9 @@ export default function App() {
     (event: TourEvent) => {
       const next = tourReducer(tourState, event);
       setTourState(next.state);
-      if (next.recordVersion) {
+      // Read the store, not a closure: Escape and the library's own end event can both land
+      // before a re-render, and the version only needs recording (and saving) once.
+      if (next.recordVersion && isTourUnseen(useSettingsStore.getState().settings)) {
         updateOnboarding({ tourVersion: CURRENT_TOUR_VERSION });
         void persistCurrentSettings();
       }
@@ -147,6 +149,9 @@ export default function App() {
     [persistCurrentSettings, tourState, updateOnboarding],
   );
   const startTour = useCallback(() => {
+    // Before hydration the store holds defaults: recording a version now would be overwritten
+    // by (or overwrite) the saved settings.
+    if (!useSettingsStore.getState().isHydrated) return;
     // The first Tour stop points at the editor toolbar, which needs an open document.
     useDocumentStore
       .getState()

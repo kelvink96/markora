@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render } from "@testing-library/react";
+import { fireEvent, render } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useWorkspaceState } from "../../../features/workspace/workspace-state";
 
@@ -42,6 +42,18 @@ describe("TourRunner keyboard and focus", () => {
     await userEvent.keyboard("{Escape}");
 
     expect(onEnd).toHaveBeenCalledWith("skip");
+  });
+
+  it("leaves an Escape alone while focus is in the editor, which uses it for its own menus", () => {
+    const editor = addEditor();
+    editor.focus();
+    const onEnd = vi.fn();
+    render(<TourRunner onEnd={onEnd} />);
+
+    fireEvent.keyDown(editor, { key: "Escape" });
+
+    expect(onEnd).not.toHaveBeenCalled();
+    editor.remove();
   });
 
   it("hands focus back to the editor when the tour goes away", () => {

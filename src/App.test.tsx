@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import packageJson from "../package.json";
 import App from "./App";
@@ -836,6 +836,37 @@ describe("App", () => {
           }),
         ),
       );
+    });
+
+    it("saves the tour version once even when the tour is ended twice in a row", async () => {
+      const user = userEvent.setup();
+      loadSettingsWithTourVersion(0);
+
+      render(<App />);
+      await user.click(await screen.findByRole("button", { name: "Start tour" }));
+      const finish = await screen.findByRole("button", { name: "End tour: finish" });
+      invokeMock.mockClear();
+      act(() => {
+        finish.click();
+        finish.click();
+      });
+
+      await waitFor(() => expect(invokeMock).toHaveBeenCalledWith("save_settings", expect.anything()));
+      expect(invokeMock.mock.calls.filter(([command]) => command === "save_settings")).toHaveLength(1);
+    });
+
+    it("ignores the palette's take-the-tour command until the saved settings have loaded", async () => {
+      const user = userEvent.setup();
+      invokeMock.mockImplementation(() => new Promise(() => {}));
+
+      render(<App />);
+      fireEvent.keyDown(window, { key: "k", ctrlKey: true });
+      const palette = await screen.findByRole("dialog", { name: "Command palette" });
+      await user.type(within(palette).getByPlaceholderText("Type a command..."), "take the tour");
+      await user.keyboard("{Enter}");
+
+      expect(screen.queryByText("tour is running")).not.toBeInTheDocument();
+      expect(invokeMock).not.toHaveBeenCalledWith("save_settings", expect.anything());
     });
 
     it("records the tour version and goes away when skipped", async () => {

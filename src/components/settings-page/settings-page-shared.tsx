@@ -79,34 +79,70 @@ export function SectionCard({
   );
 }
 
+/** A group of settings on the page: a heading, then rows divided by hairlines. */
+export function SettingsGroup({ id, title, children }: { id: string; title: string; children: ReactNode }) {
+  return (
+    <section id={id} aria-labelledby={`${id}-heading`} className="scroll-mt-20">
+      <h3 id={`${id}-heading`} className="mb-1 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+        {title}
+      </h3>
+      <div className="divide-y">{children}</div>
+    </section>
+  );
+}
+
 /**
  * A label with optional help text on the left and its control on the right (a switch, a select).
  * `controlId` ties the label and the help text to the control for assistive technology.
+ * When `changed`, a dot appears that resets just this setting through `onReset`.
  */
 export function SettingRow({
   controlId,
   label,
   description,
+  changed = false,
+  onReset,
+  stacked = false,
   children,
 }: {
   controlId: string;
   label: string;
   description?: string;
+  changed?: boolean;
+  onReset?: () => void;
+  /** Put the control under the label instead of beside it (for wide controls like swatches). */
+  stacked?: boolean;
   children: ReactNode;
 }) {
   return (
-    <div className="flex items-start justify-between gap-6">
+    <div
+      className={cn(
+        "gap-3 py-4 first:pt-2 last:pb-2",
+        stacked ? "flex flex-col" : "flex items-start justify-between gap-6",
+      )}
+    >
       <div className="min-w-0 space-y-1">
-        <Label htmlFor={controlId} className="text-sm leading-5">
-          {label}
-        </Label>
+        <div className="flex items-center gap-2">
+          <Label htmlFor={controlId} className="text-sm leading-5">
+            {label}
+          </Label>
+          {changed ? (
+            <button
+              type="button"
+              onClick={onReset}
+              aria-label={`Reset ${label} to default`}
+              title="Changed from default. Click to reset."
+              className="size-2 shrink-0 cursor-pointer rounded-full bg-primary outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+            />
+          ) : null}
+        </div>
         {description ? (
           <p id={`${controlId}-description`} className="text-sm text-muted-foreground">
             {description}
           </p>
         ) : null}
       </div>
-      <div className="shrink-0">{children}</div>
+      <div className={stacked ? undefined : "shrink-0"}>{children}</div>
     </div>
   );
 }

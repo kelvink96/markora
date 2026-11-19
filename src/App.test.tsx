@@ -787,6 +787,20 @@ describe("App", () => {
       expect(screen.queryByRole("dialog", { name: "Take a quick tour?" })).not.toBeInTheDocument();
     });
 
+    it("replays from the command palette for a user who has already seen it", async () => {
+      const user = userEvent.setup();
+      loadSettingsWithTourVersion(CURRENT_TOUR_VERSION);
+
+      render(<App />);
+      await waitFor(() => expect(useSettingsStore.getState().isHydrated).toBe(true));
+      fireEvent.keyDown(window, { key: "k", ctrlKey: true });
+      const palette = await screen.findByRole("dialog", { name: "Command palette" });
+      await user.type(within(palette).getByPlaceholderText("Type a command..."), "take the tour");
+      await user.keyboard("{Enter}");
+
+      expect(await screen.findByText("tour is running")).toBeInTheDocument();
+    });
+
     it("starts the tour on a scratch note when accepted, without recording the version yet", async () => {
       const user = userEvent.setup();
       loadSettingsWithTourVersion(0);

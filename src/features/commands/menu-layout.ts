@@ -109,6 +109,7 @@ export const MENU_LAYOUT: MenuDefinition[] = [
     label: "Help",
     items: [
       command("app.palette"),
+      command("help.tour"),
       command("help.shortcuts"),
       command("help.release-notes"),
       separator,

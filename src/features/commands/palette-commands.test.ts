@@ -36,6 +36,7 @@ function context(overrides: Partial<PaletteContext> = {}): PaletteContext {
       onOpenCommandPalette: vi.fn(),
       onOpenDocs: vi.fn(),
       onReportIssue: vi.fn(),
+      onTakeTour: vi.fn(),
     },
     ...overrides,
   };
@@ -257,7 +258,7 @@ describe("view, theme, zoom and help commands", () => {
   it("keeps theme, zoom and help available with no document while view toggles wait for one", () => {
     const ctx = context({ hasActiveDocument: false });
 
-    for (const id of ["view.theme.dark", "view.color-scheme.sepia", "view.zoom-in", "help.docs", "help.report-issue", "app.palette"]) {
+    for (const id of ["view.theme.dark", "view.color-scheme.sepia", "view.zoom-in", "help.docs", "help.report-issue", "help.tour", "app.palette"]) {
       expect(byId(id, ctx)?.enabled).toBe(true);
     }
     for (const id of ["view.status-bar", "view.word-wrap", "view.line-numbers"]) {
@@ -278,7 +279,9 @@ describe("view, theme, zoom and help commands", () => {
     byId("help.docs", ctx)?.run();
     byId("help.report-issue", ctx)?.run();
     byId("app.palette", ctx)?.run();
+    byId("help.tour", ctx)?.run();
 
+    expect(ctx.handlers.onTakeTour).toHaveBeenCalledTimes(1);
     expect(ctx.handlers.onOpenDocs).toHaveBeenCalledTimes(1);
     expect(ctx.handlers.onReportIssue).toHaveBeenCalledTimes(1);
     expect(ctx.handlers.onOpenCommandPalette).toHaveBeenCalledTimes(1);

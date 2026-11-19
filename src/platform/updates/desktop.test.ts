@@ -119,4 +119,53 @@ describe("desktopUpdateAdapter", () => {
 
     expect(relaunchMock).toHaveBeenCalledTimes(1);
   });
+
+  it("checks with a 30 second timeout", async () => {
+    checkMock.mockResolvedValue(null);
+
+    await desktopUpdateAdapter.checkForUpdate();
+
+    expect(checkMock).toHaveBeenCalledWith({ timeout: 30_000 });
+  });
+
+  it("downloads with a 10 minute timeout", async () => {
+    const pending = fakeUpdate();
+    checkMock.mockResolvedValue(pending);
+    await desktopUpdateAdapter.checkForUpdate();
+
+    await desktopUpdateAdapter.download(vi.fn());
+
+    expect(pending.download).toHaveBeenCalledWith(expect.any(Function), { timeout: 600_000 });
+  });
+
+  it("closes the previous update before replacing it on a re-check", async () => {
+    const first = fakeUpdate();
+    const second = fakeUpdate({ version: "1.6.0" });
+    checkMock.mockResolvedValueOnce(first).mockResolvedValueOnce(second);
+    await desktopUpdateAdapter.checkForUpdate();
+
+    await desktopUpdateAdapter.checkForUpdate();
+    await desktopUpdateAdapter.install();
+
+    expect(first.close).toHaveBeenCalledTimes(1);
+    expect(first.install).not.toHaveBeenCalled();
+    expect(second.install).toHaveBeenCalledTimes(1);
+  });
+
+  it("still re-checks when closing the previous update fails", async () => {
+    const first = fakeUpdate({ close: vi.fn(async () => Promise.reject(new Error("gone"))) });
+    checkMock.mockResolvedValueOnce(first).mockResolvedValueOnce(fakeUpdate({ version: "1.6.0" }));
+    await desktopUpdateAdapter.checkForUpdate();
+
+    await expect(desktopUpdateAdapter.checkForUpdate()).resolves.toMatchObject({ version: "1.6.0" });
+  });
+
+  it("forgets the update once it is installed", async () => {
+    checkMock.mockResolvedValue(fakeUpdate());
+    await desktopUpdateAdapter.checkForUpdate();
+
+    await desktopUpdateAdapter.install();
+
+    await expect(desktopUpdateAdapter.install()).rejects.toThrow("No update to install");
+  });
 });

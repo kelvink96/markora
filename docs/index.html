@@ -192,6 +192,10 @@
     .dl-meta { margin-top: 16px; font-family: var(--font-mono); font-size: 13px; color: #9aa0bd; display: flex; flex-wrap: wrap; gap: 6px 18px; }
     .dl-alt { margin-top: 18px; font-size: 14px; color: #9aa0bd; }
     .dl-alt a { color: #cfd2ea; }
+    .dl-notes { margin-top: 28px; padding-top: 22px; border-top: 1px solid #2a2f48; }
+    .dl-notes[hidden] { display: none; }
+    .dl-notes h3 { font-size: 15px; color: #fff; margin-bottom: 10px; }
+    .dl-notes ul { list-style: none; display: grid; gap: 6px; font-size: 14px; color: #aeb2cc; }
 
     .steps { list-style: none; counter-reset: s; }
     .steps li { counter-increment: s; position: relative; padding: 0 0 26px 52px; color: #aeb2cc; font-size: 16px; }
@@ -363,6 +367,10 @@
               <span data-size>MSI installer</span>
               <span data-date></span>
             </p>
+            <div class="dl-notes" data-notes hidden>
+              <h3>What's new in <span data-version-label></span></h3>
+              <ul data-notes-list></ul>
+            </div>
             <p class="dl-alt">Need an older build? See <a href="versions.html">all versions</a> or the <a href="https://github.com/kelvink96/markora/releases" target="_blank" rel="noopener">GitHub releases</a>.</p>
           </div>
         </div>
@@ -395,6 +403,20 @@
 
   <script>
     // Point the download buttons at the latest MSI. Falls back to the releases page if the API is unavailable.
+    // Show the release notes as plain-text bullets. Nothing from the release body is inserted as HTML.
+    function renderNotes(rel) {
+      var list = document.querySelector('[data-notes-list]');
+      var box = document.querySelector('[data-notes]');
+      if (!list || !box) return;
+      var items = String(rel.body || '').split(/\r?\n/)
+        .map(function (l) { return l.match(/^\s*[*-]\s+(.*)$/); })
+        .filter(Boolean)
+        .map(function (m) { return m[1].replace(/\s+by @\S+.*$/, '').replace(/\*\*/g, '').trim(); })
+        .filter(Boolean)
+        .slice(0, 8);
+      items.forEach(function (t) { var li = document.createElement('li'); li.textContent = t; list.appendChild(li); });
+      if (items.length) box.hidden = false;
+    }
     (function () {
       fetch('https://api.github.com/repos/kelvink96/markora/releases/latest', { headers: { Accept: 'application/vnd.github+json' } })
         .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
@@ -411,6 +433,7 @@
           if (!isNaN(d)) document.querySelectorAll('[data-date]').forEach(function (el) {
             el.textContent = 'Released ' + d.toLocaleDateString('en', { year: 'numeric', month: 'short', day: 'numeric' });
           });
+          renderNotes(rel);
         })
         .catch(function () { /* keep static fallback */ });
     })();

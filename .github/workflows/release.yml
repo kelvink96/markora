@@ -84,3 +84,15 @@ jobs:
           name: markora-windows-${{ github.ref_name }}
           path: src-tauri/target/release/bundle/msi/*.msi
           if-no-files-found: error
+
+      - name: Create GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $msi = Get-ChildItem "src-tauri/target/release/bundle/msi/*.msi" | Select-Object -First 1
+          gh release create "${{ github.ref_name }}" $msi.FullName `
+            --title "${{ github.ref_name }}" `
+            --generate-notes `
+            --verify-tag
+          if ($LASTEXITCODE -ne 0) { throw "gh release create failed" }

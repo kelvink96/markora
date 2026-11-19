@@ -1,8 +1,11 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createDefaultSettings, type MarkoraSettings } from "../../features/settings/settings-schema";
+import { detectPlatform } from "../../platform/runtime";
 import { SettingsPage } from "./settings-page";
+
+vi.mock("../../platform/runtime", () => ({ detectPlatform: vi.fn(() => "web") }));
 
 function renderPage(overrides: Partial<Parameters<typeof SettingsPage>[0]> = {}, settings?: MarkoraSettings) {
   const current = settings ?? createDefaultSettings();
@@ -215,5 +218,25 @@ describe("SettingsPage", () => {
     await userEvent.click(screen.getByRole("button", { name: "Back to editor" }));
 
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("SettingsPage updates card", () => {
+  afterEach(() => {
+    vi.mocked(detectPlatform).mockReturnValue("web");
+  });
+
+  it("is not shown on the web", () => {
+    renderPage();
+
+    expect(screen.queryByRole("region", { name: "Updates" })).not.toBeInTheDocument();
+  });
+
+  it("is shown on desktop with the app version", () => {
+    vi.mocked(detectPlatform).mockReturnValue("desktop");
+    renderPage();
+
+    const card = screen.getByRole("region", { name: "Updates" });
+    expect(within(card).getByText("Version 0.1.0")).toBeInTheDocument();
   });
 });

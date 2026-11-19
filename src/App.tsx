@@ -290,6 +290,7 @@ export default function App() {
           updatePreview(preview);
           void persistCurrentSettings();
         }}
+        onChangeUpdates={() => void persistCurrentSettings()}
         onSaveTemplate={(value) => {
           setTemplateDraft(value);
           saveTemplateDraft();

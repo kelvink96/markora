@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { untitledStarterContent, useDocumentStore } from "./index";
+import { selectHasUnsavedChanges, untitledStarterContent, useDocumentStore } from "./index";
 
 describe("DocumentStore", () => {
   beforeEach(() => {
@@ -293,5 +293,22 @@ describe("DocumentStore ensureDocumentOpen (Scratch note)", () => {
     const state = useDocumentStore.getState();
     expect(state.openDocuments).toEqual(before);
     expect(state.content).toBe("# Mine");
+  });
+});
+
+describe("selectHasUnsavedChanges", () => {
+  beforeEach(() => {
+    useDocumentStore.getState().openDocument({ content: "# Saved", filePath: "/saved.md", isDirty: false });
+  });
+
+  it("is false when no open document is dirty", () => {
+    expect(selectHasUnsavedChanges(useDocumentStore.getState())).toBe(false);
+  });
+
+  it("is true when any open document is dirty, even a background tab", () => {
+    useDocumentStore.getState().openDocument({ content: "# Edited", filePath: "/edited.md", isDirty: true });
+    useDocumentStore.getState().openDocument({ content: "# Clean", filePath: "/clean.md", isDirty: false });
+
+    expect(selectHasUnsavedChanges(useDocumentStore.getState())).toBe(true);
   });
 });

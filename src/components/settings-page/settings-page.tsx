@@ -18,7 +18,10 @@ import {
   type SettingSection,
 } from "./settings-catalog";
 import { SettingRow, SettingsGroup } from "./settings-page-shared";
+import { detectPlatform } from "../../platform/runtime";
+import { selectHasUnsavedChanges, useDocumentStore } from "../../store/document";
 import { SettingsFooter } from "./settings-footer";
+import { UpdatesCard } from "./updates-card";
 import { SettingsSidebar } from "./settings-sidebar";
 import { TemplateDialog } from "./template-dialog";
 import { useSettingsPageState } from "./use-settings-page-state";
@@ -38,6 +41,8 @@ interface SettingsPageProps {
   onChangePreview: (preview: PreviewSettings) => void;
   onSaveTemplate: (value: string) => void;
   onResetAll: () => void;
+  /** Desktop only: called after the automatic update check preference changes, to persist it. */
+  onChangeUpdates?: () => void;
   /** Desktop only: shows the "reopen last session" option. */
   canRestoreSession?: boolean;
 }
@@ -63,11 +68,13 @@ export function SettingsPage({
   onChangePreview,
   onSaveTemplate,
   onResetAll,
+  onChangeUpdates,
   canRestoreSession = false,
 }: SettingsPageProps) {
   const { activeSection, previewThemeMode, query, setActiveSection, setQuery } = useSettingsPageState({
     settings,
   });
+  const hasUnsavedChanges = useDocumentStore(selectHasUnsavedChanges);
   const searchRef = useRef<HTMLInputElement>(null);
   const isSearching = query.trim().length > 0;
   const visible = filterSettings(SETTINGS_CATALOG, query, { desktop: canRestoreSession });
@@ -203,7 +210,16 @@ export function SettingsPage({
             )}
 
             {isSearching ? null : (
-              <SettingsFooter version={version} privacyPolicyUrl={PRIVACY_POLICY_URL} onResetAll={onResetAll} />
+              <>
+                {detectPlatform() === "desktop" ? (
+                  <UpdatesCard
+                    version={version}
+                    hasUnsavedChanges={hasUnsavedChanges}
+                    onChangeUpdates={onChangeUpdates}
+                  />
+                ) : null}
+                <SettingsFooter version={version} privacyPolicyUrl={PRIVACY_POLICY_URL} onResetAll={onResetAll} />
+              </>
             )}
           </div>
         </div>

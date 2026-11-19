@@ -7,6 +7,7 @@ import {
   type MarkoraSettings,
   type OnboardingSettings,
   type PreviewSettings,
+  type UpdateSettings,
 } from "./settings-schema";
 
 interface SettingsStore {
@@ -19,6 +20,7 @@ interface SettingsStore {
   updatePreview: (preview: Partial<PreviewSettings>) => void;
   updateFiles: (files: Partial<FileSettings>) => void;
   updateOnboarding: (onboarding: Partial<OnboardingSettings>) => void;
+  updateUpdates: (updates: Partial<UpdateSettings>) => void;
   setTemplateDraft: (templateDraft: string) => void;
   saveTemplateDraft: () => void;
   reset: () => void;
@@ -89,6 +91,16 @@ export const useSettingsStore = create<SettingsStore>()((set) => ({
         onboarding: {
           ...state.settings.onboarding,
           ...onboarding,
+        },
+      },
+    })),
+  updateUpdates: (updates) =>
+    set((state) => ({
+      settings: {
+        ...state.settings,
+        updates: {
+          ...state.settings.updates,
+          ...updates,
         },
       },
     })),

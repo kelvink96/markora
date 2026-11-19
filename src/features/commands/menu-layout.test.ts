@@ -52,6 +52,12 @@ describe("MENU_LAYOUT", () => {
     }
   });
 
+  it("offers Take the tour in the Help menu", () => {
+    const help = MENU_LAYOUT.find((menu) => menu.id === "help");
+
+    expect(collectCommandIds(help?.items ?? [])).toContain("help.tour");
+  });
+
   it("puts Open Recent in the File menu", () => {
     expect(MENU_LAYOUT[0].items.some((node) => node.type === "recent")).toBe(true);
   });

@@ -1,41 +1,77 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { keepEditForPreexistingData, loadViewMode, saveViewMode } from "./view-mode-storage";
+import { keepEditForPreexistingData, loadViewState, saveShowSyntax, saveViewMode } from "./view-mode-storage";
+
+const MODE_KEY = "markora:view-mode";
+const SYNTAX_KEY = "markora:show-syntax";
 
 describe("view mode storage", () => {
   beforeEach(() => localStorage.clear());
   afterEach(() => vi.restoreAllMocks());
 
-  it("starts a brand-new install (nothing stored) in live", () => {
-    expect(loadViewMode()).toBe("live");
+  it("starts a brand-new install (nothing stored) in write with syntax off", () => {
+    expect(loadViewState()).toEqual({ viewMode: "write", showSyntax: false });
   });
 
-  it("keeps existing users who have no stored mode on edit", () => {
+  it("keeps existing users who have no stored mode on raw syntax", () => {
     localStorage.setItem("markora:web-settings", "{}");
-    expect(loadViewMode()).toBe("edit");
+    expect(loadViewState()).toEqual({ viewMode: "write", showSyntax: true });
 
     localStorage.clear();
     localStorage.setItem("markora:session", "{}");
-    expect(loadViewMode()).toBe("edit");
+    expect(loadViewState()).toEqual({ viewMode: "write", showSyntax: true });
   });
 
-  it("restores the last saved mode, whatever the other stored data says", () => {
+  it("migrates a stored live to write with syntax off", () => {
+    localStorage.setItem(MODE_KEY, "live");
+    expect(loadViewState()).toEqual({ viewMode: "write", showSyntax: false });
+    expect(localStorage.getItem(MODE_KEY)).toBe("write");
+    expect(localStorage.getItem(SYNTAX_KEY)).toBe("0");
+  });
+
+  it("migrates a stored edit to write with syntax on", () => {
+    localStorage.setItem(MODE_KEY, "edit");
+    expect(loadViewState()).toEqual({ viewMode: "write", showSyntax: true });
+    expect(localStorage.getItem(MODE_KEY)).toBe("write");
+    expect(localStorage.getItem(SYNTAX_KEY)).toBe("1");
+  });
+
+  it("migrates a stored split to split and preview to read, keeping the syntax choice", () => {
+    localStorage.setItem(MODE_KEY, "split");
+    localStorage.setItem(SYNTAX_KEY, "0");
+    expect(loadViewState()).toEqual({ viewMode: "split", showSyntax: false });
+    expect(localStorage.getItem(MODE_KEY)).toBe("split");
+
+    localStorage.setItem(MODE_KEY, "preview");
+    localStorage.setItem(SYNTAX_KEY, "1");
+    expect(loadViewState()).toEqual({ viewMode: "read", showSyntax: true });
+    expect(localStorage.getItem(MODE_KEY)).toBe("read");
+  });
+
+  it("gives a legacy split or preview user with no syntax choice the existing-install default", () => {
+    localStorage.setItem("markora:session", "{}");
+    localStorage.setItem(MODE_KEY, "preview");
+    expect(loadViewState()).toEqual({ viewMode: "read", showSyntax: true });
+  });
+
+  it("restores the last saved mode and syntax, whatever the other stored data says", () => {
     localStorage.setItem("markora:session", "{}");
 
-    saveViewMode("preview");
+    saveViewMode("read");
+    saveShowSyntax(false);
 
-    expect(loadViewMode()).toBe("preview");
+    expect(loadViewState()).toEqual({ viewMode: "read", showSyntax: false });
   });
 
   it("ignores an unknown stored mode and falls back by the install rule", () => {
-    localStorage.setItem("markora:view-mode", "sideways");
-    expect(loadViewMode()).toBe("live");
+    localStorage.setItem(MODE_KEY, "sideways");
+    expect(loadViewState()).toEqual({ viewMode: "write", showSyntax: false });
     localStorage.clear();
-    localStorage.setItem("markora:view-mode", "sideways");
+    localStorage.setItem(MODE_KEY, "sideways");
     localStorage.setItem("markora:session", "{}");
-    expect(loadViewMode()).toBe("edit");
+    expect(loadViewState()).toEqual({ viewMode: "write", showSyntax: true });
   });
 
-  it("falls back to live when storage is blocked, and saving does not throw", () => {
+  it("falls back to write when storage is blocked, and saving does not throw", () => {
     vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
       throw new Error("blocked");
     });
@@ -43,40 +79,46 @@ describe("view mode storage", () => {
       throw new Error("blocked");
     });
 
-    expect(loadViewMode()).toBe("live");
+    expect(loadViewState()).toEqual({ viewMode: "write", showSyntax: false });
     expect(() => saveViewMode("split")).not.toThrow();
+    expect(() => saveShowSyntax(true)).not.toThrow();
   });
 
-  it("remembers the default it picked, so saving a session later does not flip a new user to edit", () => {
-    expect(loadViewMode()).toBe("live");
+  it("remembers the default it picked, so saving a session later does not flip a new user to raw syntax", () => {
+    expect(loadViewState()).toEqual({ viewMode: "write", showSyntax: false });
 
     localStorage.setItem("markora:session", "{}");
 
-    expect(loadViewMode()).toBe("live");
+    expect(loadViewState()).toEqual({ viewMode: "write", showSyntax: false });
   });
 
   describe("keepEditForPreexistingData", () => {
-    it("moves a launch that defaulted to live back to edit when older data turns up", () => {
-      expect(loadViewMode()).toBe("live");
+    it("turns syntax on for a launch that only defaulted, when older data turns up, and keeps it", () => {
+      expect(loadViewState().showSyntax).toBe(false);
 
-      expect(keepEditForPreexistingData()).toBe("edit");
-      expect(loadViewMode()).toBe("edit");
+      expect(keepEditForPreexistingData()).toBe(true);
+      expect(loadViewState()).toEqual({ viewMode: "write", showSyntax: true });
     });
 
-    it("does nothing once the user has chosen a mode", () => {
-      expect(loadViewMode()).toBe("live");
-      saveViewMode("live");
+    it("does nothing once the user has chosen a mode or flipped syntax", () => {
+      loadViewState();
+      saveViewMode("write");
+      expect(keepEditForPreexistingData()).toBe(false);
 
-      expect(keepEditForPreexistingData()).toBeNull();
-      expect(loadViewMode()).toBe("live");
+      localStorage.clear();
+      loadViewState();
+      saveShowSyntax(false);
+      expect(keepEditForPreexistingData()).toBe(false);
+      expect(loadViewState().showSyntax).toBe(false);
     });
 
-    it("does nothing on a launch that restored a stored mode", () => {
-      saveViewMode("live");
+    it("does nothing on a launch that restored stored values", () => {
+      saveViewMode("write");
+      saveShowSyntax(false);
       localStorage.setItem("markora:view-mode-default", "1");
-      loadViewMode();
+      loadViewState();
 
-      expect(keepEditForPreexistingData()).toBeNull();
+      expect(keepEditForPreexistingData()).toBe(false);
     });
   });
 });

@@ -179,6 +179,7 @@ describe("TopBar", () => {
 
   describe("View menu", () => {
     it.each([
+      ["Live View", "live"],
       ["Edit View", "edit"],
       ["Split View", "split"],
       ["Preview View", "preview"],

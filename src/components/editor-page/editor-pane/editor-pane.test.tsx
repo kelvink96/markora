@@ -126,9 +126,13 @@ vi.mock("@codemirror/view", () => ({
   },
 }));
 
-vi.mock("@codemirror/lang-markdown", () => ({ markdown: vi.fn(() => ({})) }));
+vi.mock("@codemirror/lang-markdown", () => ({ markdown: vi.fn(() => ({})), markdownLanguage: {} }));
 // The real theme is exercised in editor-settings-extensions.test.ts and in the browser.
 vi.mock("../../../features/editor/editor-theme", () => ({ markoraEditorTheme: [] }));
+// The real Live extension is exercised in features/editor/live/*.test.ts.
+vi.mock("../../../features/editor/live/live-extension", () => ({
+  liveExtension: vi.fn(() => "live-extension"),
+}));
 vi.mock("@codemirror/commands", () => ({
   undo: vi.fn((view: { dispatch: (transaction: unknown) => void }) => {
     view.dispatch({ annotation: "undo" });
@@ -158,9 +162,11 @@ vi.mock("../find-bar", () => ({
   ),
 }));
 import { EditorPane } from "./editor-pane";
+import { liveExtension } from "../../../features/editor/live/live-extension";
 
 describe("EditorPane", () => {
   beforeEach(() => {
+    vi.mocked(liveExtension).mockClear();
     clipboardReadTextMock.mockReset();
     clipboardWriteTextMock.mockReset();
     const settings = createDefaultSettings();
@@ -183,6 +189,27 @@ describe("EditorPane", () => {
     render(<EditorPane theme="light" />);
 
     expect(screen.getByTestId("editor-surface")).toHaveAttribute("data-line-numbers", "hidden");
+  });
+
+  it("turns Live rendering on and off with the view mode, without rebuilding the editor", () => {
+    vi.mocked(EditorState.create).mockClear();
+    const { rerender } = render(<EditorPane theme="light" viewMode="edit" />);
+    expect(liveExtension).not.toHaveBeenCalled();
+    mockState.dispatchSpy.mockClear();
+
+    rerender(<EditorPane theme="light" viewMode="live" />);
+    expect(liveExtension).toHaveBeenCalledTimes(1);
+    expect(mockState.dispatchSpy).toHaveBeenCalledWith({ effects: { reconfigured: "live-extension" } });
+
+    mockState.dispatchSpy.mockClear();
+    rerender(<EditorPane theme="light" viewMode="split" />);
+    expect(mockState.dispatchSpy).toHaveBeenCalledWith({ effects: { reconfigured: [] } });
+    expect(EditorState.create).toHaveBeenCalledTimes(1);
+  });
+
+  it("boots with Live rendering when it opens in Live mode", () => {
+    render(<EditorPane theme="light" viewMode="live" />);
+    expect(liveExtension).toHaveBeenCalledTimes(1);
   });
 
   it("applies a settings change to the live editor without rebuilding it (#13)", () => {
@@ -321,7 +348,35 @@ describe("EditorPane", () => {
     expect(screen.getByRole("option", { name: /table/i })).toBeInTheDocument();
   });
 
-  it("shows an inline formatting flyout when the editor keeps focus with a collapsed cursor", () => {
+  it("shows an inline formatting flyout when text is selected", () => {
+    render(<EditorPane theme="light" />);
+
+    act(() => {
+      mockState.updateListener?.({
+        focusChanged: true,
+        selectionSet: true,
+        view: { hasFocus: true },
+        state: {
+          doc: {
+            toString: () => "Hello world",
+            lineAt: () => ({ number: 1, from: 0 }),
+          },
+          selection: {
+            main: {
+              head: 5,
+              from: 0,
+              to: 5,
+            },
+          },
+        },
+      });
+    });
+
+    expect(screen.getByRole("toolbar", { name: "Inline formatting" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Bold" })).toBeInTheDocument();
+  });
+
+  it("hides the inline formatting flyout when nothing is selected", () => {
     render(<EditorPane theme="light" />);
 
     act(() => {
@@ -345,8 +400,7 @@ describe("EditorPane", () => {
       });
     });
 
-    expect(screen.getByRole("toolbar", { name: "Inline formatting" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Bold" })).toBeInTheDocument();
+    expect(screen.queryByRole("toolbar", { name: "Inline formatting" })).not.toBeInTheDocument();
   });
 
   it("hides the inline formatting flyout while the slash command menu is open", () => {

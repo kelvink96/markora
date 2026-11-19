@@ -65,6 +65,14 @@ describe("Workspace with a sidebar (#16)", () => {
     expect(screen.getByText("Left").parentElement).toHaveStyle({ width: "55%" });
   });
 
+  it("is a single editor pane with no preview in live view, like edit view", () => {
+    render(<Workspace viewMode="live" sidebar={<div>Outline</div>} left={<div>Left</div>} right={<div>Right</div>} />);
+
+    expect(screen.getByRole("region", { name: "Editor workspace" })).toHaveTextContent("Left");
+    expect(screen.queryByText("Right")).not.toBeInTheDocument();
+    expect(screen.getByText("Outline")).toBeInTheDocument();
+  });
+
   it("shows the sidebar in edit view too", () => {
     render(<Workspace viewMode="edit" sidebar={<div>Outline</div>} left={<div>Left</div>} right={<div>Right</div>} />);
 

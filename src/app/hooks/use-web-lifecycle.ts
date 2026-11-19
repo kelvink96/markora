@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { loadWorkspaceSnapshot, saveWorkspaceSnapshot } from "../../platform/persistence/web";
+import { useWorkspaceState } from "../../features/workspace/workspace-state";
 import { useDocumentStore } from "../../store/document";
 
 interface DeferredInstallPromptEvent extends Event {
@@ -27,6 +28,8 @@ export function useWebWorkspacePersistence(isWeb: boolean) {
       .then((snapshot) => {
         if (!isActive || !snapshot) return;
         hydrateWorkspace(snapshot);
+        // A stored workspace at startup means this is an upgrade, not a first run: keep Edit.
+        useWorkspaceState.getState().keepEditForPreexistingData();
       })
       .catch((error) => console.error("load_workspace_snapshot failed:", error))
       .finally(() => {

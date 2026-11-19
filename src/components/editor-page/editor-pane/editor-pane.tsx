@@ -3,13 +3,15 @@ import { redo, selectAll, undo } from "@codemirror/commands";
 import { EditorView, basicSetup } from "codemirror";
 import { Compartment, EditorState, Prec } from "@codemirror/state";
 import { EditorView as CMView, keymap } from "@codemirror/view";
-import { markdown } from "@codemirror/lang-markdown";
+import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { readText, writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { useDocumentStore } from "../../../store/document";
 import { useEditorCommandState } from "../../../features/editor/editor-command-state";
 import { findExtensions } from "../../../features/editor/find-replace";
 import { markoraEditorTheme } from "../../../features/editor/editor-theme";
 import { createEditorSettingsExtensions } from "../../../features/editor/editor-settings-extensions";
+import { liveExtension } from "../../../features/editor/live/live-extension";
+import type { WorkspaceViewMode } from "../../../features/workspace/workspace-state";
 import { applyMarkdownToolbarAction, type MarkdownToolbarAction } from "../../../features/editor/markdown-toolbar-actions";
 import {
   applySlashCommand,
@@ -19,12 +21,16 @@ import {
 } from "../../../features/editor/slash-commands";
 import { useEditorStatusState } from "../../../features/workspace/editor-status-state";
 import { useSettingsStore } from "../../../features/settings/settings-store";
+import { getLinkAdapter } from "../../../platform/links";
+import { createLinkOpener } from "../../../features/editor/live/link-opener";
 import { FindBar } from "../find-bar";
 import { InlineFormattingMenu } from "../inline-formatting-menu";
 import { SlashCommandMenu } from "../slash-command-menu/slash-command-menu";
 
 interface EditorPaneProps {
   theme: "light" | "dark";
+  /** Live rendering is only on in "live"; the other modes show the raw markdown. */
+  viewMode?: WorkspaceViewMode;
 }
 
 interface SlashMenuState {
@@ -52,7 +58,7 @@ interface InlineMenuState {
   };
 }
 
-export function EditorPane({ theme }: EditorPaneProps) {
+export function EditorPane({ theme, viewMode = "edit" }: EditorPaneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Keep the imperative CodeMirror instance in a ref so React re-renders do not recreate it.
   const viewRef = useRef<EditorView | null>(null);
@@ -63,6 +69,17 @@ export function EditorPane({ theme }: EditorPaneProps) {
   const lineNumbers = editorSettings.lineNumbers;
   // Holds the settings-driven extensions so they can be swapped without rebuilding the editor.
   const settingsCompartment = useMemo(() => new Compartment(), []);
+  // Holds the Live-mode decorations, so switching view mode reconfigures the editor in place.
+  const liveCompartment = useMemo(() => new Compartment(), []);
+  // Ctrl/Cmd+click on a link in Live mode; the setting is read when the click happens.
+  const onOpenLink = useMemo(
+    () =>
+      createLinkOpener(() => useSettingsStore.getState().settings.preview.openLinksExternally, getLinkAdapter()),
+    [],
+  );
+  const liveMode = viewMode === "live";
+  // The mode the editor was last configured with; the creation effect reads it once, then the effect below keeps it current.
+  const appliedLiveMode = useRef(liveMode);
   const setCursorPosition = useEditorStatusState((state) => state.setCursorPosition);
   const setRunToolbarAction = useEditorCommandState((state) => state.setRunToolbarAction);
   const setRunEditAction = useEditorCommandState((state) => state.setRunEditAction);
@@ -177,11 +194,11 @@ export function EditorPane({ theme }: EditorPaneProps) {
           }
         }
 
-        if (update.view.hasFocus) {
-          const selection = update.state.selection.main;
-          const anchor = selection.from === selection.to ? selection.head : selection.to;
+        // The flyout only appears for a real selection, not for a bare caret.
+        const selection = update.state.selection.main;
+        if (update.view.hasFocus && selection.from !== selection.to) {
           setInlineMenu({
-            position: getFloatingPosition(anchor),
+            position: getFloatingPosition(selection.to),
           });
         } else {
           setInlineMenu(null);
@@ -195,7 +212,8 @@ export function EditorPane({ theme }: EditorPaneProps) {
       doc: useDocumentStore.getState().content,
       extensions: [
         basicSetup,
-        markdown(),
+        // The GFM base adds strikethrough, tables, task lists and bare-URL links to the tree.
+        markdown({ base: markdownLanguage }),
         updateListener,
         ...findExtensions,
         // Highest precedence, so these beat CodeMirror's own search panel bindings.
@@ -206,6 +224,7 @@ export function EditorPane({ theme }: EditorPaneProps) {
           ]),
         ),
         ...markoraEditorTheme,
+        liveCompartment.of(appliedLiveMode.current ? liveExtension({ onOpenLink }) : []),
         // Last, so user settings win over the theme where both style the same thing.
         settingsCompartment.of(
           createEditorSettingsExtensions(settings.editor, settings.appearance, theme === "dark"),
@@ -222,7 +241,15 @@ export function EditorPane({ theme }: EditorPaneProps) {
     };
     // The theme is read once here and then kept current by the effect below, so switching
     // light/dark doesn't rebuild the editor (which would lose undo history and the cursor).
-  }, [setContent, setCursorPosition, settingsCompartment]);
+  }, [liveCompartment, onOpenLink, setContent, setCursorPosition, settingsCompartment]);
+
+  useEffect(() => {
+    if (appliedLiveMode.current === liveMode) return;
+    appliedLiveMode.current = liveMode;
+    viewRef.current?.dispatch({
+      effects: liveCompartment.reconfigure(liveMode ? liveExtension({ onOpenLink }) : []),
+    });
+  }, [liveCompartment, liveMode, onOpenLink]);
 
   useEffect(() => {
     // Apply setting changes to the live editor (the creation effect only reads them once).

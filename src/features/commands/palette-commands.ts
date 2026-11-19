@@ -44,6 +44,7 @@ export interface PaletteContext {
 }
 
 const VIEW_MODES: Array<{ mode: WorkspaceViewMode; label: string; keywords: string[] }> = [
+  { mode: "live", label: "Live view", keywords: ["hybrid", "wysiwyg", "write", "rendered"] },
   { mode: "edit", label: "Editor only", keywords: ["edit", "write", "focus"] },
   { mode: "split", label: "Split view", keywords: ["side by side", "live preview"] },
   { mode: "preview", label: "Preview only", keywords: ["read", "rendered"] },

@@ -31,7 +31,7 @@ export const useUpdateStore = create<UpdateState>()((set, get) => ({
   error: null,
   check: async ({ silent = false } = {}) => {
     const { status } = get();
-    if (status === "checking" || status === "downloading") return;
+    if (status === "checking" || status === "downloading" || status === "ready") return;
 
     set({ status: "checking", error: null });
     try {

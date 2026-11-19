@@ -75,7 +75,7 @@ describe("update store", () => {
       expect(useUpdateStore.getState().error).toBe("offline");
     });
 
-    it.each(["checking", "downloading"] as const)("is a no-op while %s", async (status) => {
+    it.each(["checking", "downloading", "ready"] as const)("is a no-op while %s", async (status) => {
       resetStore({ status });
 
       await useUpdateStore.getState().check();

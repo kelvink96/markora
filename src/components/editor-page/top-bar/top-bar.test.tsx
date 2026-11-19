@@ -350,6 +350,7 @@ describe("TopBar", () => {
   describe("Help menu", () => {
     it.each([
       ["Command Palette", "onOpenCommandPalette"],
+      ["Take the tour", "onTakeTour"],
       ["Keyboard Shortcuts", "onOpenShortcuts"],
       ["Release Notes", "onOpenReleaseNotes"],
       ["Documentation", "onOpenDocs"],

@@ -229,6 +229,7 @@ export default function App() {
       onOpenCommandPalette: () => setIsCommandPaletteOpen(true),
       onOpenDocs: () => openExternal(DOCS_URL),
       onReportIssue: () => openExternal(REPORT_ISSUE_URL),
+      onTakeTour: startTour,
     },
   };
 

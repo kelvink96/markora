@@ -51,6 +51,7 @@ export interface PaletteHandlers {
   onOpenCommandPalette: () => void;
   onOpenDocs: () => void;
   onReportIssue: () => void;
+  onTakeTour: () => void;
 }
 
 export interface PaletteContext {
@@ -178,6 +179,7 @@ export function buildAppCommands({
     { ...always({ id: "view.zoom-reset", label: "Reset Zoom", group: "View", keywords: ["actual size", "default size"], run: () => handlers.onZoom("reset") }), enabled: canZoom(appearance, "reset") },
 
     always({ id: "app.palette", label: "Command Palette", group: "Help", shortcut: `${modifier}+K`, keywords: ["commands", "search"], run: handlers.onOpenCommandPalette }),
+    always({ id: "help.tour", label: "Take the tour", group: "Help", keywords: ["onboarding", "walkthrough", "guide", "intro", "welcome"], run: handlers.onTakeTour }),
     always({ id: "help.shortcuts", label: "Keyboard Shortcuts", group: "Help", keywords: ["keys", "hotkeys"], run: handlers.onOpenShortcuts }),
     always({ id: "help.release-notes", label: "Release Notes", group: "Help", keywords: ["changelog", "what's new"], run: handlers.onOpenReleaseNotes }),
     always({ id: "help.docs", label: "Documentation", group: "Help", keywords: ["docs", "guide", "readme"], run: handlers.onOpenDocs }),

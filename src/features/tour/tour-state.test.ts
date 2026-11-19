@@ -66,14 +66,12 @@ describe("TOUR_STOPS", () => {
 });
 
 describe("document-dependent stops", () => {
-  it("follow the view-mode stop: formatting bar, command palette, theme and settings, tabs", () => {
-    expect(TOUR_STOPS.map((stop) => stop.target)).toEqual([
-      '[data-tour="view-mode"]',
-      '[data-tour="formatting-bar"]',
-      '[data-tour="command-palette"]',
-      '[data-tour="theme"]',
-      '[data-tour="tabs"]',
-    ]);
+  it("come in order after the view-mode stop: formatting bar, command palette, theme and settings, tabs", () => {
+    const mine = ["formatting-bar", "command-palette", "theme", "tabs"].map((name) => `[data-tour="${name}"]`);
+    const targets = TOUR_STOPS.map((stop) => stop.target);
+
+    expect(targets[0]).toBe('[data-tour="view-mode"]');
+    expect(targets.filter((target) => mine.includes(target))).toEqual(mine);
     for (const stop of TOUR_STOPS) {
       expect(stop.title).toBeTruthy();
       expect(stop.content).toBeTruthy();

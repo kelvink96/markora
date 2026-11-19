@@ -8,6 +8,8 @@ export interface TourStop {
   content: string;
   /** Platforms the stop is shown on; omitted means every platform. */
   platforms?: MarkoraPlatform[];
+  /** A panel that must be open for this stop; the Tour opens it and restores the layout afterwards. */
+  panel?: "outline";
 }
 
 export const TOUR_STOPS: TourStop[] = [
@@ -28,6 +30,12 @@ export const TOUR_STOPS: TourStop[] = [
     title: "Find any command",
     content:
       "Press Ctrl+K (Cmd+K on Mac) to search every command, the same ones as in these menus, and run it with Enter.",
+  },
+  {
+    target: '[data-tour="outline"]',
+    title: "Jump around with the outline",
+    content: "The outline lists your headings. Click one to jump straight to that section.",
+    panel: "outline",
   },
   {
     target: '[data-tour="theme"]',

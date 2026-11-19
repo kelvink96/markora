@@ -44,7 +44,7 @@
   "devDependencies": {
     "@release-it/bumper": "^7.0.5",
     "@tailwindcss/vite": "^4.1.14",
-    "@tauri-apps/cli": "^2",
+    "@tauri-apps/cli": "^2.12.6",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",

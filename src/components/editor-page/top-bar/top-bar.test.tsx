@@ -9,6 +9,7 @@ import { useThemeStore } from "../../../features/theme/theme-store";
 function renderBar(props: Partial<Parameters<typeof TopBar>[0]> = {}) {
   const handlers = {
     onOpenSettings: vi.fn(),
+    onOpenCommandPalette: vi.fn(),
     onOpenKeyboardShortcuts: vi.fn(),
     onOpenAbout: vi.fn(),
     onOpenReleaseNotes: vi.fn(),
@@ -253,6 +254,22 @@ describe("TopBar", () => {
   });
 
   describe("utilities", () => {
+    it.each([
+      ["Command palette", "onOpenCommandPalette"],
+      ["Keyboard shortcuts", "onOpenKeyboardShortcuts"],
+      ["Settings", "onOpenSettings"],
+    ] as const)("has a %s button, available with nothing open", async (name, handler) => {
+      useDocumentStore.setState({ activeDocumentId: "" });
+      const user = userEvent.setup();
+      const handlers = renderBar();
+
+      await user.click(
+        within(screen.getByTestId("top-bar-utilities")).getByRole("button", { name }),
+      );
+
+      expect(handlers[handler]).toHaveBeenCalledTimes(1);
+    });
+
     it("toggles the theme from the header button", async () => {
       const user = userEvent.setup();
       const handlers = renderBar();

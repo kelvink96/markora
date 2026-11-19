@@ -12,6 +12,7 @@ import {
   FileOutput,
   FolderOpen,
   Info,
+  Keyboard,
   ListTree,
   Moon,
   PanelLeftClose,
@@ -271,6 +272,30 @@ export function TopBar({
             <Download aria-hidden="true" /> Install app
           </Button>
         ) : null}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon-sm" aria-label="Command palette" onClick={onOpenCommandPalette}>
+              <Command aria-hidden="true" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Command palette ({mod}+K)</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon-sm" aria-label="Keyboard shortcuts" onClick={onOpenKeyboardShortcuts}>
+              <Keyboard aria-hidden="true" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Keyboard shortcuts</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon-sm" aria-label="Settings" onClick={onOpenSettings}>
+              <Settings2 aria-hidden="true" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Settings</TooltipContent>
+        </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="ghost" size="icon-sm" aria-label="Toggle theme" onClick={onThemeToggle}>

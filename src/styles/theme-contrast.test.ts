@@ -77,6 +77,10 @@ const PAIRS: Array<[string, string, number]> = [
   ["foreground", "muted", TEXT],
   ["ring", "background", UI],
   ["ring", "card", UI],
+  // The Tour tooltip sits on the popover surface: its text, the hovered Skip / Close buttons
+  // (Next uses primary-foreground on primary, above) and the focus ring on its controls.
+  ["foreground", "popover", TEXT],
+  ["ring", "popover", UI],
 ];
 
 describe("theme palettes", () => {

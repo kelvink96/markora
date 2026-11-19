@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { useWorkspaceState } from "../workspace/workspace-state";
-import { captureLayout, restoreLayout, stageStop } from "./tour-layout";
+import { captureLayout, placementFor, restoreLayout, stageStop } from "./tour-layout";
 import { TOUR_STOPS } from "./tour-state";
 
 const outlineStop = TOUR_STOPS.find((stop) => stop.panel === "outline")!;
@@ -40,5 +40,11 @@ describe("tour layout", () => {
     useWorkspaceState.setState({ showOutline: false });
     restoreLayout(layout);
     expect(useWorkspaceState.getState().showOutline).toBe(true);
+  });
+
+  it("places panel stops beside the panel on wide screens and centred on narrow ones, where the outline fills the height", () => {
+    expect(placementFor(outlineStop, false)).toBe("right");
+    expect(placementFor(outlineStop, true)).toBe("center");
+    expect(placementFor(TOUR_STOPS[0], true)).toBe("bottom");
   });
 });

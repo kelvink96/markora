@@ -4,7 +4,16 @@ import { Button } from "./button";
 import { Select, SelectTrigger, SelectValue } from "./select";
 import { Switch } from "./switch";
 import { Toggle } from "./toggle";
-import { Menubar, MenubarMenu, MenubarTrigger } from "./menubar";
+import {
+  Menubar,
+  MenubarContent,
+  MenubarItem,
+  MenubarMenu,
+  MenubarSub,
+  MenubarSubContent,
+  MenubarSubTrigger,
+  MenubarTrigger,
+} from "./menubar";
 
 // jsdom can't measure layout, so check the class that makes each control grow to a 44px hit area on
 // touch screens (@media (pointer: coarse)). The real-browser measurements are in the PR description.
@@ -55,5 +64,28 @@ describe("touch targets (#8)", () => {
 
     expect(screen.getByRole("menuitem", { name: "File" }).className).toContain(`${COARSE}py-3`);
     expect(screen.getByRole("menuitem", { name: "File" }).className).toContain(`${COARSE}px-3`);
+  });
+
+  it("open menus and submenus scroll instead of running off short screens", () => {
+    render(
+      <Menubar value="file">
+        <MenubarMenu value="file">
+          <MenubarTrigger>File</MenubarTrigger>
+          <MenubarContent>
+            <MenubarSub open>
+              <MenubarSubTrigger>More</MenubarSubTrigger>
+              <MenubarSubContent>
+                <MenubarItem>Deep</MenubarItem>
+              </MenubarSubContent>
+            </MenubarSub>
+          </MenubarContent>
+        </MenubarMenu>
+      </Menubar>,
+    );
+
+    for (const menu of screen.getAllByRole("menu")) {
+      expect(menu.className).toContain("overflow-y-auto");
+      expect(menu.className).toMatch(/max-h-\(--radix-menubar-(content|sub-content)-available-height\)/);
+    }
   });
 });

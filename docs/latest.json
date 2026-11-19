@@ -1,0 +1,11 @@
+{
+  "version": "1.5.1",
+  "notes": "**Full Changelog**: https://github.com/kelvink96/markora/compare/v1.5.0...v1.5.1",
+  "pub_date": "2026-11-19T19:41:46.531Z",
+  "platforms": {
+    "windows-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSRUE2Uml6azdpVDVwRm5ORUkvQXYwMTE2OHZFTC82b1REWUN5QnoycHVsSnNFV3ZlMnJPTGM0WmQ3cHQwQXZ1NFMzTTRZdmpQRUxDLzdxVVlNd214STlNY2pDWjFVblFZPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1MTE3MzA1CWZpbGU6TWFya29yYS1NRF8xLjUuMS5tc2kKVjNJYjBqUlNxNVV1R3RhVFZvZjEwakVrUFJ5Tm00dE1takRxaDlSYnMySkM1NWpTL0lLR3IyMnJ1NktycG1UUXBnSktqNHlvTW5LZys0eGZkWGY2REE9PQo=",
+      "url": "https://github.com/kelvink96/markora/releases/download/v1.5.1/Markora-MD_1.5.1.msi"
+    }
+  }
+}

@@ -81,34 +81,40 @@ vi.mock("./components/editor-page/workspace", () => ({
 vi.mock("./components/editor-page/top-bar", () => ({
   TopBar: ({
     tabs,
-    onOpenSettings,
-    onOpenKeyboardShortcuts,
-    onOpenAbout,
-    onCloseTab,
+    commands,
   }: {
     tabs?: React.ReactNode;
-    onOpenSettings: () => void;
-    onOpenKeyboardShortcuts: () => void;
-    onOpenAbout: () => void;
-    onCloseTab: () => void;
-  }) => (
-    <div>
-      <button type="button" onClick={onOpenSettings}>
-        open-settings
-      </button>
-      <button type="button" onClick={onOpenKeyboardShortcuts}>
-        open-shortcuts
-      </button>
-      <button type="button" onClick={onOpenAbout}>
-        open-about
-      </button>
-      <button type="button" onClick={onCloseTab}>
-        close-from-menu
-      </button>
-      {tabs}
-      <div>Top Bar</div>
-    </div>
-  ),
+    commands: Array<{ id: string; run: () => void }>;
+  }) => {
+    const run = (id: string) => () => commands.find((command) => command.id === id)?.run();
+    return (
+      <div>
+        <button type="button" onClick={run("app.settings")}>
+          open-settings
+        </button>
+        <button type="button" onClick={run("help.shortcuts")}>
+          open-shortcuts
+        </button>
+        <button type="button" onClick={run("help.about")}>
+          open-about
+        </button>
+        <button type="button" onClick={run("file.close")}>
+          close-from-menu
+        </button>
+        <button type="button" onClick={run("view.word-wrap")}>
+          toggle-word-wrap
+        </button>
+        <button type="button" onClick={run("view.zoom-in")}>
+          zoom-in
+        </button>
+        <button type="button" onClick={run("view.theme.dark")}>
+          theme-dark
+        </button>
+        {tabs}
+        <div>Top Bar</div>
+      </div>
+    );
+  },
 }));
 
 vi.mock("./components/editor-page/formatting-toolbar", () => ({
@@ -533,6 +539,62 @@ describe("App", () => {
       ),
     );
     expect(screen.queryByRole("button", { name: "Save changes" })).not.toBeInTheDocument();
+  });
+
+  it("toggles word wrap from the View menu command and saves it", async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "toggle-word-wrap" }));
+
+    expect(useSettingsStore.getState().settings.editor.wordWrap).toBe(false);
+    await waitFor(() =>
+      expect(invokeMock).toHaveBeenCalledWith(
+        "save_settings",
+        expect.objectContaining({
+          settings: expect.objectContaining({ editor: expect.objectContaining({ wordWrap: false }) }),
+        }),
+      ),
+    );
+  });
+
+  it("zooms the editor and the preview together from the View menu command and saves it", async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "zoom-in" }));
+
+    const { appearance } = useSettingsStore.getState().settings;
+    expect(appearance.editorFontSize).toBe(18);
+    expect(appearance.previewFontScale).toBe(1.1);
+    await waitFor(() =>
+      expect(invokeMock).toHaveBeenCalledWith(
+        "save_settings",
+        expect.objectContaining({
+          settings: expect.objectContaining({
+            appearance: expect.objectContaining({ editorFontSize: 18, previewFontScale: 1.1 }),
+          }),
+        }),
+      ),
+    );
+  });
+
+  it("sets the theme preference from the View menu and saves it", async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "theme-dark" }));
+
+    expect(useSettingsStore.getState().settings.appearance.theme).toBe("dark");
+    expect(useThemeStore.getState().themePreference).toBe("dark");
+    await waitFor(() =>
+      expect(invokeMock).toHaveBeenCalledWith(
+        "save_settings",
+        expect.objectContaining({
+          settings: expect.objectContaining({ appearance: expect.objectContaining({ theme: "dark" }) }),
+        }),
+      ),
+    );
   });
 
   it("persists a preview setting as soon as it is changed (#12)", async () => {

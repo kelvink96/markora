@@ -38,7 +38,7 @@ import { useDocumentStore } from "./store/document";
 import { useThemeStore } from "./features/theme/theme-store";
 import { ErrorBanner } from "./components/editor-page/error-banner";
 import { CommandPalette } from "./components/editor-page/command-palette";
-import { buildPaletteCommands, type PaletteContext } from "./features/commands/palette-commands";
+import { buildAppCommands, buildPaletteCommands, type PaletteContext } from "./features/commands/palette-commands";
 import { stepZoom } from "./features/settings/zoom";
 import { getModifierLabel } from "./features/shortcuts/modifier-label";
 import { Toaster } from "@/components/ui/sonner";
@@ -221,23 +221,10 @@ export default function App() {
   const header = (
     <TopBar
       tabs={activeScreen === "workspace" ? tabStrip : null}
-      onOpenSettings={() => setActiveScreen("settings")}
-      onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
-      onOpenKeyboardShortcuts={() => setIsKeyboardShortcutsOpen(true)}
-      onOpenAbout={() => setIsAboutDialogOpen(true)}
-      onOpenReleaseNotes={() => setIsReleaseNotesOpen(true)}
-      onThemeToggle={handleThemeToggle}
-      onNew={handleNew}
-      onOpen={handleOpen}
-      onSave={handleSave}
-      onSaveAs={handleSaveAs}
-      onCloseTab={requestCloseCurrentTab}
-      onExportHtml={() => void exportHtml()}
-      onExportPdf={() => void exportPdf()}
-      showOutline={showOutline}
-      onToggleOutline={toggleOutline}
+      commands={buildAppCommands(commandContext)}
       recentFiles={recentDocuments.slice(0, 8)}
       onOpenRecent={handleOpenRecent}
+      onThemeToggle={handleThemeToggle}
       canInstallApp={canInstall}
       onInstallApp={() => void install()}
       viewMode={viewMode}

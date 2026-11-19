@@ -109,33 +109,34 @@ vi.mock("./components/editor-page/workspace", () => ({
 vi.mock("./components/editor-page/top-bar", () => ({
   TopBar: ({
     tabs,
-    onOpen,
-    onSave,
+    commands,
     canInstallApp,
     onInstallApp,
   }: {
     tabs?: React.ReactNode;
-    onOpen: () => void;
-    onSave: () => void;
+    commands: Array<{ id: string; run: () => void }>;
     canInstallApp?: boolean;
     onInstallApp?: () => void;
-  }) => (
-    <div>
-      <button type="button" onClick={onOpen}>
-        open
-      </button>
-      <button type="button" onClick={onSave}>
-        save
-      </button>
-      {canInstallApp ? (
-        <button type="button" onClick={onInstallApp}>
-          Install app
+  }) => {
+    const run = (id: string) => () => commands.find((command) => command.id === id)?.run();
+    return (
+      <div>
+        <button type="button" onClick={run("file.open")}>
+          open
         </button>
-      ) : null}
-      {tabs}
-      <div>Top Bar</div>
-    </div>
-  ),
+        <button type="button" onClick={run("file.save")}>
+          save
+        </button>
+        {canInstallApp ? (
+          <button type="button" onClick={onInstallApp}>
+            Install app
+          </button>
+        ) : null}
+        {tabs}
+        <div>Top Bar</div>
+      </div>
+    );
+  },
 }));
 
 vi.mock("./components/editor-page/formatting-toolbar", () => ({

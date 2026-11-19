@@ -77,6 +77,26 @@ describe("settings-api", () => {
     expect(loaded.onboarding.tourVersion).toBe(0);
   });
 
+  it("loads a web save without an updates group as checking automatically", async () => {
+    localStorage.setItem("markora:web-settings", JSON.stringify({ appearance: { theme: "dark" } }));
+
+    const loaded = await loadSettings();
+
+    expect(loaded.updates.checkAutomatically).toBe(true);
+  });
+
+  it("round-trips an opt-out of automatic update checks and resets it on web", async () => {
+    const settings = createDefaultSettings();
+    settings.updates.checkAutomatically = false;
+
+    await saveSettings(settings);
+    __resetSettingsStorageForTests();
+    await expect(loadSettings()).resolves.toMatchObject({ updates: { checkAutomatically: false } });
+
+    const reset = await resetSettings();
+    expect(reset.updates.checkAutomatically).toBe(true);
+  });
+
   it("migrates an older web save that lacks newer keys and uses removed ones", async () => {
     localStorage.setItem(
       "markora:web-settings",

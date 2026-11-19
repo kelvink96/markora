@@ -36,6 +36,7 @@ import { initialTourState, shouldOfferTour, tourReducer, type TourEvent } from "
 import { TourPrompt } from "./components/editor-page/tour-prompt";
 import { Tour } from "./components/editor-page/tour";
 import { useSettingsStore } from "./features/settings/settings-store";
+import { useUpdateCheckOnLaunch } from "./features/updates/use-update-check";
 import { useEditorStatusState } from "./features/workspace/editor-status-state";
 import { useWorkspaceState } from "./features/workspace/workspace-state";
 import { useDocumentStore } from "./store/document";
@@ -106,6 +107,7 @@ export default function App() {
   const { exportHtml, exportPdf } = useExport(fileAdapter);
 
   useSettingsHydration();
+  useUpdateCheckOnLaunch();
   useThemeSync();
   useWebWorkspacePersistence(isWeb);
   useDocumentTitle();

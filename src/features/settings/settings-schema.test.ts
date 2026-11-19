@@ -156,6 +156,27 @@ describe("normalizeSettings", () => {
   });
 });
 
+describe("update settings", () => {
+  it("check automatically by default", () => {
+    expect(defaultSettings.updates.checkAutomatically).toBe(true);
+  });
+
+  it("treats a save from before updates existed as checking automatically", () => {
+    const legacy = normalizeSettings({ appearance: { theme: "dark" } });
+
+    expect(legacy.updates.checkAutomatically).toBe(true);
+  });
+
+  it("keeps a stored opt-out and ignores a wrong-typed value", () => {
+    expect(normalizeSettings({ updates: { checkAutomatically: false } }).updates).toEqual({
+      checkAutomatically: false,
+    });
+    expect(normalizeSettings({ updates: { checkAutomatically: "no" } }).updates).toEqual({
+      checkAutomatically: true,
+    });
+  });
+});
+
 describe("tour version", () => {
   it("is unseen by default", () => {
     expect(defaultSettings.onboarding.tourVersion).toBe(0);

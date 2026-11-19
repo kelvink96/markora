@@ -1,71 +1,29 @@
-# Manual Release Signing
+# Releasing Markora
 
-This project uses a manual MSI signing flow for Microsoft Store releases.
+Releases are automated. Pushing a `v*` tag runs `.github/workflows/release.yml`.
 
-## 1. Build the unsigned MSI
-
-Push a tag like `v1.2.0`.
-
-The `Release` workflow will build the Windows MSI and upload an unsigned artifact named:
-
-- `markora-windows-unsigned-v1.2.0`
-
-Download that artifact from GitHub Actions.
-
-## 2. Sign the MSI locally
-
-Sign the MSI on your Windows machine with your trusted code-signing certificate.
-
-Example:
+## Cut a release
 
 ```powershell
-signtool sign /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 /a "C:\path\to\Markora MD_1.2.0_x64_en-US.msi"
+npx release-it 1.5.0 --ci
 ```
 
-Verify it:
+This bumps `package.json`, `src-tauri/tauri.conf.json` and `src-tauri/Cargo.toml`, commits, tags `v1.5.0` and pushes.
 
-```powershell
-Get-AuthenticodeSignature "C:\path\to\Markora MD_1.2.0_x64_en-US.msi" | Format-List Status,SignerCertificate
-```
+## What CI does
 
-You want:
+1. Builds the MSI and Authenticode-signs it with the certificate secrets.
+2. Uploads it as a workflow artifact.
+3. Creates the GitHub release with generated notes and the MSI as `Markora-MD_<version>.msi`.
+4. Signs the MSI for the in-app updater, writes `docs/latest.json` and pushes it to `main`.
 
-- `Status : Valid`
+The landing page reads the latest GitHub release for the version, download link and notes. The app's updater reads `https://kelvink96.github.io/markora/latest.json`.
 
-## 3. Publish the signed MSI locally
+## Required repository secrets
 
-Run:
+- `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`: must match the `pubkey` in `src-tauri/tauri.conf.json`.
+- `WINDOWS_CERTIFICATE` and `WINDOWS_CERTIFICATE_PASSWORD`: Authenticode certificate.
 
-```powershell
-.\scripts\publish-signed-release.ps1 -Version 1.2.0 -SignedMsiPath "C:\path\to\Markora MD_1.2.0_x64_en-US.msi"
-```
+## Manual fallback
 
-Or with npm:
-
-```powershell
-npm run publish:signed -- -Version 1.2.0 -SignedMsiPath "C:\path\to\Markora MD_1.2.0_x64_en-US.msi"
-```
-
-This script will:
-
-- verify the MSI signature
-- copy it into `docs/releases/<version>/`
-- update `docs/releases.json`
-- commit and push the release metadata to `main`
-- upload the MSI to the GitHub Release tag using `gh`
-
-Requirements:
-
-- `git` configured for this repo
-- GitHub CLI `gh` installed and authenticated
-- the tag `v<version>` already exists on GitHub
-
-## 4. Use the direct download URL
-
-After the script succeeds, use:
-
-`https://kelvink96.github.io/markora/releases/<version>/Markora-MD_<version>.msi`
-
-Example:
-
-`https://kelvink96.github.io/markora/releases/1.2.0/Markora-MD_1.2.0.msi`
+`npm run publish:signed -- -Version <v> -SignedMsiPath <msi>` (`scripts/publish-signed-release.ps1`) does the same publishing steps from a local machine. It needs the tag and release to exist and the Tauri signing env vars set.

@@ -76,6 +76,14 @@ pub struct AuthoringDefaults {
     pub new_document_template: String,
 }
 
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct OnboardingSettings {
+    // The Tour version the user last finished or skipped; 0 means unseen.
+    #[serde(default)]
+    pub tour_version: u32,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct MarkoraSettings {
@@ -84,6 +92,9 @@ pub struct MarkoraSettings {
     pub preview: PreviewSettings,
     pub files: FileSettings,
     pub authoring: AuthoringDefaults,
+    // Absent in files saved before the Tour existed.
+    #[serde(default)]
+    pub onboarding: OnboardingSettings,
 }
 
 fn default_color_scheme() -> ColorScheme {
@@ -119,6 +130,7 @@ pub fn default_settings() -> MarkoraSettings {
             new_document_template: "# Welcome to Markora\n\nStart writing your markdown here...\n"
                 .into(),
         },
+        onboarding: OnboardingSettings::default(),
     }
 }
 
@@ -148,12 +160,22 @@ pub fn save_settings_to_dir(
 }
 
 pub fn reset_settings_in_dir(config_dir: &Path) -> Result<MarkoraSettings, String> {
+    // Reset restores preferences, not history: the recorded tour version stays.
+    let onboarding = load_settings_from_dir(config_dir)
+        .map(|settings| settings.onboarding)
+        .unwrap_or_default();
+
     let path = settings_file_path(config_dir);
     if path.exists() {
         fs::remove_file(path).map_err(|error| error.to_string())?;
     }
 
-    Ok(default_settings())
+    let mut defaults = default_settings();
+    defaults.onboarding = onboarding;
+    if defaults.onboarding != OnboardingSettings::default() {
+        save_settings_to_dir(config_dir, &defaults)?;
+    }
+    Ok(defaults)
 }
 
 fn resolve_config_dir(app: &AppHandle) -> Result<PathBuf, String> {
@@ -305,6 +327,58 @@ mod tests {
         assert_eq!(settings.appearance.editor_line_height, 1.6);
         assert_eq!(settings.appearance.preview_font_scale, 1.25);
         assert!(!settings.editor.word_wrap);
+    }
+
+    #[test]
+    fn legacy_settings_file_without_onboarding_counts_as_unseen() {
+        let temp_dir = temp_settings_dir();
+        let legacy = r##"{
+  "appearance": { "theme": "system", "editorFontSize": 16, "previewFontScale": 1.0,
+                  "editorLineHeight": 1.7, "showStatusBar": true },
+  "editor": { "wordWrap": true, "lineNumbers": false, "highlightActiveLine": true },
+  "preview": { "syncScroll": true, "openLinksExternally": true, "contentWidth": "normal" },
+  "files": { "autosave": false, "restorePreviousSession": false, "confirmOnUnsavedClose": true },
+  "authoring": { "newDocumentTemplate": "# Legacy" }
+}"##;
+        fs::write(settings_file_path(&temp_dir), legacy).unwrap();
+
+        let settings = load_settings_from_dir(&temp_dir).unwrap();
+
+        assert_eq!(settings.onboarding.tour_version, 0);
+
+        fs::remove_dir_all(temp_dir).ok();
+    }
+
+    #[test]
+    fn tour_version_defaults_to_unseen_and_round_trips() {
+        let temp_dir = temp_settings_dir();
+        assert_eq!(default_settings().onboarding.tour_version, 0);
+
+        let mut settings = default_settings();
+        settings.onboarding.tour_version = 1;
+        save_settings_to_dir(&temp_dir, &settings).unwrap();
+
+        let reloaded = load_settings_from_dir(&temp_dir).unwrap();
+        assert_eq!(reloaded.onboarding.tour_version, 1);
+
+        fs::remove_dir_all(temp_dir).ok();
+    }
+
+    #[test]
+    fn reset_settings_keeps_the_recorded_tour_version() {
+        let temp_dir = temp_settings_dir();
+        let mut settings = default_settings();
+        settings.authoring.new_document_template = "# Custom".into();
+        settings.onboarding.tour_version = 1;
+        save_settings_to_dir(&temp_dir, &settings).unwrap();
+
+        let reset = reset_settings_in_dir(&temp_dir).unwrap();
+
+        assert_eq!(reset.authoring, default_settings().authoring);
+        assert_eq!(reset.onboarding.tour_version, 1);
+        assert_eq!(load_settings_from_dir(&temp_dir).unwrap(), reset);
+
+        fs::remove_dir_all(temp_dir).ok();
     }
 
     #[test]

@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { createDefaultSettings, defaultSettings, normalizeSettings } from "./settings-schema";
+import {
+  CURRENT_TOUR_VERSION,
+  createDefaultSettings,
+  defaultSettings,
+  isTourUnseen,
+  normalizeSettings,
+} from "./settings-schema";
 
 describe("settings-schema", () => {
   it("defaults to the system theme preference", () => {
@@ -147,5 +153,31 @@ describe("normalizeSettings", () => {
     result.appearance.theme = "dark";
 
     expect(defaultSettings.appearance.theme).toBe("system");
+  });
+});
+
+describe("tour version", () => {
+  it("is unseen by default", () => {
+    expect(defaultSettings.onboarding.tourVersion).toBe(0);
+    expect(isTourUnseen(defaultSettings)).toBe(true);
+  });
+
+  it("counts a save from before the Tour existed as unseen", () => {
+    const legacy = normalizeSettings({ appearance: { theme: "dark" } });
+
+    expect(legacy.onboarding.tourVersion).toBe(0);
+    expect(isTourUnseen(legacy)).toBe(true);
+  });
+
+  it("is seen once the current version is recorded, and unseen again for a newer tour", () => {
+    const settings = normalizeSettings({ onboarding: { tourVersion: CURRENT_TOUR_VERSION } });
+
+    expect(isTourUnseen(settings)).toBe(false);
+    expect(isTourUnseen(settings, CURRENT_TOUR_VERSION + 1)).toBe(true);
+  });
+
+  it("falls back to unseen for a corrupt recorded version", () => {
+    expect(normalizeSettings({ onboarding: { tourVersion: "1" } }).onboarding.tourVersion).toBe(0);
+    expect(normalizeSettings({ onboarding: { tourVersion: -3 } }).onboarding.tourVersion).toBe(0);
   });
 });

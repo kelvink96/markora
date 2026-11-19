@@ -4,11 +4,18 @@ import userEvent from "@testing-library/user-event";
 import packageJson from "../package.json";
 import App from "./App";
 import { untitledStarterContent, useDocumentStore } from "./store/document";
-import { createDefaultSettings } from "./features/settings/settings-schema";
+import { CURRENT_TOUR_VERSION, createDefaultSettings } from "./features/settings/settings-schema";
 import { useSettingsStore } from "./features/settings/settings-store";
 import { useWorkspaceState } from "./features/workspace/workspace-state";
 import { useEditorCommandState } from "./features/editor/editor-command-state";
 import { useThemeStore } from "./features/theme/theme-store";
+
+/** Settings for a user who has already dealt with the Tour prompt, so it stays out of the way. */
+function createSeenSettings() {
+  const settings = createDefaultSettings();
+  settings.onboarding.tourVersion = CURRENT_TOUR_VERSION;
+  return settings;
+}
 
 const { invokeMock, openMock, saveMock, readFileMock, writeFileMock } = vi.hoisted(() => ({
   invokeMock: vi.fn(),
@@ -169,7 +176,7 @@ describe("App", () => {
   beforeEach(() => {
     // @ts-expect-error test shim
     window.__TAURI_INTERNALS__ = {};
-    const settings = createDefaultSettings();
+    const settings = createSeenSettings();
     useDocumentStore.setState({
       openDocuments: [
         { id: "document-1", content: untitledStarterContent, filePath: null, isDirty: false },
@@ -275,7 +282,7 @@ describe("App", () => {
 
   it("uses the saved template for newly created tabs", async () => {
     const user = userEvent.setup();
-    const settings = createDefaultSettings();
+    const settings = createSeenSettings();
     settings.authoring.newDocumentTemplate = "# Saved template";
     invokeMock.mockImplementation(async (command: string) => {
       if (command === "load_settings") {
@@ -294,7 +301,7 @@ describe("App", () => {
 
   it("closes dirty tabs without confirmation when the setting is disabled", async () => {
     const user = userEvent.setup();
-    const settings = createDefaultSettings();
+    const settings = createSeenSettings();
     settings.files.confirmOnUnsavedClose = false;
     invokeMock.mockImplementation(async (command: string) => {
       if (command === "load_settings") {
@@ -313,7 +320,7 @@ describe("App", () => {
 
   it("closes all tabs without confirmation when the unsaved-close setting is disabled", async () => {
     const user = userEvent.setup();
-    const settings = createDefaultSettings();
+    const settings = createSeenSettings();
     settings.files.confirmOnUnsavedClose = false;
     invokeMock.mockImplementation(async (command: string) => {
       if (command === "load_settings") {
@@ -372,7 +379,7 @@ describe("App", () => {
     readFileMock.mockResolvedValue("# Fresh from disk");
     invokeMock.mockImplementation(async (command: string) => {
       if (command === "load_settings") {
-        return createDefaultSettings();
+        return createSeenSettings();
       }
 
       return undefined;
@@ -428,7 +435,7 @@ describe("App", () => {
     readFileMock.mockResolvedValue("# Empty state open");
     invokeMock.mockImplementation(async (command: string) => {
       if (command === "load_settings") {
-        return createDefaultSettings();
+        return createSeenSettings();
       }
 
       return undefined;
@@ -618,7 +625,7 @@ describe("App", () => {
   });
 
   it("saves a dirty file automatically when autosave is on (#11)", async () => {
-    const autosaveSettings = createDefaultSettings();
+    const autosaveSettings = createSeenSettings();
     autosaveSettings.files.autosave = true;
     invokeMock.mockImplementation(async (command: string) =>
       command === "load_settings" ? autosaveSettings : undefined,
@@ -650,7 +657,7 @@ describe("App", () => {
       "markora:session",
       JSON.stringify({ openPaths: ["D:\\notes\\restored.md"], activePath: "D:\\notes\\restored.md" }),
     );
-    const restoreSettings = createDefaultSettings();
+    const restoreSettings = createSeenSettings();
     restoreSettings.files.restorePreviousSession = true;
     invokeMock.mockImplementation(async (command: string) =>
       command === "load_settings" ? restoreSettings : undefined,
@@ -734,6 +741,60 @@ describe("App", () => {
 
       expect(screen.queryByRole("complementary", { name: "Outline" })).not.toBeInTheDocument();
       expect(useWorkspaceState.getState().showOutline).toBe(false);
+    });
+  });
+
+  describe("tour prompt", () => {
+    function loadSettingsWithTourVersion(tourVersion: number) {
+      const stored = createSeenSettings();
+      stored.onboarding.tourVersion = tourVersion;
+      invokeMock.mockImplementation(async (command: string) =>
+        command === "load_settings" ? stored : undefined,
+      );
+    }
+
+    it("is offered once to an unseen user", async () => {
+      loadSettingsWithTourVersion(0);
+
+      render(<App />);
+
+      expect(await screen.findByRole("dialog", { name: "Take a quick tour?" })).toBeInTheDocument();
+    });
+
+    it("is not offered to a user who has already seen the current tour", async () => {
+      loadSettingsWithTourVersion(CURRENT_TOUR_VERSION);
+
+      render(<App />);
+      await waitFor(() => expect(useSettingsStore.getState().isHydrated).toBe(true));
+
+      expect(screen.queryByRole("dialog", { name: "Take a quick tour?" })).not.toBeInTheDocument();
+    });
+
+    it("is not flashed before the saved settings have loaded", () => {
+      render(<App />);
+
+      expect(screen.queryByRole("dialog", { name: "Take a quick tour?" })).not.toBeInTheDocument();
+    });
+
+    it("records the tour version and goes away when skipped", async () => {
+      const user = userEvent.setup();
+      loadSettingsWithTourVersion(0);
+
+      render(<App />);
+      await user.click(await screen.findByRole("button", { name: "Skip" }));
+
+      expect(screen.queryByRole("dialog", { name: "Take a quick tour?" })).not.toBeInTheDocument();
+      expect(useSettingsStore.getState().settings.onboarding.tourVersion).toBe(CURRENT_TOUR_VERSION);
+      await waitFor(() =>
+        expect(invokeMock).toHaveBeenCalledWith(
+          "save_settings",
+          expect.objectContaining({
+            settings: expect.objectContaining({
+              onboarding: { tourVersion: CURRENT_TOUR_VERSION },
+            }),
+          }),
+        ),
+      );
     });
   });
 });

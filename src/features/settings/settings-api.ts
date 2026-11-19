@@ -61,7 +61,9 @@ export function saveSettings(settings: MarkoraSettings) {
 
 export function resetSettings() {
   if (detectPlatform() === "web") {
+    // Reset restores preferences, not history: the recorded tour version stays.
     const defaults = createDefaultSettings();
+    defaults.onboarding = loadWebSettings().onboarding;
     return Promise.resolve(saveWebSettings(defaults));
   }
 

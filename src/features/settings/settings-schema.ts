@@ -32,12 +32,29 @@ export interface AuthoringDefaults {
   newDocumentTemplate: string;
 }
 
+export interface OnboardingSettings {
+  /** The Tour version the user last finished or skipped; 0 means they are unseen. */
+  tourVersion: number;
+}
+
 export interface MarkoraSettings {
   appearance: AppearanceSettings;
   editor: EditorSettings;
   preview: PreviewSettings;
   files: FileSettings;
   authoring: AuthoringDefaults;
+  onboarding: OnboardingSettings;
+}
+
+/** Bump this when the Tour changes enough that people who saw it should be offered it again. */
+export const CURRENT_TOUR_VERSION = 1;
+
+/** True when the user should be offered the Tour prompt. */
+export function isTourUnseen(
+  settings: MarkoraSettings,
+  currentVersion: number = CURRENT_TOUR_VERSION,
+): boolean {
+  return settings.onboarding.tourVersion < currentVersion;
 }
 
 /** The editor font sizes (px) the settings stepper and the Zoom commands move through. */
@@ -76,6 +93,9 @@ export const defaultSettings: MarkoraSettings = {
   },
   authoring: {
     newDocumentTemplate: defaultNewDocumentTemplate,
+  },
+  onboarding: {
+    tourVersion: 0,
   },
 };
 
@@ -163,11 +183,17 @@ export function normalizeSettings(raw: unknown): MarkoraSettings {
     defaults.preview.contentWidth,
   );
 
+  const onboarding = mergeKnown(defaults.onboarding, source.onboarding);
+  onboarding.tourVersion = Math.floor(
+    clamp(onboarding.tourVersion, 0, Number.MAX_SAFE_INTEGER, defaults.onboarding.tourVersion),
+  );
+
   return {
     appearance,
     editor: mergeKnown(defaults.editor, source.editor),
     preview,
     files: mergeKnown(defaults.files, source.files),
     authoring: mergeKnown(defaults.authoring, source.authoring),
+    onboarding,
   };
 }

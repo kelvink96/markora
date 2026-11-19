@@ -2,11 +2,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
-import { createDefaultSettings } from "./features/settings/settings-schema";
+import { CURRENT_TOUR_VERSION, createDefaultSettings } from "./features/settings/settings-schema";
+import { __resetSettingsStorageForTests } from "./features/settings/settings-api";
 import { useDocumentStore } from "./store/document";
 import { useSettingsStore } from "./features/settings/settings-store";
 import { useThemeStore } from "./features/theme/theme-store";
 import { useWorkspaceState } from "./features/workspace/workspace-state";
+
+function storeTourVersion(tourVersion: number) {
+  localStorage.setItem("markora:web-settings", JSON.stringify({ onboarding: { tourVersion } }));
+}
 
 const {
   loadWorkspaceSnapshotMock,
@@ -154,6 +159,11 @@ vi.mock("./components/editor-page/tab-strip", () => ({
 describe("App web mode", () => {
   beforeEach(() => {
     const settings = createDefaultSettings();
+    // Browser storage is what web mode loads from. Start as a user who has dealt with the
+    // Tour prompt so it stays out of the way; the prompt tests below override this.
+    __resetSettingsStorageForTests();
+    localStorage.clear();
+    storeTourVersion(CURRENT_TOUR_VERSION);
     useDocumentStore.setState({
       projects: [
         {
@@ -192,6 +202,27 @@ describe("App web mode", () => {
     supportsFileImportMock.mockReturnValue(true);
     supportsFileExportMock.mockReturnValue(true);
     installPromptMock.mockReset();
+  });
+
+  it("offers the Tour prompt to an unseen user and never again after Skip", async () => {
+    const user = userEvent.setup();
+    localStorage.clear();
+
+    const first = render(<App />);
+    await user.click(await screen.findByRole("button", { name: "Skip" }));
+    expect(screen.queryByRole("dialog", { name: "Take a quick tour?" })).not.toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem("markora:web-settings") ?? "{}")).toMatchObject({
+      onboarding: { tourVersion: CURRENT_TOUR_VERSION },
+    });
+    first.unmount();
+
+    // A fresh launch: the in-memory cache is gone, only browser storage remains.
+    __resetSettingsStorageForTests();
+    useSettingsStore.setState({ isHydrated: false, settings: createDefaultSettings() });
+    render(<App />);
+    await waitFor(() => expect(useSettingsStore.getState().isHydrated).toBe(true));
+
+    expect(screen.queryByRole("dialog", { name: "Take a quick tour?" })).not.toBeInTheDocument();
   });
 
   it("hydrates the workspace from saved browser state", async () => {

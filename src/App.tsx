@@ -31,6 +31,8 @@ import { scrollPreviewToHeading } from "./features/outline/scroll-to-heading";
 import { useEditorCommandState } from "./features/editor/editor-command-state";
 import { OutlinePanel } from "./components/editor-page/outline-panel";
 import { resetSettings, saveSettings } from "./features/settings/settings-api";
+import { CURRENT_TOUR_VERSION, isTourUnseen } from "./features/settings/settings-schema";
+import { TourPrompt } from "./components/editor-page/tour-prompt";
 import { useSettingsStore } from "./features/settings/settings-store";
 import { useEditorStatusState } from "./features/workspace/editor-status-state";
 import { useWorkspaceState } from "./features/workspace/workspace-state";
@@ -79,6 +81,8 @@ export default function App() {
   const updateAppearance = useSettingsStore((state) => state.updateAppearance);
   const updateEditor = useSettingsStore((state) => state.updateEditor);
   const updateFiles = useSettingsStore((state) => state.updateFiles);
+  const updateOnboarding = useSettingsStore((state) => state.updateOnboarding);
+  const isSettingsHydrated = useSettingsStore((state) => state.isHydrated);
   const updatePreview = useSettingsStore((state) => state.updatePreview);
   const templateDraft = useSettingsStore((state) => state.templateDraft);
   const setTemplateDraft = useSettingsStore((state) => state.setTemplateDraft);
@@ -127,6 +131,11 @@ export default function App() {
       console.error("save_settings failed:", error),
     );
   }, []);
+
+  const skipTour = useCallback(() => {
+    updateOnboarding({ tourVersion: CURRENT_TOUR_VERSION });
+    void persistCurrentSettings();
+  }, [persistCurrentSettings, updateOnboarding]);
 
   const handleThemeToggle = useCallback(() => {
     toggleTheme();
@@ -335,6 +344,11 @@ export default function App() {
         onOpenChange={setIsCommandPaletteOpen}
         // Built only while open, so it always reflects the current document, view mode and outline state.
         commands={isCommandPaletteOpen ? buildPaletteCommands(commandContext) : []}
+      />
+      <TourPrompt
+        // Only after the saved settings have loaded, so a returning user never sees it flash.
+        open={isSettingsHydrated && activeScreen === "workspace" && isTourUnseen(settings)}
+        onSkip={skipTour}
       />
       <Toaster position="bottom-right" />
     </TooltipProvider>

@@ -45,6 +45,38 @@ describe("settings-api", () => {
     await expect(loadSettings()).resolves.toEqual(createDefaultSettings());
   });
 
+  it("keeps the recorded tour version when settings are reset on web", async () => {
+    const settings = createDefaultSettings();
+    settings.editor.lineNumbers = true;
+    settings.onboarding.tourVersion = 1;
+
+    await saveSettings(settings);
+    const reset = await resetSettings();
+
+    expect(reset.onboarding.tourVersion).toBe(1);
+    expect(reset.editor.lineNumbers).toBe(false);
+    await expect(loadSettings()).resolves.toMatchObject({ onboarding: { tourVersion: 1 } });
+  });
+
+  it("round-trips the tour version through web storage", async () => {
+    const settings = createDefaultSettings();
+    settings.onboarding.tourVersion = 1;
+
+    await saveSettings(settings);
+    __resetSettingsStorageForTests();
+
+    await expect(loadSettings()).resolves.toMatchObject({ onboarding: { tourVersion: 1 } });
+  });
+
+  it("treats a web save from before the Tour existed as unseen", async () => {
+    localStorage.setItem("markora:web-settings", JSON.stringify({ appearance: { theme: "dark" } }));
+
+    const loaded = await loadSettings();
+
+    expect(loaded.appearance.theme).toBe("dark");
+    expect(loaded.onboarding.tourVersion).toBe(0);
+  });
+
   it("migrates an older web save that lacks newer keys and uses removed ones", async () => {
     localStorage.setItem(
       "markora:web-settings",

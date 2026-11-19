@@ -22,6 +22,7 @@ export function ViewModeSwitcher({ value, onValueChange }: ViewModeSwitcherProps
       variant="outline"
       size="sm"
       aria-label="View mode"
+      data-tour="view-mode"
       value={value}
       // Clicking the selected item would clear a single-select group; a view is always chosen.
       onValueChange={(next) => next && onValueChange(next as WorkspaceViewMode)}

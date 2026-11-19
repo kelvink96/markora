@@ -20,6 +20,12 @@ describe("ViewModeSwitcher", () => {
     expect(screen.getByRole("radio", { name: "Preview view" })).not.toBeChecked();
   });
 
+  it("is the anchor of the view-mode Tour stop", () => {
+    render(<ViewModeSwitcher value="live" onValueChange={vi.fn()} />);
+
+    expect(screen.getByRole("radiogroup", { name: "View mode" })).toHaveAttribute("data-tour", "view-mode");
+  });
+
   it("changes modes when clicked", async () => {
     const user = userEvent.setup();
     const onValueChange = vi.fn();

@@ -31,8 +31,10 @@ import { scrollPreviewToHeading } from "./features/outline/scroll-to-heading";
 import { useEditorCommandState } from "./features/editor/editor-command-state";
 import { OutlinePanel } from "./components/editor-page/outline-panel";
 import { resetSettings, saveSettings } from "./features/settings/settings-api";
-import { CURRENT_TOUR_VERSION, isTourUnseen } from "./features/settings/settings-schema";
+import { CURRENT_TOUR_VERSION } from "./features/settings/settings-schema";
+import { initialTourState, shouldOfferTour, tourReducer, type TourEvent } from "./features/tour/tour-state";
 import { TourPrompt } from "./components/editor-page/tour-prompt";
+import { Tour } from "./components/editor-page/tour";
 import { useSettingsStore } from "./features/settings/settings-store";
 import { useEditorStatusState } from "./features/workspace/editor-status-state";
 import { useWorkspaceState } from "./features/workspace/workspace-state";
@@ -132,10 +134,23 @@ export default function App() {
     );
   }, []);
 
-  const skipTour = useCallback(() => {
-    updateOnboarding({ tourVersion: CURRENT_TOUR_VERSION });
-    void persistCurrentSettings();
-  }, [persistCurrentSettings, updateOnboarding]);
+  const [tourState, setTourState] = useState(initialTourState);
+  const dispatchTour = useCallback(
+    (event: TourEvent) => {
+      const next = tourReducer(tourState, event);
+      setTourState(next.state);
+      if (next.recordVersion) {
+        updateOnboarding({ tourVersion: CURRENT_TOUR_VERSION });
+        void persistCurrentSettings();
+      }
+    },
+    [persistCurrentSettings, tourState, updateOnboarding],
+  );
+  const startTour = useCallback(() => {
+    // The first Tour stop points at the editor toolbar, which needs an open document.
+    if (useDocumentStore.getState().openDocuments.length === 0) handleNew();
+    dispatchTour("accept");
+  }, [dispatchTour, handleNew]);
 
   const handleThemeToggle = useCallback(() => {
     toggleTheme();
@@ -347,9 +362,11 @@ export default function App() {
       />
       <TourPrompt
         // Only after the saved settings have loaded, so a returning user never sees it flash.
-        open={isSettingsHydrated && activeScreen === "workspace" && isTourUnseen(settings)}
-        onSkip={skipTour}
+        open={isSettingsHydrated && activeScreen === "workspace" && shouldOfferTour(settings, tourState)}
+        onSkip={() => dispatchTour("skip")}
+        onStart={startTour}
       />
+      <Tour run={tourState.running} onEnd={dispatchTour} />
       <Toaster position="bottom-right" />
     </TooltipProvider>
   );

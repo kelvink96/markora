@@ -41,6 +41,17 @@ vi.mock("./platform/files", () => ({
   }),
 }));
 
+// The tour library is covered by its own tests; here the runner just reports how the tour ended.
+vi.mock("./components/editor-page/tour/tour-runner", () => ({
+  default: ({ onEnd }: { onEnd: (event: "skip" | "finish") => void }) => (
+    <div>
+      <p>tour is running</p>
+      <button onClick={() => onEnd("finish")}>End tour: finish</button>
+      <button onClick={() => onEnd("skip")}>End tour: skip</button>
+    </div>
+  ),
+}));
+
 vi.mock("./platform/persistence/web", () => ({
   loadWorkspaceSnapshot: vi.fn().mockResolvedValue(null),
   saveWorkspaceSnapshot: vi.fn().mockResolvedValue(undefined),
@@ -774,6 +785,43 @@ describe("App", () => {
       render(<App />);
 
       expect(screen.queryByRole("dialog", { name: "Take a quick tour?" })).not.toBeInTheDocument();
+    });
+
+    it("starts the tour on a scratch note when accepted, without recording the version yet", async () => {
+      const user = userEvent.setup();
+      loadSettingsWithTourVersion(0);
+
+      render(<App />);
+      await user.click(await screen.findByRole("button", { name: "Start tour" }));
+
+      expect(screen.queryByRole("dialog", { name: "Take a quick tour?" })).not.toBeInTheDocument();
+      expect(await screen.findByText("tour is running")).toBeInTheDocument();
+      expect(useDocumentStore.getState().openDocuments.length).toBeGreaterThan(0);
+      expect(useSettingsStore.getState().settings.onboarding.tourVersion).toBe(0);
+    });
+
+    it.each([
+      ["finish", "End tour: finish"],
+      ["close or skip", "End tour: skip"],
+    ])("records the tour version when the tour ends by %s", async (_how, button) => {
+      const user = userEvent.setup();
+      loadSettingsWithTourVersion(0);
+
+      render(<App />);
+      await user.click(await screen.findByRole("button", { name: "Start tour" }));
+      await user.click(await screen.findByRole("button", { name: button }));
+
+      expect(screen.queryByText("tour is running")).not.toBeInTheDocument();
+      expect(screen.queryByRole("dialog", { name: "Take a quick tour?" })).not.toBeInTheDocument();
+      expect(useSettingsStore.getState().settings.onboarding.tourVersion).toBe(CURRENT_TOUR_VERSION);
+      await waitFor(() =>
+        expect(invokeMock).toHaveBeenCalledWith(
+          "save_settings",
+          expect.objectContaining({
+            settings: expect.objectContaining({ onboarding: { tourVersion: CURRENT_TOUR_VERSION } }),
+          }),
+        ),
+      );
     });
 
     it("records the tour version and goes away when skipped", async () => {

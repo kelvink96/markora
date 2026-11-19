@@ -75,6 +75,9 @@ export default function App() {
   const toggleTheme = useThemeStore((state) => state.toggleTheme);
   const viewMode = useWorkspaceState((state) => state.viewMode);
   const setViewMode = useWorkspaceState((state) => state.setViewMode);
+  const showSyntax = useWorkspaceState((state) => state.showSyntax);
+  const setShowSyntax = useWorkspaceState((state) => state.setShowSyntax);
+  const toggleSyntax = useWorkspaceState((state) => state.toggleSyntax);
   const showOutline = useWorkspaceState((state) => state.showOutline);
   const toggleOutline = useWorkspaceState((state) => state.toggleOutline);
   const goToLine = useEditorCommandState((state) => state.goToLine);
@@ -189,6 +192,7 @@ export default function App() {
     modifier: getModifierLabel(),
     hasActiveDocument: hasOpenDocuments,
     viewMode,
+    showSyntax,
     showOutline,
     appearance: settings.appearance,
     editor: settings.editor,
@@ -209,6 +213,7 @@ export default function App() {
       onToggleTheme: handleThemeToggle,
       onToggleOutline: toggleOutline,
       onViewModeChange: setViewMode,
+      onToggleSyntax: toggleSyntax,
       onFormat: runToolbarAction,
       onEditAction: (action) => void runEditAction(action),
       onOpenShortcuts: () => setIsKeyboardShortcutsOpen(true),
@@ -270,6 +275,8 @@ export default function App() {
       updatesSupported={!isWeb}
       viewMode={viewMode}
       onViewModeChange={setViewMode}
+      showSyntax={showSyntax}
+      onShowSyntaxChange={setShowSyntax}
     />
   );
 
@@ -314,7 +321,7 @@ export default function App() {
     ) : (
       hasOpenDocuments ? (
         <Workspace
-          left={<EditorPane theme={theme} viewMode={viewMode} />}
+          left={<EditorPane theme={theme} live={viewMode === "write" && !showSyntax} />}
           right={<PreviewPane />}
           viewMode={viewMode}
           sidebar={
@@ -324,11 +331,13 @@ export default function App() {
                 activeIndex={activeHeadingIndex}
                 onClose={toggleOutline}
                 onSelect={(heading) => {
-                  goToLine(heading.line);
+                  // Read hides the editor, so there is no cursor to move: only the preview scrolls.
+                  const reading = viewMode === "read";
+                  if (!reading) goToLine(heading.line);
                   // Below the md breakpoint the outline floats over the editor, so get it out of the way.
                   if (window.matchMedia?.("(max-width: 767px)").matches) toggleOutline();
-                  // With synced scrolling the preview follows the editor; otherwise take it there too.
-                  if (!settings.preview.syncScroll) {
+                  // With synced scrolling the preview follows the editor; otherwise (and always in Read) take it there too.
+                  if (reading || !settings.preview.syncScroll) {
                     scrollPreviewToHeading(heading.index, headings.length);
                   }
                 }}

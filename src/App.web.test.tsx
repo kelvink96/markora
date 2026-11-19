@@ -186,7 +186,7 @@ describe("App web mode", () => {
       settings,
       templateDraft: settings.authoring.newDocumentTemplate,
     });
-    useWorkspaceState.setState({ viewMode: "edit" });
+    useWorkspaceState.setState({ viewMode: "write", showSyntax: false });
     useThemeStore.setState({
       themePreference: "system",
       systemTheme: "light",

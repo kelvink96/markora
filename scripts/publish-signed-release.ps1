@@ -54,7 +54,7 @@ if (-not (Test-Path $sigPath)) {
   throw "Updater signature not found at: $sigPath"
 }
 
-node scripts/build-update-manifest.mjs --version $Version --url $downloadUrl --signature-file $sigPath --notes $Notes --out $latestPath
+node scripts/build-update-manifest.mjs --version $Version --url $downloadUrl --signature-file $sigPath "--notes=$Notes" --out $latestPath
 if ($LASTEXITCODE -ne 0) {
   throw "build-update-manifest failed with exit code $LASTEXITCODE"
 }

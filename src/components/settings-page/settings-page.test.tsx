@@ -1,369 +1,196 @@
-import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
-import { within } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { createDefaultSettings } from "../../features/settings/settings-schema";
+import { createDefaultSettings, type MarkoraSettings } from "../../features/settings/settings-schema";
 import { SettingsPage } from "./settings-page";
-import { AboutSettingsSection } from "./about-settings-section";
 
-it("renders a privacy policy link in the about section", () => {
-  render(<AboutSettingsSection version="1.0.0" privacyPolicyUrl="https://example.com/privacy" />);
-  const link = screen.getByRole("link", { name: /privacy policy/i });
-  expect(link).toBeInTheDocument();
-  expect(link).toHaveAttribute("href", "https://example.com/privacy");
+function renderPage(overrides: Partial<Parameters<typeof SettingsPage>[0]> = {}, settings?: MarkoraSettings) {
+  const current = settings ?? createDefaultSettings();
+  const handlers = {
+    onClose: vi.fn(),
+    onChangeAppearance: vi.fn(),
+    onChangeEditor: vi.fn(),
+    onChangeFiles: vi.fn(),
+    onChangePreview: vi.fn(),
+    onSaveTemplate: vi.fn(),
+    onResetAll: vi.fn(),
+  };
+  render(
+    <SettingsPage
+      settings={current}
+      templateDraft={current.authoring.newDocumentTemplate}
+      version="0.1.0"
+      {...handlers}
+      {...overrides}
+    />,
+  );
+  return handlers;
+}
+
+const search = () => screen.getByRole("searchbox", { name: "Search settings" });
+
+beforeEach(() => {
+  Element.prototype.scrollIntoView = vi.fn();
 });
 
 describe("SettingsPage", () => {
-  it("renders application and authoring defaults sections", () => {
-    const settings = createDefaultSettings();
+  it("shows every group on one page with a jump list", () => {
+    renderPage();
 
-    render(
-      <SettingsPage
-        settings={settings}
-        templateDraft={settings.authoring.newDocumentTemplate}
-        version="0.1.0"
-        onClose={() => {}}
-        onChangeAppearance={() => {}}
-        onChangeEditor={() => {}}
-        onChangeFiles={() => {}}
-        onChangePreview={() => {}}
-        onSaveTemplate={() => {}}
-        onResetTemplate={() => {}}
-        onResetAll={() => {}}
-      />,
-    );
-
-    expect(screen.getByRole("heading", { name: "Application" })).toBeInTheDocument();
+    for (const title of ["Appearance", "Writing", "Preview", "Files"]) {
+      expect(screen.getByRole("heading", { name: title, level: 3 })).toBeInTheDocument();
+    }
     expect(screen.getByRole("heading", { name: "Settings", level: 2 })).toBeInTheDocument();
-    expect(screen.getByRole("complementary")).toBeInTheDocument();
-    expect(screen.getByRole("navigation", { name: "Settings sections" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Appearance" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Editor" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Preview" })).toBeInTheDocument();
-    expect(within(screen.getByRole("button", { name: "Appearance" })).getByTestId("settings-tab-icon-appearance")).toBeInTheDocument();
-    expect(within(screen.getByRole("button", { name: "Advanced" })).getByTestId("settings-tab-icon-advanced")).toBeInTheDocument();
-    expect(within(screen.getByRole("button", { name: "New Document Template" })).getByTestId("settings-tab-icon-template")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "About" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Back to editor" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Authoring Defaults" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "New Document Template" })).toBeInTheDocument();
-  });
-
-  it("marks the current section for assistive technology, whatever the colour scheme", () => {
-    const settings = createDefaultSettings();
-    settings.appearance.colorScheme = "high-contrast";
-
-    render(
-      <SettingsPage
-        settings={settings}
-        templateDraft={settings.authoring.newDocumentTemplate}
-        version="0.1.0"
-        onClose={() => {}}
-        onChangeAppearance={() => {}}
-        onChangeEditor={() => {}}
-        onChangeFiles={() => {}}
-        onChangePreview={() => {}}
-        onSaveTemplate={() => {}}
-        onResetTemplate={() => {}}
-        onResetAll={() => {}}
-      />,
-    );
-
-    expect(screen.getByRole("button", { name: "Appearance" })).toHaveAttribute("aria-current", "page");
-    expect(screen.getByRole("button", { name: "Editor" })).not.toHaveAttribute("aria-current");
-    expect(screen.getByTestId("settings-tab-icon-appearance")).toHaveClass("size-4");
-  });
-
-  it("switches sections from the sidebar", async () => {
-    const user = userEvent.setup();
-    const settings = createDefaultSettings();
-
-    render(
-      <SettingsPage
-        settings={settings}
-        templateDraft={settings.authoring.newDocumentTemplate}
-        version="0.1.0"
-        onClose={() => {}}
-        onChangeAppearance={() => {}}
-        onChangeEditor={() => {}}
-        onChangeFiles={() => {}}
-        onChangePreview={() => {}}
-        onSaveTemplate={() => {}}
-        onResetTemplate={() => {}}
-        onResetAll={() => {}}
-      />,
-    );
-
-    await user.click(screen.getByRole("button", { name: "About" }));
-
-    expect(screen.getByRole("heading", { name: "About", level: 3 })).toBeInTheDocument();
-    expect(screen.getByText("Markora is a desktop-first markdown editor.")).toBeInTheDocument();
-    expect(screen.getByText("Version 0.1.0")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "About" })).toHaveAttribute("aria-current", "page");
-  });
-
-  it("keeps app color scheme controls inside the appearance section", async () => {
-    const user = userEvent.setup();
-    const settings = createDefaultSettings();
-
-    render(
-      <SettingsPage
-        settings={settings}
-        templateDraft={settings.authoring.newDocumentTemplate}
-        version="0.1.0"
-        onClose={() => {}}
-        onChangeAppearance={() => {}}
-        onChangeEditor={() => {}}
-        onChangeFiles={() => {}}
-        onChangePreview={() => {}}
-        onSaveTemplate={() => {}}
-        onResetTemplate={() => {}}
-        onResetAll={() => {}}
-      />,
-    );
-
-    await user.click(screen.getByRole("button", { name: "Appearance" }));
-
-    expect(screen.getByRole("heading", { name: "Appearance", level: 3 })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Status Bar", level: 3 })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Color Scheme", level: 3 })).toBeInTheDocument();
-    expect(screen.getByRole("radiogroup", { name: "Theme mode" })).toBeInTheDocument();
-    expect(screen.getByRole("radiogroup", { name: "Color scheme" })).toBeInTheDocument();
+    const nav = screen.getByRole("navigation", { name: "Settings sections" });
+    expect(within(nav).getAllByRole("button")).toHaveLength(4);
     expect(screen.getAllByTestId(/theme-swatch-/i)).toHaveLength(3);
     expect(screen.getAllByTestId(/scheme-swatch-/i)).toHaveLength(3);
+    expect(screen.getByTestId("theme-swatch-system")).toHaveAttribute("data-resolved-theme-mode", "light");
   });
 
-  it("lets the user save the template draft explicitly", async () => {
-    const user = userEvent.setup();
+  it("scrolls to a group from the jump list", async () => {
+    renderPage();
+
+    await userEvent.click(within(screen.getByRole("navigation", { name: "Settings sections" })).getByRole("button", { name: "Preview" }));
+
+    expect(Element.prototype.scrollIntoView).toHaveBeenCalled();
+  });
+
+  it("filters settings as you type and hides the jump list", async () => {
+    renderPage();
+
+    await userEvent.type(search(), "night");
+
+    expect(screen.getByRole("radiogroup", { name: "Theme mode" })).toBeInTheDocument();
+    expect(screen.queryByLabelText("Show line numbers")).toBeNull();
+    expect(screen.queryByRole("navigation", { name: "Settings sections" })).toBeNull();
+  });
+
+  it("shows a message when nothing matches", async () => {
+    renderPage();
+
+    await userEvent.type(search(), "zzz");
+
+    expect(screen.getByRole("status")).toHaveTextContent("No settings match");
+  });
+
+  it("treats a whitespace-only query as no query", async () => {
+    renderPage();
+
+    await userEvent.type(search(), "   ");
+
+    expect(screen.queryByText(/No settings match/)).toBeNull();
+    expect(screen.getByLabelText("Show line numbers")).toBeInTheDocument();
+  });
+
+  it("does not offer the desktop-only restore option on web, even in search", async () => {
+    renderPage();
+
+    await userEvent.type(search(), "restore");
+
+    expect(screen.getByRole("status")).toHaveTextContent("No settings match");
+  });
+
+  it("offers the restore option on desktop", async () => {
+    renderPage({ canRestoreSession: true });
+
+    await userEvent.type(search(), "restore");
+
+    expect(screen.getByLabelText("Reopen last session's files on launch")).toBeInTheDocument();
+  });
+
+  it("clears the query with Escape", async () => {
+    renderPage();
+
+    await userEvent.type(search(), "zzz");
+    await userEvent.keyboard("{Escape}");
+
+    expect(search()).toHaveValue("");
+    expect(screen.getByLabelText("Show line numbers")).toBeInTheDocument();
+  });
+
+  it("focuses search when / is pressed outside a text field", async () => {
+    renderPage();
+
+    await userEvent.keyboard("/");
+
+    expect(search()).toHaveFocus();
+    expect(search()).toHaveValue("");
+  });
+
+  it("does not steal / from a text field", async () => {
+    renderPage({ canRestoreSession: false });
+    await userEvent.type(search(), "a/b");
+
+    expect(search()).toHaveValue("a/b");
+  });
+
+  it("applies a toggle as soon as it changes", async () => {
+    const { onChangeEditor } = renderPage();
+
+    await userEvent.click(screen.getByLabelText("Show line numbers"));
+
+    expect(onChangeEditor).toHaveBeenCalledWith(expect.objectContaining({ lineNumbers: true }));
+    expect(screen.queryByRole("button", { name: "Save changes" })).toBeNull();
+  });
+
+  it("applies the color scheme as soon as it is picked", async () => {
+    const { onChangeAppearance } = renderPage();
+
+    await userEvent.click(screen.getByTestId("scheme-swatch-sepia"));
+
+    expect(onChangeAppearance).toHaveBeenCalledWith(expect.objectContaining({ colorScheme: "sepia" }));
+  });
+
+  it("resets a single changed setting from its dot", async () => {
     const settings = createDefaultSettings();
-    const onSaveTemplate = vi.fn();
+    settings.appearance.editorLineHeight = 1.9;
+    const { onChangeAppearance } = renderPage({}, settings);
 
-    render(
-      <SettingsPage
-        settings={settings}
-        templateDraft="# Draft"
-        version="0.1.0"
-        onClose={() => {}}
-        onChangeAppearance={() => {}}
-        onChangeEditor={() => {}}
-        onChangeFiles={() => {}}
-        onChangePreview={() => {}}
-        onSaveTemplate={onSaveTemplate}
-        onResetTemplate={() => {}}
-        onResetAll={() => {}}
-      />,
-    );
+    await userEvent.click(screen.getByRole("button", { name: "Reset Editor line spacing to default" }));
 
-    await user.click(screen.getByRole("button", { name: "New Document Template" }));
-    await user.clear(screen.getByLabelText("Template content"));
-    await user.type(screen.getByLabelText("Template content"), "# New draft");
-    await user.click(screen.getByRole("button", { name: "Save template" }));
+    expect(onChangeAppearance).toHaveBeenCalledWith(expect.objectContaining({ editorLineHeight: 1.7 }));
+    expect(screen.queryByRole("button", { name: "Reset Editor font size to default" })).toBeNull();
+  });
 
-    expect(onSaveTemplate).toHaveBeenCalledWith("# New draft");
+  it("saves the template from its dialog", async () => {
+    const { onSaveTemplate } = renderPage();
+
+    await userEvent.click(screen.getByRole("button", { name: "Edit template…" }));
+    const textarea = screen.getByRole("textbox", { name: "Template content" });
+    await userEvent.clear(textarea);
+    await userEvent.type(textarea, "# mine");
+    await userEvent.click(screen.getByRole("button", { name: "Save template" }));
+
+    expect(onSaveTemplate).toHaveBeenCalledWith("# mine");
+  });
+
+  it("keeps the dialog's Escape from touching the search query", async () => {
+    renderPage();
+    await userEvent.type(search(), "template");
+
+    await userEvent.click(screen.getByRole("button", { name: "Edit template…" }));
+    await userEvent.keyboard("{Escape}");
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(search()).toHaveValue("template");
   });
 
   it("confirms before resetting all settings", async () => {
-    const user = userEvent.setup();
-    const settings = createDefaultSettings();
-    const onResetAll = vi.fn();
+    const { onResetAll } = renderPage();
 
-    render(
-      <SettingsPage
-        settings={settings}
-        templateDraft={settings.authoring.newDocumentTemplate}
-        version="0.1.0"
-        onClose={() => {}}
-        onChangeAppearance={() => {}}
-        onChangeEditor={() => {}}
-        onChangeFiles={() => {}}
-        onChangePreview={() => {}}
-        onSaveTemplate={() => {}}
-        onResetTemplate={() => {}}
-        onResetAll={onResetAll}
-      />,
-    );
-
-    await user.click(screen.getByRole("button", { name: "Advanced" }));
-    await user.click(screen.getByRole("button", { name: "Reset all settings" }));
-
-    // Nothing happens until the question is answered.
-    const dialog = await screen.findByRole("alertdialog", { name: "Reset all settings?" });
+    await userEvent.click(screen.getByRole("button", { name: "Reset all settings" }));
     expect(onResetAll).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole("button", { name: "Reset everything" }));
 
-    await user.click(within(dialog).getByRole("button", { name: "Reset everything" }));
     expect(onResetAll).toHaveBeenCalledTimes(1);
   });
 
-  it("keeps every setting when the reset is cancelled", async () => {
-    const user = userEvent.setup();
-    const settings = createDefaultSettings();
-    const onResetAll = vi.fn();
-
-    render(
-      <SettingsPage
-        settings={settings}
-        templateDraft={settings.authoring.newDocumentTemplate}
-        version="0.1.0"
-        onClose={() => {}}
-        onChangeAppearance={() => {}}
-        onChangeEditor={() => {}}
-        onChangeFiles={() => {}}
-        onChangePreview={() => {}}
-        onSaveTemplate={() => {}}
-        onResetTemplate={() => {}}
-        onResetAll={onResetAll}
-      />,
-    );
-
-    await user.click(screen.getByRole("button", { name: "Advanced" }));
-    await user.click(screen.getByRole("button", { name: "Reset all settings" }));
-    await user.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Cancel" }));
-
-    expect(onResetAll).not.toHaveBeenCalled();
-    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
-  });
-
-  it("applies an editor setting as soon as it is changed", async () => {
-    const user = userEvent.setup();
-    const settings = createDefaultSettings();
-    settings.editor.lineNumbers = true;
-    const onChangeEditor = vi.fn();
-
-    render(
-      <SettingsPage
-        settings={settings}
-        templateDraft={settings.authoring.newDocumentTemplate}
-        version="0.1.0"
-        onClose={() => {}}
-        onChangeAppearance={() => {}}
-        onChangeEditor={onChangeEditor}
-        onChangeFiles={() => {}}
-        onChangePreview={() => {}}
-        onSaveTemplate={() => {}}
-        onResetTemplate={() => {}}
-        onResetAll={() => {}}
-      />,
-    );
-
-    await user.click(screen.getByRole("button", { name: "Editor" }));
-    await user.click(screen.getByLabelText("Show line numbers"));
-
-    expect(onChangeEditor).toHaveBeenCalledWith(
-      expect.objectContaining({ lineNumbers: false }),
-    );
-    expect(screen.queryByRole("button", { name: "Save changes" })).not.toBeInTheDocument();
-  });
-
-  it("applies the app color scheme as soon as it is picked", async () => {
-    const user = userEvent.setup();
-    const settings = createDefaultSettings();
-    const onChangeAppearance = vi.fn();
-
-    render(
-      <SettingsPage
-        settings={settings}
-        templateDraft={settings.authoring.newDocumentTemplate}
-        version="0.1.0"
-        onClose={() => {}}
-        onChangeAppearance={onChangeAppearance}
-        onChangeEditor={() => {}}
-        onChangeFiles={() => {}}
-        onChangePreview={() => {}}
-        onSaveTemplate={() => {}}
-        onResetTemplate={() => {}}
-        onResetAll={() => {}}
-      />,
-    );
-
-    await user.click(screen.getByRole("button", { name: "Appearance" }));
-    await user.click(screen.getByTestId("scheme-swatch-sepia"));
-
-    expect(onChangeAppearance).toHaveBeenCalledWith(
-      expect.objectContaining({ colorScheme: "sepia" }),
-    );
-  });
-
-  it("renders visual preview cards for each app color scheme", () => {
-    const settings = createDefaultSettings();
-
-    render(
-      <SettingsPage
-        settings={settings}
-        templateDraft={settings.authoring.newDocumentTemplate}
-        version="0.1.0"
-        onClose={() => {}}
-        onChangeAppearance={() => {}}
-        onChangeEditor={() => {}}
-        onChangeFiles={() => {}}
-        onChangePreview={() => {}}
-        onSaveTemplate={() => {}}
-        onResetTemplate={() => {}}
-        onResetAll={() => {}}
-      />,
-    );
-
-    expect(screen.getAllByTestId(/scheme-swatch-/i)).toHaveLength(3);
-    expect(screen.getAllByTestId(/theme-swatch-/i)).toHaveLength(3);
-    expect(screen.getByTestId("theme-swatch-system")).toHaveAttribute("data-theme", "system");
-    expect(screen.getByTestId("theme-swatch-system")).toHaveAttribute("data-resolved-theme-mode", "light");
-    expect(screen.getByTestId("scheme-swatch-standard")).toHaveAttribute("data-color-scheme", "standard");
-    expect(screen.getByTestId("scheme-swatch-sepia")).toHaveAttribute("data-color-scheme", "sepia");
-    expect(screen.getByTestId("scheme-swatch-sepia")).toHaveAttribute("data-theme-mode", "light");
-  });
-
   it("returns to the workspace from the back action", async () => {
-    const user = userEvent.setup();
-    const settings = createDefaultSettings();
-    const onClose = vi.fn();
+    const { onClose } = renderPage();
 
-    render(
-      <SettingsPage
-        settings={settings}
-        templateDraft={settings.authoring.newDocumentTemplate}
-        version="0.1.0"
-        onClose={onClose}
-        onChangeAppearance={() => {}}
-        onChangeEditor={() => {}}
-        onChangeFiles={() => {}}
-        onChangePreview={() => {}}
-        onSaveTemplate={() => {}}
-        onResetTemplate={() => {}}
-        onResetAll={() => {}}
-      />,
-    );
+    await userEvent.click(screen.getByRole("button", { name: "Back to editor" }));
 
-    await user.click(screen.getByRole("button", { name: "Back to editor" }));
-
-    expect(onClose).toHaveBeenCalled();
-  });
-
-  it("renders icons for the main settings actions", async () => {
-    const user = userEvent.setup();
-    const settings = createDefaultSettings();
-
-    render(
-      <SettingsPage
-        settings={settings}
-        templateDraft={settings.authoring.newDocumentTemplate}
-        version="0.1.0"
-        onClose={() => {}}
-        onChangeAppearance={() => {}}
-        onChangeEditor={() => {}}
-        onChangeFiles={() => {}}
-        onChangePreview={() => {}}
-        onSaveTemplate={() => {}}
-        onResetTemplate={() => {}}
-        onResetAll={() => {}}
-      />,
-    );
-
-    expect(within(screen.getByRole("button", { name: "Back to editor" })).getByTestId("settings-back-icon")).toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: "New Document Template" }));
-    expect(within(screen.getByRole("button", { name: "Save template" })).getByTestId("settings-save-icon")).toBeInTheDocument();
-    expect(within(screen.getByRole("button", { name: "Reset template" })).getByTestId("settings-reset-icon")).toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: "Advanced" }));
-    expect(within(screen.getByRole("button", { name: "Reset all settings" })).getByTestId("settings-danger-icon")).toBeInTheDocument();
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

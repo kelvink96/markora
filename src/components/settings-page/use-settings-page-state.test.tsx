@@ -24,26 +24,17 @@ function stubMatchMedia(listeners: Set<(event: MediaQueryListEvent) => void>, ma
 }
 
 describe("useSettingsPageState", () => {
-  it("resyncs the template draft from props and follows the system theme", () => {
+  it("follows the system theme", () => {
     const settings = createDefaultSettings();
     const listeners = new Set<(event: MediaQueryListEvent) => void>();
     let matches = false;
     stubMatchMedia(listeners, () => matches);
 
-    const { result, rerender } = renderHook(
-      ({ nextSettings, nextTemplateDraft }) =>
-        useSettingsPageState({ settings: nextSettings, templateDraft: nextTemplateDraft }),
-      { initialProps: { nextSettings: settings, nextTemplateDraft: settings.authoring.newDocumentTemplate } },
+    const { result } = renderHook(
+      ({ nextSettings }) => useSettingsPageState({ settings: nextSettings }),
+      { initialProps: { nextSettings: settings } },
     );
 
-    act(() => {
-      result.current.setTemplateDraftValue("# custom");
-    });
-    expect(result.current.templateDraftValue).toBe("# custom");
-
-    rerender({ nextSettings: settings, nextTemplateDraft: "# from props" });
-
-    expect(result.current.templateDraftValue).toBe("# from props");
     expect(result.current.previewThemeMode).toBe("light");
 
     matches = true;
@@ -61,7 +52,7 @@ describe("useSettingsPageState", () => {
     stubMatchMedia(new Set(), () => false);
 
     const { result, rerender } = renderHook(
-      ({ nextSettings }) => useSettingsPageState({ settings: nextSettings, templateDraft: "" }),
+      ({ nextSettings }) => useSettingsPageState({ settings: nextSettings }),
       { initialProps: { nextSettings: settings } },
     );
     expect(result.current.previewThemeMode).toBe("dark");

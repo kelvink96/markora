@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
-import { Eye, FilePlus2, FolderOpen, Info, Palette, PenSquare, SlidersHorizontal } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Eye, FolderOpen, Palette, PenSquare } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import type { SettingsNavigationIcon } from "./settings-navigation";
@@ -18,9 +17,6 @@ const NAVIGATION_ICONS: Record<SettingsNavigationIcon, typeof Palette> = {
   "pen-square": PenSquare,
   eye: Eye,
   "folder-open": FolderOpen,
-  info: Info,
-  "sliders-horizontal": SlidersHorizontal,
-  "file-plus-2": FilePlus2,
 };
 
 export function SidebarButton({
@@ -44,7 +40,7 @@ export function SidebarButton({
       onClick={onClick}
       aria-current={isActive ? "page" : undefined}
       className={cn(
-        "relative flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-left text-sm outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50 pointer-coarse:py-3",
+        "relative flex cursor-pointer md:w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50 pointer-coarse:py-3",
         isActive
           ? "bg-accent font-medium text-accent-foreground before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-linear-to-b before:from-brand-from before:to-brand-to"
           : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
@@ -53,29 +49,6 @@ export function SidebarButton({
       <Icon data-testid={iconTestId} aria-hidden="true" className="size-4 shrink-0" />
       <span className="min-w-0 truncate">{label}</span>
     </button>
-  );
-}
-
-/** One group of settings on the page: a titled card with the controls inside. */
-export function SectionCard({
-  description,
-  title,
-  children,
-}: {
-  description: string;
-  title: string;
-  children: ReactNode;
-}) {
-  return (
-    <Card className="gap-5 bg-card/80 py-5 backdrop-blur-sm">
-      <CardHeader>
-        <CardTitle role="heading" aria-level={3} className="text-base">
-          {title}
-        </CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-5">{children}</CardContent>
-    </Card>
   );
 }
 

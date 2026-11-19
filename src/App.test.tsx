@@ -480,10 +480,10 @@ describe("App", () => {
     render(<App />);
     await user.click(screen.getByRole("button", { name: "open-settings" }));
 
-    expect(screen.getByRole("heading", { name: "Application" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Settings", level: 2 })).toBeInTheDocument();
     expect(screen.queryByText("Top Bar")).not.toBeInTheDocument();
     expect(screen.queryByText("Footer Status")).not.toBeInTheDocument();
-    expect(screen.queryByText(/tabs$/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^\d+ tabs$/)).not.toBeInTheDocument();
   });
 
   it("opens the keyboard shortcuts dialog from the help menu action", async () => {
@@ -520,7 +520,6 @@ describe("App", () => {
 
     render(<App />);
     await user.click(screen.getByRole("button", { name: "open-settings" }));
-    await user.click(screen.getByRole("button", { name: "Editor" }));
     await user.click(screen.getByLabelText("Show line numbers"));
 
     await waitFor(() =>
@@ -541,7 +540,6 @@ describe("App", () => {
 
     render(<App />);
     await user.click(screen.getByRole("button", { name: "open-settings" }));
-    await user.click(screen.getByRole("button", { name: "Preview" }));
     await user.click(screen.getByRole("switch", { name: "Open links in your browser" }));
 
     await waitFor(() =>

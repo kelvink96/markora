@@ -31,7 +31,6 @@ import { scrollPreviewToHeading } from "./features/outline/scroll-to-heading";
 import { useEditorCommandState } from "./features/editor/editor-command-state";
 import { OutlinePanel } from "./components/editor-page/outline-panel";
 import { resetSettings, saveSettings } from "./features/settings/settings-api";
-import { createDefaultSettings } from "./features/settings/settings-schema";
 import { useSettingsStore } from "./features/settings/settings-store";
 import { useEditorStatusState } from "./features/workspace/editor-status-state";
 import { useWorkspaceState } from "./features/workspace/workspace-state";
@@ -207,12 +206,6 @@ export default function App() {
         onSaveTemplate={(value) => {
           setTemplateDraft(value);
           saveTemplateDraft();
-          void persistCurrentSettings();
-        }}
-        onResetTemplate={() => {
-          const defaultTemplate = createDefaultSettings().authoring.newDocumentTemplate;
-          setTemplateDraft(defaultTemplate);
-          useSettingsStore.getState().saveTemplateDraft();
           void persistCurrentSettings();
         }}
         onResetAll={() => {

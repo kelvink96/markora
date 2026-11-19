@@ -1,44 +1,40 @@
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { SettingsSection } from "./settings-page-types";
-import { SETTINGS_NAVIGATION_GROUPS } from "./settings-navigation";
+import { SETTING_SECTIONS, type SettingSection } from "./settings-catalog";
+import { SECTION_ICONS } from "./settings-navigation";
 import { SidebarButton } from "./settings-page-shared";
 
 interface SettingsSidebarProps {
-  activeSection: SettingsSection;
+  activeSection: SettingSection;
+  /** Hidden while searching, when the page no longer shows every section. */
+  showJumpList: boolean;
   onClose: () => void;
-  onSectionChange: (section: SettingsSection) => void;
+  onJump: (section: SettingSection) => void;
 }
 
-export function SettingsSidebar({ activeSection, onClose, onSectionChange }: SettingsSidebarProps) {
+export function SettingsSidebar({ activeSection, showJumpList, onClose, onJump }: SettingsSidebarProps) {
   return (
-    <aside className="flex h-full min-h-0 flex-col overflow-auto rounded-xl border bg-card/80 p-4 shadow-sm backdrop-blur-sm">
-      <div className="mb-5">
+    <aside className="flex min-h-0 flex-col gap-4 md:h-full md:overflow-auto">
+      <div>
         <h2 className="text-lg font-semibold tracking-tight">Settings</h2>
-        <p className="text-sm text-muted-foreground">Tune Markora for your writing flow.</p>
       </div>
 
-      <nav aria-label="Settings sections" className="space-y-5">
-        {SETTINGS_NAVIGATION_GROUPS.map((group) => (
-          <div key={group.title} className="space-y-1">
-            <h3 className="px-3 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-              {group.title}
-            </h3>
-            {group.items.map((item) => (
-              <SidebarButton
-                key={item.id}
-                icon={item.icon}
-                iconTestId={`settings-tab-icon-${item.id}`}
-                label={item.label}
-                isActive={activeSection === item.id}
-                onClick={() => onSectionChange(item.id)}
-              />
-            ))}
-          </div>
-        ))}
-      </nav>
+      {showJumpList ? (
+        <nav aria-label="Settings sections" className="flex flex-wrap gap-1 md:block md:space-y-1">
+          {SETTING_SECTIONS.map((section) => (
+            <SidebarButton
+              key={section.id}
+              icon={SECTION_ICONS[section.id]}
+              iconTestId={`settings-tab-icon-${section.id}`}
+              label={section.title}
+              isActive={activeSection === section.id}
+              onClick={() => onJump(section.id)}
+            />
+          ))}
+        </nav>
+      ) : null}
 
-      <div className="mt-auto pt-4">
+      <div className="md:mt-auto">
         <Button variant="outline" onClick={onClose}>
           <ArrowLeft data-testid="settings-back-icon" aria-hidden="true" />
           Back to editor

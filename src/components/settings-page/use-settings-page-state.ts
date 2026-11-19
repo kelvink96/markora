@@ -1,25 +1,17 @@
 import type { MarkoraSettings } from "../../features/settings/settings-schema";
 import { useEffect, useState } from "react";
+import type { SettingSection } from "./settings-catalog";
 import { DEFAULT_SETTINGS_SECTION } from "./settings-navigation";
 import { getSystemThemeMode } from "./settings-page-shared";
-import type { SettingsSection } from "./settings-page-types";
 
 interface UseSettingsPageStateOptions {
   settings: MarkoraSettings;
-  templateDraft: string;
 }
 
-export function useSettingsPageState({
-  settings,
-  templateDraft,
-}: UseSettingsPageStateOptions) {
-  const [activeSection, setActiveSection] = useState<SettingsSection>(DEFAULT_SETTINGS_SECTION);
-  const [templateDraftValue, setTemplateDraftValue] = useState(templateDraft);
+export function useSettingsPageState({ settings }: UseSettingsPageStateOptions) {
+  const [query, setQuery] = useState("");
+  const [activeSection, setActiveSection] = useState<SettingSection>(DEFAULT_SETTINGS_SECTION);
   const [systemThemeMode, setSystemThemeMode] = useState<"light" | "dark">(getSystemThemeMode);
-
-  useEffect(() => {
-    setTemplateDraftValue(templateDraft);
-  }, [templateDraft]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia?.("(prefers-color-scheme: dark)");
@@ -36,11 +28,5 @@ export function useSettingsPageState({
 
   const previewThemeMode = settings.appearance.theme === "system" ? systemThemeMode : settings.appearance.theme;
 
-  return {
-    activeSection,
-    previewThemeMode,
-    setActiveSection,
-    setTemplateDraftValue,
-    templateDraftValue,
-  };
+  return { activeSection, previewThemeMode, query, setActiveSection, setQuery };
 }

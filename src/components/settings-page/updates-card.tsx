@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useSettingsStore } from "../../features/settings/settings-store";
-import { useUpdateStore } from "../../features/updates/update-store";
+import { SAVE_BEFORE_RESTART, useUpdateStore } from "../../features/updates/update-store";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -19,26 +19,34 @@ export function UpdatesCard({ version, hasUnsavedChanges, onChangeUpdates }: Upd
   const progress = useUpdateStore((state) => state.progress);
   const storeError = useUpdateStore((state) => state.error);
   const check = useUpdateStore((state) => state.check);
-  const install = useUpdateStore((state) => state.install);
+  const download = useUpdateStore((state) => state.download);
   const restart = useUpdateStore((state) => state.restart);
   const checkAutomatically = useSettingsStore((state) => state.settings.updates.checkAutomatically);
   const updateUpdates = useSettingsStore((state) => state.updateUpdates);
   const [restartError, setRestartError] = useState<string | null>(null);
+  const [restarting, setRestarting] = useState(false);
 
   const handleRestart = async () => {
+    if (restarting) return;
+    setRestarting(true);
     setRestartError(null);
     try {
       await restart();
     } catch (error) {
       setRestartError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setRestarting(false);
     }
   };
 
   const percent =
     progress && progress.total ? Math.min(100, Math.round((progress.downloaded / progress.total) * 100)) : null;
-  const errorMessage = restartError ?? (status === "error" ? storeError : null);
-  // A failed download leaves the found update in place, so retrying installs instead of re-checking.
-  const retry = update ? install : check;
+  const showSaveHint = status === "ready" && hasUnsavedChanges;
+  // The store's own dirty-tab refusal repeats the save hint, which already tracks the live dirty state.
+  const readyError = status === "ready" && storeError !== SAVE_BEFORE_RESTART ? storeError : null;
+  const errorMessage = restartError ?? (status === "error" ? storeError : readyError);
+  // A failed download leaves the found update in place, so retrying downloads instead of re-checking.
+  const retry = update ? download : check;
 
   return (
     <section aria-label="Updates" className="mt-10 space-y-4 rounded-xl border p-4 text-sm">
@@ -58,10 +66,10 @@ export function UpdatesCard({ version, hasUnsavedChanges, onChangeUpdates }: Upd
               </Button>
             </>
           ) : null}
-          {status === "available" ? <Button onClick={() => void install()}>Install update</Button> : null}
+          {status === "available" ? <Button onClick={() => void download()}>Download update</Button> : null}
           {status === "ready" ? (
-            <Button disabled={hasUnsavedChanges} onClick={() => void handleRestart()}>
-              Restart to finish
+            <Button disabled={hasUnsavedChanges || restarting} onClick={() => void handleRestart()}>
+              Restart to install
             </Button>
           ) : null}
           {status === "error" ? <Button onClick={() => void retry()}>Try again</Button> : null}
@@ -91,8 +99,12 @@ export function UpdatesCard({ version, hasUnsavedChanges, onChangeUpdates }: Upd
         </div>
       ) : null}
 
-      {status === "ready" && hasUnsavedChanges ? (
-        <p className="text-muted-foreground">Save your changes before restarting.</p>
+      {status === "ready" ? (
+        <div className="space-y-1">
+          <p>Update downloaded</p>
+          <p className="text-muted-foreground">Markora will close and reopen. Windows may ask for permission.</p>
+          {showSaveHint ? <p className="text-muted-foreground">{SAVE_BEFORE_RESTART}</p> : null}
+        </div>
       ) : null}
 
       {errorMessage ? (

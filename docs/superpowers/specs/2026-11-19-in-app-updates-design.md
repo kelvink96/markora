@@ -7,7 +7,7 @@ Direct-download users should stop running old versions. Markora shows its curren
 ## Goals
 
 - Quiet check once at launch; an "Update available" badge if a newer version exists.
-- Settings "Updates" card: current version, "Check for updates" button, and these states: up to date, available (with release notes), downloading (with progress), restart to finish, error.
+- Settings "Updates" card: current version, "Check for updates" button, and these states: up to date, available (with release notes), downloading (with progress), downloaded / restart to install, error.
 - "Check automatically" toggle in settings, on by default.
 - Install only on an explicit click. Never download or install unprompted.
 - Releases publish a signed update manifest, so shipping a version is still one tag push.
@@ -54,7 +54,7 @@ Chosen first: A. **Revised after reading the real release flow:** B, with the ma
 - First updater release ships as 1.5.0. Existing 1.4.0 and earlier installs cannot self-update, so they download 1.5.0 manually once. Release notes say so.
 - `tauri.conf.json` is the canonical version. `Cargo.toml` and `package.json` are aligned to it in the same change.
 - Default MSI installs per-machine, so Windows may show a UAC prompt during the update. Accepted for now; switching to a per-user install is out of scope.
-- Desktop has no workspace persistence (web only). Before `relaunch()`, if any tab has unsaved changes, prompt to save or cancel rather than relying on restore.
+- Desktop has no workspace persistence (web only). Before installing (which closes the app), if any tab has unsaved changes, refuse and ask the user to save rather than relying on restore.
 - `releases/latest` ignores pre-releases, so end-to-end testing uses a test build whose updater endpoint points at a separate test release, not a real production release.
 - The "Update available" badge shows whenever the store is in `available`, whether the check was automatic or manual.
 
@@ -62,11 +62,11 @@ Chosen first: A. **Revised after reading the real release flow:** B, with the ma
 
 **Rust.** Add `tauri-plugin-updater` and `tauri-plugin-process` (for relaunch); register in `lib.rs`; add capabilities.
 
-**Adapter.** `UpdateAdapter` with `checkForUpdate()` (returns none or `{version, notes, date}`), `downloadAndInstall(onProgress)`, and `relaunch()`. Desktop wraps the plugins; web returns "no updates".
+**Adapter.** `UpdateAdapter` with `checkForUpdate()` (returns none or `{version, notes, date}`), `download(onProgress)`, `install()` and `relaunch()`. Download and install are separate because on Windows the plugin's install step launches the MSI installer and then exits the app (`install()` never returns there); the installer reopens Markora. On macOS/Linux `install()` returns and the store calls `relaunch()`. Desktop wraps the plugins; web returns "no updates" and rejects the rest.
 
-**State.** A small Zustand store `src/features/updates/update-store.ts` owns the status machine (`idle | checking | up-to-date | available | downloading | ready | error`), progress, and the available version/notes. Components read it; the launch check runs from `App.tsx` and is gated on desktop and the auto-check setting.
+**State.** A small Zustand store `src/features/updates/update-store.ts` owns the status machine (`idle | checking | up-to-date | available | downloading | ready | error`), progress, and the available version/notes. `download()` ends in `ready`; `restart()` re-checks for unsaved tabs itself (and refuses with "Save your changes before restarting.") before calling `install()`, so nothing closes the app while work is unsaved. Components read it; the launch check runs from `App.tsx` and is gated on desktop and the auto-check setting.
 
-**UI.** "Updates" card in the settings page; a small "Update available" badge in the existing chrome that links to it; the version already shown in the settings footer/About stays as is. Add a command-palette entry "Check for updates".
+**UI.** "Updates" card in the settings page: "Download update", then "Update downloaded" with a "Restart to install" button (disabled while any tab is unsaved) and the note "Markora will close and reopen. Windows may ask for permission."; a small "Update available" badge in the existing chrome that links to it; the version already shown in the settings footer/About stays as is. Add a command-palette entry "Check for updates".
 
 **Errors.** Offline or failed checks on launch are silent; a manual check shows the error inline with a retry.
 

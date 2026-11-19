@@ -1,5 +1,8 @@
 import { create } from "zustand";
 import { getUpdateAdapter, type AvailableUpdate, type DownloadProgress } from "../../platform/updates";
+import { selectHasUnsavedChanges, useDocumentStore } from "../../store/document";
+
+export const SAVE_BEFORE_RESTART = "Save your changes before restarting.";
 
 export type UpdateStatus =
   | "idle"
@@ -16,7 +19,8 @@ interface UpdateState {
   progress: DownloadProgress | null;
   error: string | null;
   check: (options?: { silent?: boolean }) => Promise<void>;
-  install: () => Promise<void>;
+  download: () => Promise<void>;
+  /** Installs the downloaded update and relaunches; refuses while any tab has unsaved changes. */
   restart: () => Promise<void>;
 }
 
@@ -41,14 +45,14 @@ export const useUpdateStore = create<UpdateState>()((set, get) => ({
       set(silent ? { status: "idle", error: null } : { status: "error", error: toMessage(error) });
     }
   },
-  install: async () => {
+  download: async () => {
     const { status, update } = get();
-    const canInstall = status === "available" || (status === "error" && update !== null);
-    if (!canInstall) return;
+    const canDownload = status === "available" || (status === "error" && update !== null);
+    if (!canDownload) return;
 
     set({ status: "downloading", progress: null, error: null });
     try {
-      await getUpdateAdapter().downloadAndInstall((progress) => set({ progress }));
+      await getUpdateAdapter().download((progress) => set({ progress }));
       set({ status: "ready" });
     } catch (error) {
       set({ status: "error", error: toMessage(error) });
@@ -56,6 +60,21 @@ export const useUpdateStore = create<UpdateState>()((set, get) => ({
   },
   restart: async () => {
     if (get().status !== "ready") return;
-    await getUpdateAdapter().relaunch();
+    // Installing closes the app (Windows exits right away), so re-check here rather than trusting the caller.
+    if (selectHasUnsavedChanges(useDocumentStore.getState())) {
+      set({ error: SAVE_BEFORE_RESTART });
+      return;
+    }
+
+    set({ error: null });
+    try {
+      const adapter = getUpdateAdapter();
+      await adapter.install();
+      // Only reached where install returns (macOS/Linux); Windows has already exited.
+      await adapter.relaunch();
+    } catch (error) {
+      // Stay ready with the downloaded update so the user can retry the restart.
+      set({ error: toMessage(error) });
+    }
   },
 }));

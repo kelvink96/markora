@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useSettingsStore } from "../../features/settings/settings-store";
 import { useUpdateStore } from "../../features/updates/update-store";
 import { UpdatesCard } from "./updates-card";
 
 const check = vi.fn();
-const install = vi.fn();
+const download = vi.fn();
 const restart = vi.fn();
 
 function seed(partial: Partial<ReturnType<typeof useUpdateStore.getState>>) {
@@ -16,7 +16,7 @@ function seed(partial: Partial<ReturnType<typeof useUpdateStore.getState>>) {
     progress: null,
     error: null,
     check,
-    install,
+    download,
     restart,
     ...partial,
   });
@@ -29,7 +29,7 @@ function renderCard(hasUnsavedChanges = false, onChangeUpdates?: () => void) {
 describe("UpdatesCard", () => {
   beforeEach(() => {
     check.mockReset().mockResolvedValue(undefined);
-    install.mockReset().mockResolvedValue(undefined);
+    download.mockReset().mockResolvedValue(undefined);
     restart.mockReset().mockResolvedValue(undefined);
     seed({});
     useSettingsStore.getState().reset();
@@ -57,14 +57,15 @@ describe("UpdatesCard", () => {
     expect(screen.getByText("You're up to date")).toBeInTheDocument();
   });
 
-  it("available: shows the version and notes and installs on demand", async () => {
+  it("available: shows the version and notes and downloads on demand", async () => {
     seed({ status: "available", update: { version: "1.5.0", notes: "Fixes", publishedAt: null } });
     renderCard();
 
     expect(screen.getByText(/1\.5\.0/)).toBeInTheDocument();
     expect(screen.getByText("Fixes")).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Install update" }));
-    expect(install).toHaveBeenCalledTimes(1);
+    await userEvent.click(screen.getByRole("button", { name: "Download update" }));
+    expect(download).toHaveBeenCalledTimes(1);
+    expect(restart).not.toHaveBeenCalled();
   });
 
   it("downloading: shows a progress bar", () => {
@@ -78,11 +79,13 @@ describe("UpdatesCard", () => {
     expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "40");
   });
 
-  it("ready: restarts on demand", async () => {
+  it("ready: says the update is downloaded, warns about the restart, and restarts on demand", async () => {
     seed({ status: "ready" });
     renderCard();
 
-    await userEvent.click(screen.getByRole("button", { name: "Restart to finish" }));
+    expect(screen.getByText("Update downloaded")).toBeInTheDocument();
+    expect(screen.getByText("Markora will close and reopen. Windows may ask for permission.")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Restart to install" }));
     expect(restart).toHaveBeenCalledTimes(1);
   });
 
@@ -90,8 +93,39 @@ describe("UpdatesCard", () => {
     seed({ status: "ready" });
     renderCard(true);
 
-    expect(screen.getByRole("button", { name: "Restart to finish" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Restart to install" })).toBeDisabled();
     expect(screen.getByText("Save your changes before restarting.")).toBeInTheDocument();
+  });
+
+  it("ready: shows the dirty-tab refusal from the store only once", () => {
+    seed({ status: "ready", error: "Save your changes before restarting." });
+    renderCard(true);
+
+    expect(screen.getAllByText("Save your changes before restarting.")).toHaveLength(1);
+  });
+
+  it("ready: cannot be clicked twice while the restart is in flight", async () => {
+    let finish!: () => void;
+    restart.mockReturnValue(new Promise<void>((resolve) => (finish = resolve)));
+    seed({ status: "ready" });
+    renderCard();
+
+    const button = screen.getByRole("button", { name: "Restart to install" });
+    await userEvent.click(button);
+    expect(button).toBeDisabled();
+    await userEvent.click(button);
+    expect(restart).toHaveBeenCalledTimes(1);
+
+    await act(async () => finish());
+    expect(button).toBeEnabled();
+  });
+
+  it("ready: shows an install error kept by the store", () => {
+    seed({ status: "ready", error: "installer failed" });
+    renderCard();
+
+    expect(screen.getByRole("alert")).toHaveTextContent("installer failed");
+    expect(screen.getByRole("button", { name: "Restart to install" })).toBeEnabled();
   });
 
   it("ready: shows the error when the restart fails instead of leaving it unhandled", async () => {
@@ -99,7 +133,7 @@ describe("UpdatesCard", () => {
     seed({ status: "ready" });
     renderCard();
 
-    await userEvent.click(screen.getByRole("button", { name: "Restart to finish" }));
+    await userEvent.click(screen.getByRole("button", { name: "Restart to install" }));
 
     expect(await screen.findByText("relaunch failed")).toBeInTheDocument();
   });
@@ -113,12 +147,12 @@ describe("UpdatesCard", () => {
     expect(check).toHaveBeenCalledTimes(1);
   });
 
-  it("error after a found update: retries the install", async () => {
+  it("error after a found update: retries the download", async () => {
     seed({ status: "error", error: "Download failed", update: { version: "1.5.0", notes: "", publishedAt: null } });
     renderCard();
 
     await userEvent.click(screen.getByRole("button", { name: "Try again" }));
-    expect(install).toHaveBeenCalledTimes(1);
+    expect(download).toHaveBeenCalledTimes(1);
     expect(check).not.toHaveBeenCalled();
   });
 

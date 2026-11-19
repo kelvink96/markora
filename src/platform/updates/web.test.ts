@@ -6,8 +6,12 @@ describe("webUpdateAdapter", () => {
     await expect(webUpdateAdapter.checkForUpdate()).resolves.toBeNull();
   });
 
-  it("rejects downloadAndInstall", async () => {
-    await expect(webUpdateAdapter.downloadAndInstall(vi.fn())).rejects.toThrow();
+  it("rejects download", async () => {
+    await expect(webUpdateAdapter.download(vi.fn())).rejects.toThrow();
+  });
+
+  it("rejects install", async () => {
+    await expect(webUpdateAdapter.install()).rejects.toThrow();
   });
 
   it("rejects relaunch", async () => {

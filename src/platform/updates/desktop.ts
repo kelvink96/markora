@@ -16,13 +16,13 @@ export const desktopUpdateAdapter: UpdateAdapter = {
     };
   },
 
-  async downloadAndInstall(onProgress) {
+  async download(onProgress) {
     if (!pendingUpdate) throw new Error("No update to install");
 
     let downloaded = 0;
     let total: number | null = null;
 
-    await pendingUpdate.downloadAndInstall((event) => {
+    await pendingUpdate.download((event) => {
       if (event.event === "Started") {
         total = event.data.contentLength ?? null;
       } else if (event.event === "Progress") {
@@ -30,6 +30,12 @@ export const desktopUpdateAdapter: UpdateAdapter = {
         onProgress({ downloaded, total });
       }
     });
+  },
+
+  async install() {
+    if (!pendingUpdate) throw new Error("No update to install");
+    // On Windows the plugin launches the installer and exits the app, so this never returns there.
+    await pendingUpdate.install();
   },
 
   async relaunch() {

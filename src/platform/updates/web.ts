@@ -5,7 +5,11 @@ export const webUpdateAdapter: UpdateAdapter = {
     return null;
   },
 
-  async downloadAndInstall() {
+  async download() {
+    throw new Error("In-app updates are only available in the desktop app");
+  },
+
+  async install() {
     throw new Error("In-app updates are only available in the desktop app");
   },
 

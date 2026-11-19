@@ -11,7 +11,12 @@ export interface DownloadProgress {
 
 export interface UpdateAdapter {
   checkForUpdate(): Promise<AvailableUpdate | null>;
-  /** Installs the update returned by the last checkForUpdate(); rejects if there is none. */
-  downloadAndInstall(onProgress: (progress: DownloadProgress) => void): Promise<void>;
+  /** Downloads the update returned by the last checkForUpdate() without installing it; rejects if there is none. */
+  download(onProgress: (progress: DownloadProgress) => void): Promise<void>;
+  /**
+   * Installs the downloaded update; rejects if there is none.
+   * On Windows this never resolves: the plugin launches the installer and exits the app.
+   */
+  install(): Promise<void>;
   relaunch(): Promise<void>;
 }

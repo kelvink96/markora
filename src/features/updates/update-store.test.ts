@@ -1,12 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AvailableUpdate, DownloadProgress, UpdateAdapter } from "../../platform/updates";
+import { useDocumentStore } from "../../store/document";
 import { useUpdateStore } from "./update-store";
 
 const adapter: {
   [K in keyof UpdateAdapter]: ReturnType<typeof vi.fn<UpdateAdapter[K]>>;
 } = {
   checkForUpdate: vi.fn<UpdateAdapter["checkForUpdate"]>(),
-  downloadAndInstall: vi.fn<UpdateAdapter["downloadAndInstall"]>(),
+  download: vi.fn<UpdateAdapter["download"]>(),
+  install: vi.fn<UpdateAdapter["install"]>(),
   relaunch: vi.fn<UpdateAdapter["relaunch"]>(),
 };
 
@@ -29,8 +31,10 @@ function resetStore(partial: Partial<ReturnType<typeof useUpdateStore.getState>>
 describe("update store", () => {
   beforeEach(() => {
     adapter.checkForUpdate.mockReset();
-    adapter.downloadAndInstall.mockReset();
+    adapter.download.mockReset();
+    adapter.install.mockReset();
     adapter.relaunch.mockReset();
+    useDocumentStore.setState(useDocumentStore.getInitialState(), true);
     resetStore();
   });
 
@@ -85,34 +89,36 @@ describe("update store", () => {
     });
   });
 
-  describe("install", () => {
-    it("downloads, records progress and ends ready", async () => {
+  describe("download", () => {
+    it("downloads, records progress and ends ready without installing", async () => {
       resetStore({ status: "available", update });
       const seen: Array<DownloadProgress | null> = [];
-      adapter.downloadAndInstall.mockImplementation(async (onProgress) => {
+      adapter.download.mockImplementation(async (onProgress) => {
         expect(useUpdateStore.getState().status).toBe("downloading");
         onProgress({ downloaded: 5, total: 10 });
         seen.push(useUpdateStore.getState().progress);
       });
 
-      await useUpdateStore.getState().install();
+      await useUpdateStore.getState().download();
 
       expect(seen).toEqual([{ downloaded: 5, total: 10 }]);
       expect(useUpdateStore.getState().status).toBe("ready");
+      expect(adapter.install).not.toHaveBeenCalled();
+      expect(adapter.relaunch).not.toHaveBeenCalled();
     });
 
     it("ends error and keeps the update on failure so retry works", async () => {
       resetStore({ status: "available", update });
-      adapter.downloadAndInstall.mockRejectedValueOnce(new Error("disk full"));
+      adapter.download.mockRejectedValueOnce(new Error("disk full"));
 
-      await useUpdateStore.getState().install();
+      await useUpdateStore.getState().download();
 
       expect(useUpdateStore.getState().status).toBe("error");
       expect(useUpdateStore.getState().error).toBe("disk full");
       expect(useUpdateStore.getState().update).toEqual(update);
 
-      adapter.downloadAndInstall.mockResolvedValueOnce();
-      await useUpdateStore.getState().install();
+      adapter.download.mockResolvedValueOnce();
+      await useUpdateStore.getState().download();
 
       expect(useUpdateStore.getState().status).toBe("ready");
       expect(useUpdateStore.getState().error).toBeNull();
@@ -123,30 +129,86 @@ describe("update store", () => {
       async (status) => {
         resetStore({ status, update });
 
-        await useUpdateStore.getState().install();
+        await useUpdateStore.getState().download();
 
-        expect(adapter.downloadAndInstall).not.toHaveBeenCalled();
+        expect(adapter.download).not.toHaveBeenCalled();
       },
     );
 
     it("is a no-op when in error without an update", async () => {
       resetStore({ status: "error", error: "x" });
 
-      await useUpdateStore.getState().install();
+      await useUpdateStore.getState().download();
 
-      expect(adapter.downloadAndInstall).not.toHaveBeenCalled();
+      expect(adapter.download).not.toHaveBeenCalled();
     });
   });
 
   describe("restart", () => {
-    it("relaunches only when ready", async () => {
+    it("is a no-op unless ready", async () => {
       resetStore({ status: "available", update });
-      await useUpdateStore.getState().restart();
-      expect(adapter.relaunch).not.toHaveBeenCalled();
 
-      resetStore({ status: "ready", update });
       await useUpdateStore.getState().restart();
+
+      expect(adapter.install).not.toHaveBeenCalled();
+      expect(adapter.relaunch).not.toHaveBeenCalled();
+    });
+
+    it("installs, then relaunches once install returns", async () => {
+      const calls: string[] = [];
+      adapter.install.mockImplementation(async () => {
+        calls.push("install");
+      });
+      adapter.relaunch.mockImplementation(async () => {
+        calls.push("relaunch");
+      });
+      resetStore({ status: "ready", update });
+
+      await useUpdateStore.getState().restart();
+
+      expect(calls).toEqual(["install", "relaunch"]);
+    });
+
+    it("refuses to install while any document has unsaved changes", async () => {
+      useDocumentStore.getState().openDocument({ content: "# Edited", filePath: "/edited.md", isDirty: true });
+      resetStore({ status: "ready", update });
+
+      await useUpdateStore.getState().restart();
+
+      expect(adapter.install).not.toHaveBeenCalled();
+      expect(adapter.relaunch).not.toHaveBeenCalled();
+      expect(useUpdateStore.getState().status).toBe("ready");
+      expect(useUpdateStore.getState().error).toBe("Save your changes before restarting.");
+    });
+
+    it("does not relaunch when install fails, and keeps the update ready to retry", async () => {
+      adapter.install.mockRejectedValueOnce(new Error("installer failed"));
+      resetStore({ status: "ready", update });
+
+      await useUpdateStore.getState().restart();
+
+      expect(adapter.relaunch).not.toHaveBeenCalled();
+      expect(useUpdateStore.getState().status).toBe("ready");
+      expect(useUpdateStore.getState().error).toBe("installer failed");
+      expect(useUpdateStore.getState().update).toEqual(update);
+
+      adapter.install.mockResolvedValueOnce();
+      adapter.relaunch.mockResolvedValueOnce();
+      await useUpdateStore.getState().restart();
+
       expect(adapter.relaunch).toHaveBeenCalledTimes(1);
+      expect(useUpdateStore.getState().error).toBeNull();
+    });
+
+    it("surfaces a relaunch failure as the store error", async () => {
+      adapter.install.mockResolvedValue();
+      adapter.relaunch.mockRejectedValue(new Error("relaunch failed"));
+      resetStore({ status: "ready", update });
+
+      await useUpdateStore.getState().restart();
+
+      expect(useUpdateStore.getState().status).toBe("ready");
+      expect(useUpdateStore.getState().error).toBe("relaunch failed");
     });
   });
 });

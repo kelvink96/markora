@@ -76,6 +76,9 @@ export const createDocumentTabSlice: StateCreator<DocumentStore, [], [], Documen
 
       return syncActiveProjectView(projects, normalized.activeProjectId, recentDocuments);
     }),
+  ensureDocumentOpen: (content) => {
+    if (normalizeState(get()).openDocuments.length === 0) get().newDocument(content);
+  },
   addDocument: (document = {}) => {
     const normalized = normalizeState(get());
     const newDocument = createDocumentTab(normalized.openDocuments, document);

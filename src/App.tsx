@@ -45,6 +45,7 @@ import { ErrorBanner } from "./components/editor-page/error-banner";
 import { CommandPalette } from "./components/editor-page/command-palette";
 import { buildAppCommands, buildPaletteCommands, type PaletteContext } from "./features/commands/palette-commands";
 import { stepZoom } from "./features/settings/zoom";
+import { useUpdateStore } from "./features/updates/update-store";
 import { getModifierLabel } from "./features/shortcuts/modifier-label";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -191,6 +192,7 @@ export default function App() {
     showOutline,
     appearance: settings.appearance,
     editor: settings.editor,
+    updatesSupported: !isWeb,
     handlers: {
       onNew: handleNew,
       onOpen: () => void handleOpen(),
@@ -200,6 +202,10 @@ export default function App() {
       onExportHtml: () => void exportHtml(),
       onExportPdf: () => void exportPdf(),
       onOpenSettings: () => setActiveScreen("settings"),
+      onCheckForUpdates: () => {
+        setActiveScreen("settings");
+        void useUpdateStore.getState().check();
+      },
       onToggleTheme: handleThemeToggle,
       onToggleOutline: toggleOutline,
       onViewModeChange: setViewMode,
@@ -261,6 +267,7 @@ export default function App() {
       onThemeToggle={handleThemeToggle}
       canInstallApp={canInstall}
       onInstallApp={() => void install()}
+      updatesSupported={!isWeb}
       viewMode={viewMode}
       onViewModeChange={setViewMode}
     />

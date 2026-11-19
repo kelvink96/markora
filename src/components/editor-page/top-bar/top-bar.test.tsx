@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TopBar } from "./top-bar";
@@ -6,6 +6,7 @@ import { buildAppCommands, type PaletteContext, type PaletteHandlers } from "../
 import { defaultSettings } from "../../../features/settings/settings-schema";
 import { useDocumentStore } from "../../../store/document";
 import { useThemeStore } from "../../../features/theme/theme-store";
+import { useUpdateStore, type UpdateStatus } from "../../../features/updates/update-store";
 
 /** Handlers that are created on first use, so a test can assert on any of them without listing all. */
 function makeHandlers() {
@@ -29,6 +30,7 @@ function renderBar({ context = {}, ...props }: BarProps & { context?: Partial<Pa
     showOutline: false,
     appearance: { ...defaultSettings.appearance },
     editor: { ...defaultSettings.editor },
+    updatesSupported: true,
     handlers,
     ...context,
   };
@@ -38,6 +40,7 @@ function renderBar({ context = {}, ...props }: BarProps & { context?: Partial<Pa
     <TopBar
       viewMode={commandContext.viewMode}
       commands={buildAppCommands(commandContext)}
+      updatesSupported={commandContext.updatesSupported}
       onThemeToggle={onThemeToggle}
       onViewModeChange={onViewModeChange}
       {...props}
@@ -438,5 +441,30 @@ describe("TopBar", () => {
 
     expect(screen.getByTestId("top-bar-menu")).toHaveAttribute("data-tour", "command-palette");
     expect(screen.getByRole("button", { name: "Toggle theme" })).toHaveAttribute("data-tour", "theme");
+  });
+});
+
+describe("TopBar update badge", () => {
+  afterEach(() => useUpdateStore.setState({ status: "idle" }));
+
+  it.each<UpdateStatus>(["available", "downloading", "ready"])("shows a labelled dot while an update is %s", (status) => {
+    useUpdateStore.setState({ status });
+    renderBar();
+
+    expect(screen.getByTestId("update-badge")).toHaveAccessibleName("Update available");
+  });
+
+  it.each<UpdateStatus>(["idle", "checking", "up-to-date", "error"])("shows no dot while %s", (status) => {
+    useUpdateStore.setState({ status });
+    renderBar();
+
+    expect(screen.queryByTestId("update-badge")).not.toBeInTheDocument();
+  });
+
+  it("never shows the dot when updates are not supported (web)", () => {
+    useUpdateStore.setState({ status: "available" });
+    renderBar({ context: { updatesSupported: false } });
+
+    expect(screen.queryByTestId("update-badge")).not.toBeInTheDocument();
   });
 });

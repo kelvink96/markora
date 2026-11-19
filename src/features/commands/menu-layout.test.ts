@@ -12,6 +12,7 @@ function allCommandIds() {
     showOutline: false,
     appearance: { ...defaultSettings.appearance },
     editor: { ...defaultSettings.editor },
+    updatesSupported: true,
     handlers,
   };
   return new Set(buildAppCommands(context).map((command) => command.id));
@@ -56,6 +57,14 @@ describe("MENU_LAYOUT", () => {
     const help = MENU_LAYOUT.find((menu) => menu.id === "help");
 
     expect(collectCommandIds(help?.items ?? [])).toContain("help.tour");
+  });
+
+  it("lists Check for updates once, under Help", () => {
+    const help = MENU_LAYOUT.find((menu) => menu.id === "help");
+    const ids = MENU_LAYOUT.flatMap((menu) => collectCommandIds(menu.items));
+
+    expect(collectCommandIds(help?.items ?? [])).toContain("check-for-updates");
+    expect(ids.filter((id) => id === "check-for-updates")).toHaveLength(1);
   });
 
   it("puts Open Recent in the File menu", () => {

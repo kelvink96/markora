@@ -112,6 +112,7 @@ export const MENU_LAYOUT: MenuDefinition[] = [
       command("help.tour"),
       command("help.shortcuts"),
       command("help.release-notes"),
+      command("check-for-updates"),
       separator,
       command("help.docs"),
       command("help.report-issue"),

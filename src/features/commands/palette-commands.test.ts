@@ -10,6 +10,7 @@ function context(overrides: Partial<PaletteContext> = {}): PaletteContext {
     showOutline: false,
     appearance: { ...defaultSettings.appearance },
     editor: { ...defaultSettings.editor },
+    updatesSupported: true,
     handlers: {
       onNew: vi.fn(),
       onOpen: vi.fn(),
@@ -37,6 +38,7 @@ function context(overrides: Partial<PaletteContext> = {}): PaletteContext {
       onOpenDocs: vi.fn(),
       onReportIssue: vi.fn(),
       onTakeTour: vi.fn(),
+      onCheckForUpdates: vi.fn(),
     },
     ...overrides,
   };
@@ -317,5 +319,20 @@ describe("scorePaletteCommand", () => {
   it("matches multi-word searches as a phrase", () => {
     expect(scorePaletteCommand("save as", "Save as", [])).toBeGreaterThan(0);
     expect(scorePaletteCommand("as save", "Save as", [])).toBe(0);
+  });
+});
+
+describe("Check for updates", () => {
+  it("is offered in the palette when updates are supported, and runs the handler", () => {
+    const ctx = context({ updatesSupported: true });
+    const command = find(buildPaletteCommands(ctx), "check-for-updates");
+
+    expect(command).toMatchObject({ label: "Check for updates", group: "App" });
+    command?.run();
+    expect(ctx.handlers.onCheckForUpdates).toHaveBeenCalledTimes(1);
+  });
+
+  it("is hidden from the palette when updates are not supported", () => {
+    expect(find(buildPaletteCommands(context({ updatesSupported: false })), "check-for-updates")).toBeUndefined();
   });
 });

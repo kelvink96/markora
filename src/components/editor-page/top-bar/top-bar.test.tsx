@@ -81,12 +81,15 @@ describe("TopBar", () => {
     }
   });
 
-  it("still shows all five menus when nothing is open, with the document controls hidden", () => {
+  it("hides the menus with nothing to offer when nothing is open", () => {
     useDocumentStore.setState({ activeDocumentId: "" });
     renderBar();
 
-    for (const name of ["File", "Edit", "Format", "View", "Help"]) {
+    for (const name of ["File", "View", "Help"]) {
       expect(screen.getByRole("menuitem", { name })).toBeInTheDocument();
+    }
+    for (const name of ["Edit", "Format"]) {
+      expect(screen.queryByRole("menuitem", { name })).not.toBeInTheDocument();
     }
     expect(screen.queryByRole("radiogroup", { name: "View mode" })).not.toBeInTheDocument();
     expect(screen.queryByRole("toolbar", { name: "Formatting" })).not.toBeInTheDocument();
@@ -215,17 +218,6 @@ describe("TopBar", () => {
       expect(handlers.onEditAction).toHaveBeenCalledWith(action);
     });
 
-    it("opens with nothing open and greys everything out", async () => {
-      const user = userEvent.setup();
-      useDocumentStore.setState({ activeDocumentId: "" });
-      renderBar();
-
-      const menu = await openMenu(user, "Edit");
-
-      for (const item of within(menu).getAllByRole("menuitem")) {
-        expect(item).toHaveAttribute("aria-disabled", "true");
-      }
-    });
   });
 
   describe("Format menu", () => {
@@ -250,15 +242,6 @@ describe("TopBar", () => {
       expect(handlers.onFormat).toHaveBeenCalledWith("taskList");
     });
 
-    it("greys formatting out when nothing is open", async () => {
-      const user = userEvent.setup();
-      useDocumentStore.setState({ activeDocumentId: "" });
-      renderBar();
-
-      await openMenu(user, "Format");
-
-      expect(await screen.findByRole("menuitem", { name: "Bold" })).toHaveAttribute("aria-disabled", "true");
-    });
   });
 
   describe("View menu", () => {

@@ -133,9 +133,14 @@ export function AppMenus({ commands, recentFiles, onOpenRecent }: AppMenusProps)
     );
   };
 
+  // A menu where nothing can run (Edit and Format with no document open) is left out rather than shown greyed.
+  const hasAnythingToOffer = (items: MenuNode[]) =>
+    items.some((node) => node.type === "recent") ||
+    collectCommandIds(items).some((id) => byId.get(id)?.enabled);
+
   return (
     <>
-      {MENU_LAYOUT.map((menu) => (
+      {MENU_LAYOUT.filter((menu) => hasAnythingToOffer(menu.items)).map((menu) => (
         <MenubarMenu key={menu.id}>
           <MenubarTrigger>{menu.label}</MenubarTrigger>
           <MenubarContent className="min-w-60">{renderNodes(menu.items)}</MenubarContent>

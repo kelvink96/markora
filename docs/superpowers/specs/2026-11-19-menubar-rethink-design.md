@@ -73,3 +73,4 @@ Layout:
 - Commands carry no icon field (the registry stays UI-free). Icons are an id-to-icon map next to the menu renderer.
 - A menu layout item may override a command label inside its submenu (for example "Theme: Dark" in the palette shows as "Dark" under View > Theme).
 - Zoom steps through the existing allowed lists (editor font sizes 12 to 24, preview scales 0.9 to 1.5), not arbitrary increments.
+- **Hidden menus (user request, after merge):** a top-level menu where every command is disabled is not rendered. With no document open that hides Edit and Format; File, View and Help stay. Items inside a visible menu are still shown disabled.

@@ -76,11 +76,11 @@ export const MENU_LAYOUT: MenuDefinition[] = [
     label: "View",
     items: [
       submenu("Mode", [
-        command("view.mode.live"),
-        command("view.mode.edit"),
+        command("view.mode.write"),
         command("view.mode.split"),
-        command("view.mode.preview"),
+        command("view.mode.read"),
       ]),
+      command("view.syntax"),
       separator,
       command("view.outline"),
       command("view.status-bar"),

@@ -63,6 +63,13 @@ describe("TOUR_STOPS", () => {
     expect(TOUR_STOPS[0]).toMatchObject({ target: '[data-tour="view-mode"]' });
     expect(TOUR_STOPS[0].title).toBeTruthy();
   });
+
+  it("describes the three views and Show syntax, not the old four modes", () => {
+    const content = TOUR_STOPS[0].content;
+
+    for (const phrase of ["Write", "Show syntax", "Side-by-side", "Read"]) expect(content).toContain(phrase);
+    for (const old of ["Live", "Edit", "Split", "Preview"]) expect(content).not.toContain(old);
+  });
 });
 
 describe("document-dependent stops", () => {

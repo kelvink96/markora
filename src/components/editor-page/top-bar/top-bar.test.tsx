@@ -27,6 +27,7 @@ function renderBar({ context = {}, ...props }: BarProps & { context?: Partial<Pa
     modifier: "Ctrl",
     hasActiveDocument: Boolean(useDocumentStore.getState().activeDocumentId),
     viewMode: "split",
+    showSyntax: false,
     showOutline: false,
     appearance: { ...defaultSettings.appearance },
     editor: { ...defaultSettings.editor },
@@ -255,11 +256,11 @@ describe("TopBar", () => {
       await openMenu(user, "View");
       await user.click(await screen.findByRole("menuitem", { name: "Mode" }));
 
-      expect(await screen.findByRole("menuitemradio", { name: /Split View/ })).toHaveAttribute("aria-checked", "true");
-      expect(screen.getByRole("menuitemradio", { name: /Live View/ })).toHaveAttribute("aria-checked", "false");
+      expect(await screen.findByRole("menuitemradio", { name: /Side-by-side View/ })).toHaveAttribute("aria-checked", "true");
+      expect(screen.getByRole("menuitemradio", { name: /Write View/ })).toHaveAttribute("aria-checked", "false");
 
-      await choose(user, screen.getByRole("menuitemradio", { name: /Live View/ }));
-      expect(handlers.onViewModeChange).toHaveBeenCalledWith("live");
+      await choose(user, screen.getByRole("menuitemradio", { name: /Write View/ }));
+      expect(handlers.onViewModeChange).toHaveBeenCalledWith("write");
     });
 
     it("toggles the outline, and shows a check while it is open", async () => {

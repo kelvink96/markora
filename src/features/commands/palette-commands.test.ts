@@ -7,6 +7,7 @@ function context(overrides: Partial<PaletteContext> = {}): PaletteContext {
     modifier: "Ctrl",
     hasActiveDocument: true,
     viewMode: "split",
+    showSyntax: false,
     showOutline: false,
     appearance: { ...defaultSettings.appearance },
     editor: { ...defaultSettings.editor },
@@ -23,6 +24,7 @@ function context(overrides: Partial<PaletteContext> = {}): PaletteContext {
       onToggleTheme: vi.fn(),
       onToggleOutline: vi.fn(),
       onViewModeChange: vi.fn(),
+      onToggleSyntax: vi.fn(),
       onFormat: vi.fn(),
       onEditAction: vi.fn(),
       onOpenShortcuts: vi.fn(),
@@ -77,12 +79,12 @@ describe("buildPaletteCommands", () => {
     const ctx = context();
     const commands = buildPaletteCommands(ctx);
 
-    find(commands, "view.mode.preview")?.run();
+    find(commands, "view.mode.read")?.run();
     find(commands, "format.bold")?.run();
     find(commands, "edit.replace")?.run();
     find(commands, "file.save")?.run();
 
-    expect(ctx.handlers.onViewModeChange).toHaveBeenCalledWith("preview");
+    expect(ctx.handlers.onViewModeChange).toHaveBeenCalledWith("read");
     expect(ctx.handlers.onFormat).toHaveBeenCalledWith("bold");
     expect(ctx.handlers.onEditAction).toHaveBeenCalledWith("replace");
     expect(ctx.handlers.onSave).toHaveBeenCalledTimes(1);
@@ -92,7 +94,7 @@ describe("buildPaletteCommands", () => {
     const ids = buildPaletteCommands(context({ viewMode: "split" })).map((command) => command.id);
 
     expect(ids).not.toContain("view.mode.split");
-    expect(ids).toEqual(expect.arrayContaining(["view.mode.live", "view.mode.edit", "view.mode.preview"]));
+    expect(ids).toEqual(expect.arrayContaining(["view.mode.write", "view.mode.read"]));
   });
 
   it("words the outline command for its current state", () => {
@@ -129,9 +131,47 @@ describe("buildAppCommands", () => {
 
   it("marks the active view mode and the open outline as checked", () => {
     expect(byId("view.mode.split")?.checked).toBe(true);
-    expect(byId("view.mode.live")?.checked).toBe(false);
+    expect(byId("view.mode.write")?.checked).toBe(false);
     expect(byId("view.outline", context({ showOutline: true }))?.checked).toBe(true);
     expect(byId("view.outline")?.checked).toBe(false);
+  });
+
+  it("runs the view mode command it is named after", () => {
+    const ctx = context();
+
+    byId("view.mode.write", ctx)?.run();
+    byId("view.mode.split", ctx)?.run();
+
+    expect(ctx.handlers.onViewModeChange).toHaveBeenNthCalledWith(1, "write");
+    expect(ctx.handlers.onViewModeChange).toHaveBeenNthCalledWith(2, "split");
+  });
+
+  it("offers Show Syntax as a checked toggle, only while writing in an open document", () => {
+    const writing = context({ viewMode: "write", showSyntax: true });
+    expect(byId("view.syntax", writing)).toMatchObject({ label: "Show Syntax", group: "View", enabled: true, checked: true });
+    expect(byId("view.syntax", context({ viewMode: "write", showSyntax: false }))?.checked).toBe(false);
+
+    expect(byId("view.syntax", context({ viewMode: "split" }))?.enabled).toBe(false);
+    expect(byId("view.syntax", context({ viewMode: "read" }))?.enabled).toBe(false);
+    expect(byId("view.syntax", context({ viewMode: "write", hasActiveDocument: false }))?.enabled).toBe(false);
+
+    byId("view.syntax", writing)?.run();
+    expect(writing.handlers.onToggleSyntax).toHaveBeenCalledTimes(1);
+  });
+
+  it("disables the editing and formatting commands in Read, where the editor is hidden", () => {
+    const reading = context({ viewMode: "read" });
+    const editingIds = ["edit.undo", "edit.redo", "edit.cut", "edit.copy", "edit.paste", "edit.select-all", "edit.find", "edit.replace", "format.bold", "format.heading", "format.table"];
+
+    for (const id of editingIds) {
+      expect(byId(id, reading)?.enabled, id).toBe(false);
+      expect(byId(id, context({ viewMode: "write" }))?.enabled, id).toBe(true);
+      expect(byId(id, context({ viewMode: "split" }))?.enabled, id).toBe(true);
+    }
+    // Everything that is not about the editor still works while reading.
+    for (const id of ["file.save", "file.export-html", "view.outline", "view.mode.write"]) {
+      expect(byId(id, reading)?.enabled, id).toBe(true);
+    }
   });
 
   it("uses one label for the outline command whatever its state", () => {
@@ -176,10 +216,10 @@ describe("buildAppCommands", () => {
       "app.settings": "Settings",
       "edit.find": "Find",
       "edit.replace": "Replace",
-      "view.mode.live": "Live View",
-      "view.mode.edit": "Edit View",
-      "view.mode.split": "Split View",
-      "view.mode.preview": "Preview View",
+      "view.mode.write": "Write View",
+      "view.mode.split": "Side-by-side View",
+      "view.mode.read": "Read View",
+      "view.syntax": "Show Syntax",
     });
   });
 });

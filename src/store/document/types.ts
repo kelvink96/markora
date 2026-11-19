@@ -52,6 +52,8 @@ export interface DocumentTabActions {
   setFilePath: (path: string | null) => void;
   markClean: () => void;
   newDocument: (content?: string) => void;
+  /** Opens an unsaved Scratch note with `content` if no document is open; otherwise does nothing. */
+  ensureDocumentOpen: (content?: string) => void;
   addDocument: (document?: Partial<Omit<DocumentTab, "id">>) => string;
   openDocument: (document?: Partial<Omit<DocumentTab, "id">>) => string;
   selectDocument: (id: string) => void;

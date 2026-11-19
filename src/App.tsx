@@ -148,9 +148,11 @@ export default function App() {
   );
   const startTour = useCallback(() => {
     // The first Tour stop points at the editor toolbar, which needs an open document.
-    if (useDocumentStore.getState().openDocuments.length === 0) handleNew();
+    useDocumentStore
+      .getState()
+      .ensureDocumentOpen(useSettingsStore.getState().settings.authoring.newDocumentTemplate);
     dispatchTour("accept");
-  }, [dispatchTour, handleNew]);
+  }, [dispatchTour]);
 
   const handleThemeToggle = useCallback(() => {
     toggleTheme();

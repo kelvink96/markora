@@ -269,3 +269,29 @@ describe("DocumentStore", () => {
     expect(useDocumentStore.getState().recentDocuments).toHaveLength(1);
   });
 });
+
+describe("DocumentStore ensureDocumentOpen (Scratch note)", () => {
+  it("opens an unsaved Scratch note with the given content when no document is open", () => {
+    useDocumentStore.getState().closeAllDocuments();
+
+    useDocumentStore.getState().ensureDocumentOpen("# Template");
+
+    const state = useDocumentStore.getState();
+    expect(state.openDocuments).toHaveLength(1);
+    expect(state.content).toBe("# Template");
+    expect(state.filePath).toBeNull();
+    expect(state.activeDocumentId).toBe(state.openDocuments[0].id);
+  });
+
+  it("creates no extra document when one is already open", () => {
+    useDocumentStore.getState().closeAllDocuments();
+    useDocumentStore.getState().openDocument({ content: "# Mine", filePath: "/mine.md" });
+    const before = useDocumentStore.getState().openDocuments;
+
+    useDocumentStore.getState().ensureDocumentOpen("# Template");
+
+    const state = useDocumentStore.getState();
+    expect(state.openDocuments).toEqual(before);
+    expect(state.content).toBe("# Mine");
+  });
+});

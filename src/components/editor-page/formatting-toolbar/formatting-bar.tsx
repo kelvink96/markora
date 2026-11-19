@@ -1,8 +1,13 @@
 import { useEditorCommandState } from "../../../features/editor/editor-command-state";
 import { FormattingToolbar } from "./formatting-toolbar";
 
+interface FormattingBarProps {
+  /** True while the editor is hidden (the Read view), so a click cannot change a document nobody can see. */
+  disabled?: boolean;
+}
+
 /** The slim second header row: the formatting toolbar wired to the editor. Shown while a document is open. */
-export function FormattingBar() {
+export function FormattingBar({ disabled = false }: FormattingBarProps) {
   const runToolbarAction = useEditorCommandState((state) => state.runToolbarAction);
 
   return (
@@ -21,6 +26,7 @@ export function FormattingBar() {
         onLink={() => runToolbarAction("link")}
         onTable={() => runToolbarAction("table")}
         onImage={() => runToolbarAction("image")}
+        disabled={disabled}
       />
     </div>
   );

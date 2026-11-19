@@ -365,7 +365,7 @@ export default function App() {
         themeMode={theme}
         colorScheme={settings.appearance.colorScheme}
         header={activeScreen === "workspace" ? header : null}
-        toolbar={activeScreen === "workspace" && hasOpenDocuments ? <FormattingBar /> : null}
+        toolbar={activeScreen === "workspace" && hasOpenDocuments ? <FormattingBar disabled={viewMode === "read"} /> : null}
         workspace={workspace}
         statusBar={settings.appearance.showStatusBar && activeScreen === "workspace" && hasOpenDocuments ? statusBar : null}
       />

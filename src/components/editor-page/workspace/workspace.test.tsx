@@ -186,6 +186,34 @@ describe("Workspace", () => {
     expect(screen.queryByRole("separator")).not.toBeInTheDocument();
   });
 
+  it("keeps the editor mounted across every view change, so undo history, cursor and find state survive", () => {
+    const ui = (viewMode: "write" | "split" | "read") => (
+      <Workspace viewMode={viewMode} left={<input aria-label="Draft" />} right={<div>Right</div>} />
+    );
+    const { rerender } = render(ui("split"));
+    fireEvent.change(screen.getByLabelText("Draft"), { target: { value: "typed" } });
+
+    for (const mode of ["read", "split", "write", "read", "write", "split"] as const) {
+      rerender(ui(mode));
+      // An uncontrolled input resets to empty if React remounts it.
+      expect(screen.getByDisplayValue("typed")).toBeInTheDocument();
+    }
+  });
+
+  it("keeps the preview mounted going between Side-by-side and Read, so it keeps its scroll position", () => {
+    const ui = (viewMode: "split" | "read") => (
+      <Workspace viewMode={viewMode} left={<div>Left</div>} right={<input aria-label="Reader" />} />
+    );
+    const { rerender } = render(ui("split"));
+    fireEvent.change(screen.getByLabelText("Reader"), { target: { value: "scrolled" } });
+
+    rerender(ui("read"));
+    expect(screen.getByLabelText("Reader")).toHaveValue("scrolled");
+
+    rerender(ui("split"));
+    expect(screen.getByLabelText("Reader")).toHaveValue("scrolled");
+  });
+
   it("keeps the editor mounted but hidden in read mode, so its state survives a round trip", () => {
     const { rerender } = render(<Workspace left={<input aria-label="Draft" />} right={<div>Right</div>} viewMode="write" />);
     fireEvent.change(screen.getByLabelText("Draft"), { target: { value: "typed" } });

@@ -149,7 +149,11 @@ vi.mock("./components/editor-page/top-bar", () => ({
 }));
 
 vi.mock("./components/editor-page/formatting-toolbar", () => ({
-  FormattingBar: () => <div>Formatting Bar</div>,
+  FormattingBar: ({ disabled }: { disabled?: boolean }) => (
+    <div data-testid="formatting-bar" data-disabled={String(Boolean(disabled))}>
+      Formatting Bar
+    </div>
+  ),
 }));
 
 vi.mock("./components/editor-page/footer-status-bar", () => ({
@@ -841,6 +845,18 @@ describe("App", () => {
         await waitFor(() => expect(useWorkspaceState.getState().showSyntax).toBe(expected));
         expect(editor()).toHaveAttribute("data-live", String(!expected));
       }
+    });
+
+    it.each([
+      ["write", "false"],
+      ["split", "false"],
+      ["read", "true"],
+    ] as const)("disables the formatting bar only in Read, where the editor is hidden (%s)", (viewMode, disabled) => {
+      useWorkspaceState.setState({ viewMode });
+
+      render(<App />);
+
+      expect(screen.getByTestId("formatting-bar")).toHaveAttribute("data-disabled", disabled);
     });
 
     it("does not offer Show Syntax outside Write", async () => {

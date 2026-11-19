@@ -1,5 +1,7 @@
 import type { EditorEditAction } from "../editor/editor-command-state";
 import type { MarkdownToolbarAction } from "../editor/markdown-toolbar-actions";
+import type { AppearanceSettings, ColorScheme, EditorSettings, ThemePreference } from "../settings/settings-schema";
+import { canZoom, type ZoomDirection } from "../settings/zoom";
 import type { WorkspaceViewMode } from "../workspace/workspace-state";
 
 export type PaletteGroup = "File" | "Edit" | "Format" | "View" | "App" | "Help";
@@ -40,6 +42,15 @@ export interface PaletteHandlers {
   onOpenShortcuts: () => void;
   onOpenReleaseNotes: () => void;
   onOpenAbout: () => void;
+  onToggleStatusBar: () => void;
+  onToggleWordWrap: () => void;
+  onToggleLineNumbers: () => void;
+  onSetThemePreference: (preference: ThemePreference) => void;
+  onSetColorScheme: (scheme: ColorScheme) => void;
+  onZoom: (direction: ZoomDirection) => void;
+  onOpenCommandPalette: () => void;
+  onOpenDocs: () => void;
+  onReportIssue: () => void;
 }
 
 export interface PaletteContext {
@@ -48,6 +59,9 @@ export interface PaletteContext {
   hasActiveDocument: boolean;
   viewMode: WorkspaceViewMode;
   showOutline: boolean;
+  /** The stored appearance settings: the theme preference (not the resolved theme), colour scheme, zoom and status bar. */
+  appearance: AppearanceSettings;
+  editor: EditorSettings;
   handlers: PaletteHandlers;
 }
 
@@ -56,6 +70,18 @@ const VIEW_MODES: Array<{ mode: WorkspaceViewMode; label: string; keywords: stri
   { mode: "edit", label: "Edit View", keywords: ["edit", "write", "focus"] },
   { mode: "split", label: "Split View", keywords: ["side by side", "live preview"] },
   { mode: "preview", label: "Preview View", keywords: ["read", "rendered"] },
+];
+
+const THEME_OPTIONS: Array<{ value: ThemePreference; label: string; keywords: string[] }> = [
+  { value: "system", label: "System", keywords: ["automatic", "follow system"] },
+  { value: "light", label: "Light", keywords: ["light mode", "bright"] },
+  { value: "dark", label: "Dark", keywords: ["dark mode"] },
+];
+
+const COLOR_SCHEMES: Array<{ value: ColorScheme; label: string; keywords: string[] }> = [
+  { value: "standard", label: "Standard", keywords: ["default"] },
+  { value: "sepia", label: "Sepia", keywords: ["warm", "paper"] },
+  { value: "high-contrast", label: "High Contrast", keywords: ["accessible", "contrast"] },
 ];
 
 const FORMAT_COMMANDS: Array<{ action: MarkdownToolbarAction; label: string; keywords?: string[] }> = [
@@ -83,6 +109,8 @@ export function buildAppCommands({
   hasActiveDocument,
   viewMode,
   showOutline,
+  appearance,
+  editor,
   handlers,
 }: PaletteContext): AppCommand[] {
   const always = (command: Omit<AppCommand, "enabled">): AppCommand => ({ ...command, enabled: true });
@@ -133,10 +161,27 @@ export function buildAppCommands({
       }),
       checked: showOutline,
     },
+    { ...withDocument({ id: "view.status-bar", label: "Status Bar", group: "View", keywords: ["footer", "word count"], run: handlers.onToggleStatusBar }), checked: appearance.showStatusBar },
     always({ id: "view.theme", label: "Toggle Light/Dark Theme", group: "View", keywords: ["appearance", "dark mode", "light mode"], run: handlers.onToggleTheme }),
+    ...THEME_OPTIONS.map(({ value, label, keywords }) => ({
+      ...always({ id: `view.theme.${value}`, label: `Theme: ${label}`, group: "View" as const, keywords: ["appearance", ...keywords], run: () => handlers.onSetThemePreference(value) }),
+      checked: appearance.theme === value,
+    })),
+    ...COLOR_SCHEMES.map(({ value, label, keywords }) => ({
+      ...always({ id: `view.color-scheme.${value}`, label: `Color Scheme: ${label}`, group: "View" as const, keywords: ["appearance", "colour", ...keywords], run: () => handlers.onSetColorScheme(value) }),
+      checked: appearance.colorScheme === value,
+    })),
+    { ...withDocument({ id: "view.word-wrap", label: "Word Wrap", group: "View", keywords: ["wrap long lines"], run: handlers.onToggleWordWrap }), checked: editor.wordWrap },
+    { ...withDocument({ id: "view.line-numbers", label: "Line Numbers", group: "View", keywords: ["gutter"], run: handlers.onToggleLineNumbers }), checked: editor.lineNumbers },
+    { ...always({ id: "view.zoom-in", label: "Zoom In", group: "View", keywords: ["bigger", "larger", "text size"], run: () => handlers.onZoom("in") }), enabled: canZoom(appearance, "in") },
+    { ...always({ id: "view.zoom-out", label: "Zoom Out", group: "View", keywords: ["smaller", "text size"], run: () => handlers.onZoom("out") }), enabled: canZoom(appearance, "out") },
+    { ...always({ id: "view.zoom-reset", label: "Reset Zoom", group: "View", keywords: ["actual size", "default size"], run: () => handlers.onZoom("reset") }), enabled: canZoom(appearance, "reset") },
 
+    always({ id: "app.palette", label: "Command Palette", group: "Help", shortcut: `${modifier}+K`, keywords: ["commands", "search"], run: handlers.onOpenCommandPalette }),
     always({ id: "help.shortcuts", label: "Keyboard Shortcuts", group: "Help", keywords: ["keys", "hotkeys"], run: handlers.onOpenShortcuts }),
     always({ id: "help.release-notes", label: "Release Notes", group: "Help", keywords: ["changelog", "what's new"], run: handlers.onOpenReleaseNotes }),
+    always({ id: "help.docs", label: "Documentation", group: "Help", keywords: ["docs", "guide", "readme"], run: handlers.onOpenDocs }),
+    always({ id: "help.report-issue", label: "Report an Issue", group: "Help", keywords: ["bug", "feedback", "github"], run: handlers.onReportIssue }),
     always({ id: "help.about", label: "About Markora", group: "Help", keywords: ["version"], run: handlers.onOpenAbout }),
   ];
 }
@@ -147,7 +192,7 @@ export function buildAppCommands({
  */
 export function buildPaletteCommands(context: PaletteContext): PaletteCommand[] {
   return buildAppCommands(context)
-    .filter((command) => command.enabled)
+    .filter((command) => command.enabled && command.id !== "app.palette")
     .filter((command) => !(command.id.startsWith("view.mode.") && command.checked))
     .map((command) =>
       command.id === "view.outline" ? { ...command, label: context.showOutline ? "Hide Outline" : "Show Outline" } : command,

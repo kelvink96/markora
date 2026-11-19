@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { defaultSettings } from "../settings/settings-schema";
 import { buildAppCommands, buildPaletteCommands, scorePaletteCommand, type PaletteContext } from "./palette-commands";
 
 function context(overrides: Partial<PaletteContext> = {}): PaletteContext {
@@ -7,6 +8,8 @@ function context(overrides: Partial<PaletteContext> = {}): PaletteContext {
     hasActiveDocument: true,
     viewMode: "split",
     showOutline: false,
+    appearance: { ...defaultSettings.appearance },
+    editor: { ...defaultSettings.editor },
     handlers: {
       onNew: vi.fn(),
       onOpen: vi.fn(),
@@ -24,6 +27,15 @@ function context(overrides: Partial<PaletteContext> = {}): PaletteContext {
       onOpenShortcuts: vi.fn(),
       onOpenReleaseNotes: vi.fn(),
       onOpenAbout: vi.fn(),
+      onToggleStatusBar: vi.fn(),
+      onToggleWordWrap: vi.fn(),
+      onToggleLineNumbers: vi.fn(),
+      onSetThemePreference: vi.fn(),
+      onSetColorScheme: vi.fn(),
+      onZoom: vi.fn(),
+      onOpenCommandPalette: vi.fn(),
+      onOpenDocs: vi.fn(),
+      onReportIssue: vi.fn(),
     },
     ...overrides,
   };
@@ -166,6 +178,110 @@ describe("buildAppCommands", () => {
       "view.mode.split": "Split View",
       "view.mode.preview": "Preview View",
     });
+  });
+});
+
+describe("view, theme, zoom and help commands", () => {
+  const byId = (id: string, ctx = context()) => buildAppCommands(ctx).find((command) => command.id === id);
+
+  it("checks only the Theme option that matches the stored preference, not the resolved theme", () => {
+    const ctx = context({ appearance: { ...defaultSettings.appearance, theme: "system" } });
+
+    expect(byId("view.theme.system", ctx)?.checked).toBe(true);
+    expect(byId("view.theme.light", ctx)?.checked).toBe(false);
+    expect(byId("view.theme.dark", ctx)?.checked).toBe(false);
+  });
+
+  it("sets the theme preference and colour scheme it is named after", () => {
+    const ctx = context();
+
+    byId("view.theme.dark", ctx)?.run();
+    byId("view.color-scheme.high-contrast", ctx)?.run();
+
+    expect(ctx.handlers.onSetThemePreference).toHaveBeenCalledWith("dark");
+    expect(ctx.handlers.onSetColorScheme).toHaveBeenCalledWith("high-contrast");
+  });
+
+  it("checks the current colour scheme and labels the options for the palette", () => {
+    const ctx = context({ appearance: { ...defaultSettings.appearance, colorScheme: "sepia" } });
+
+    expect(byId("view.color-scheme.sepia", ctx)).toMatchObject({ checked: true, label: "Color Scheme: Sepia" });
+    expect(byId("view.color-scheme.standard", ctx)?.checked).toBe(false);
+    expect(byId("view.theme.light", ctx)?.label).toBe("Theme: Light");
+  });
+
+  it("mirrors the status bar, word wrap and line number settings as checks", () => {
+    const ctx = context({
+      appearance: { ...defaultSettings.appearance, showStatusBar: false },
+      editor: { ...defaultSettings.editor, wordWrap: true, lineNumbers: false },
+    });
+
+    expect(byId("view.status-bar", ctx)?.checked).toBe(false);
+    expect(byId("view.word-wrap", ctx)?.checked).toBe(true);
+    expect(byId("view.line-numbers", ctx)?.checked).toBe(false);
+  });
+
+  it("runs the toggle handlers", () => {
+    const ctx = context();
+
+    byId("view.status-bar", ctx)?.run();
+    byId("view.word-wrap", ctx)?.run();
+    byId("view.line-numbers", ctx)?.run();
+
+    expect(ctx.handlers.onToggleStatusBar).toHaveBeenCalledTimes(1);
+    expect(ctx.handlers.onToggleWordWrap).toHaveBeenCalledTimes(1);
+    expect(ctx.handlers.onToggleLineNumbers).toHaveBeenCalledTimes(1);
+  });
+
+  it("disables Zoom In at the top of the range and Reset Zoom at the defaults", () => {
+    const top = context({ appearance: { ...defaultSettings.appearance, editorFontSize: 24, previewFontScale: 1.5 } });
+
+    expect(byId("view.zoom-in", top)?.enabled).toBe(false);
+    expect(byId("view.zoom-out", top)?.enabled).toBe(true);
+    expect(byId("view.zoom-reset")?.enabled).toBe(false);
+    expect(byId("view.zoom-in")?.enabled).toBe(true);
+  });
+
+  it("runs the zoom handler with its direction", () => {
+    const ctx = context();
+
+    byId("view.zoom-in", ctx)?.run();
+    byId("view.zoom-out", ctx)?.run();
+    byId("view.zoom-reset", ctx)?.run();
+
+    expect(ctx.handlers.onZoom).toHaveBeenNthCalledWith(1, "in");
+    expect(ctx.handlers.onZoom).toHaveBeenNthCalledWith(2, "out");
+    expect(ctx.handlers.onZoom).toHaveBeenNthCalledWith(3, "reset");
+  });
+
+  it("keeps theme, zoom and help available with no document while view toggles wait for one", () => {
+    const ctx = context({ hasActiveDocument: false });
+
+    for (const id of ["view.theme.dark", "view.color-scheme.sepia", "view.zoom-in", "help.docs", "help.report-issue", "app.palette"]) {
+      expect(byId(id, ctx)?.enabled).toBe(true);
+    }
+    for (const id of ["view.status-bar", "view.word-wrap", "view.line-numbers"]) {
+      expect(byId(id, ctx)?.enabled).toBe(false);
+    }
+  });
+
+  it("offers Command Palette from the menus but not from inside the palette itself", () => {
+    const ctx = context();
+
+    expect(byId("app.palette", ctx)).toMatchObject({ label: "Command Palette", shortcut: "Ctrl+K", group: "Help" });
+    expect(buildPaletteCommands(ctx).map((command) => command.id)).not.toContain("app.palette");
+  });
+
+  it("runs the help handlers", () => {
+    const ctx = context();
+
+    byId("help.docs", ctx)?.run();
+    byId("help.report-issue", ctx)?.run();
+    byId("app.palette", ctx)?.run();
+
+    expect(ctx.handlers.onOpenDocs).toHaveBeenCalledTimes(1);
+    expect(ctx.handlers.onReportIssue).toHaveBeenCalledTimes(1);
+    expect(ctx.handlers.onOpenCommandPalette).toHaveBeenCalledTimes(1);
   });
 });
 

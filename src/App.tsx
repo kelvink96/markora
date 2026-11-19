@@ -38,12 +38,17 @@ import { useDocumentStore } from "./store/document";
 import { useThemeStore } from "./features/theme/theme-store";
 import { ErrorBanner } from "./components/editor-page/error-banner";
 import { CommandPalette } from "./components/editor-page/command-palette";
-import { buildPaletteCommands } from "./features/commands/palette-commands";
+import { buildPaletteCommands, type PaletteContext } from "./features/commands/palette-commands";
+import { stepZoom } from "./features/settings/zoom";
 import { getModifierLabel } from "./features/shortcuts/modifier-label";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { getFileAdapter } from "./platform/files";
+import { getLinkAdapter } from "./platform/links";
 import { detectPlatform } from "./platform/runtime";
+
+const DOCS_URL = "https://github.com/kelvink96/markora#readme";
+const REPORT_ISSUE_URL = "https://github.com/kelvink96/markora/issues/new";
 
 export default function App() {
   const fileAdapter = useMemo(() => getFileAdapter(), []);
@@ -139,6 +144,67 @@ export default function App() {
   const headings = useMemo(() => extractHeadings(content), [content]);
   const activeHeadingIndex = findActiveHeadingIndex(headings, line);
   const wordCount = getWordCount(content);
+
+  const openExternal = useCallback((url: string) => {
+    getLinkAdapter()
+      .openExternal(url)
+      .catch((error) => console.error("open link failed:", error));
+  }, []);
+
+  const commandContext: PaletteContext = {
+    modifier: getModifierLabel(),
+    hasActiveDocument: hasOpenDocuments,
+    viewMode,
+    showOutline,
+    appearance: settings.appearance,
+    editor: settings.editor,
+    handlers: {
+      onNew: handleNew,
+      onOpen: () => void handleOpen(),
+      onSave: () => void handleSave(),
+      onSaveAs: () => void handleSaveAs(),
+      onCloseTab: requestCloseCurrentTab,
+      onExportHtml: () => void exportHtml(),
+      onExportPdf: () => void exportPdf(),
+      onOpenSettings: () => setActiveScreen("settings"),
+      onToggleTheme: handleThemeToggle,
+      onToggleOutline: toggleOutline,
+      onViewModeChange: setViewMode,
+      onFormat: runToolbarAction,
+      onEditAction: (action) => void runEditAction(action),
+      onOpenShortcuts: () => setIsKeyboardShortcutsOpen(true),
+      onOpenReleaseNotes: () => setIsReleaseNotesOpen(true),
+      onOpenAbout: () => setIsAboutDialogOpen(true),
+      onToggleStatusBar: () => {
+        updateAppearance({ showStatusBar: !settings.appearance.showStatusBar });
+        void persistCurrentSettings();
+      },
+      onToggleWordWrap: () => {
+        updateEditor({ wordWrap: !settings.editor.wordWrap });
+        void persistCurrentSettings();
+      },
+      onToggleLineNumbers: () => {
+        updateEditor({ lineNumbers: !settings.editor.lineNumbers });
+        void persistCurrentSettings();
+      },
+      onSetThemePreference: (preference) => {
+        useThemeStore.getState().setThemePreference(preference);
+        updateAppearance({ theme: preference });
+        void persistCurrentSettings();
+      },
+      onSetColorScheme: (colorScheme) => {
+        updateAppearance({ colorScheme });
+        void persistCurrentSettings();
+      },
+      onZoom: (direction) => {
+        updateAppearance(stepZoom(settings.appearance, direction));
+        void persistCurrentSettings();
+      },
+      onOpenCommandPalette: () => setIsCommandPaletteOpen(true),
+      onOpenDocs: () => openExternal(DOCS_URL),
+      onReportIssue: () => openExternal(REPORT_ISSUE_URL),
+    },
+  };
 
   const tabStrip = hasOpenDocuments ? (
     <TabStrip
@@ -280,35 +346,8 @@ export default function App() {
       <CommandPalette
         open={isCommandPaletteOpen}
         onOpenChange={setIsCommandPaletteOpen}
-        commands={
-          // Built only while open, so it always reflects the current document, view mode and outline state.
-          isCommandPaletteOpen
-            ? buildPaletteCommands({
-                modifier: getModifierLabel(),
-                hasActiveDocument: hasOpenDocuments,
-                viewMode,
-                showOutline,
-                handlers: {
-                  onNew: handleNew,
-                  onOpen: () => void handleOpen(),
-                  onSave: () => void handleSave(),
-                  onSaveAs: () => void handleSaveAs(),
-                  onCloseTab: requestCloseCurrentTab,
-                  onExportHtml: () => void exportHtml(),
-                  onExportPdf: () => void exportPdf(),
-                  onOpenSettings: () => setActiveScreen("settings"),
-                  onToggleTheme: handleThemeToggle,
-                  onToggleOutline: toggleOutline,
-                  onViewModeChange: setViewMode,
-                  onFormat: runToolbarAction,
-                  onEditAction: (action) => void runEditAction(action),
-                  onOpenShortcuts: () => setIsKeyboardShortcutsOpen(true),
-                  onOpenReleaseNotes: () => setIsReleaseNotesOpen(true),
-                  onOpenAbout: () => setIsAboutDialogOpen(true),
-                },
-              })
-            : []
-        }
+        // Built only while open, so it always reflects the current document, view mode and outline state.
+        commands={isCommandPaletteOpen ? buildPaletteCommands(commandContext) : []}
       />
       <Toaster position="bottom-right" />
     </TooltipProvider>

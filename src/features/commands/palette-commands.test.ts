@@ -325,7 +325,7 @@ describe("scorePaletteCommand", () => {
 describe("Check for updates", () => {
   it("is offered in the palette when updates are supported, and runs the handler", () => {
     const ctx = context({ updatesSupported: true });
-    const command = find(buildPaletteCommands(ctx), "check-for-updates");
+    const command = find(buildPaletteCommands(ctx), "help.check-for-updates");
 
     expect(command).toMatchObject({ label: "Check for updates", group: "App" });
     command?.run();
@@ -333,6 +333,6 @@ describe("Check for updates", () => {
   });
 
   it("is hidden from the palette when updates are not supported", () => {
-    expect(find(buildPaletteCommands(context({ updatesSupported: false })), "check-for-updates")).toBeUndefined();
+    expect(find(buildPaletteCommands(context({ updatesSupported: false })), "help.check-for-updates")).toBeUndefined();
   });
 });

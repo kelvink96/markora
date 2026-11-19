@@ -132,7 +132,7 @@ export function buildAppCommands({
     withDocument({ id: "file.export-pdf", label: "Export as PDF", group: "File", keywords: ["print"], run: handlers.onExportPdf }),
     withDocument({ id: "file.close", label: "Close Tab", group: "File", keywords: ["close document"], run: handlers.onCloseTab }),
     always({ id: "app.settings", label: "Settings", group: "App", keywords: ["preferences", "options"], run: handlers.onOpenSettings }),
-    { ...always({ id: "check-for-updates", label: "Check for updates", group: "App", keywords: ["update", "upgrade", "new version", "latest"], run: handlers.onCheckForUpdates }), enabled: updatesSupported },
+    { ...always({ id: "help.check-for-updates", label: "Check for updates", group: "App", keywords: ["update", "upgrade", "new version", "latest"], run: handlers.onCheckForUpdates }), enabled: updatesSupported },
 
     edit("edit.undo", "Undo", "undo", `${modifier}+Z`),
     edit("edit.redo", "Redo", "redo", `${modifier}+Shift+Z`),

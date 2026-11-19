@@ -63,8 +63,8 @@ describe("MENU_LAYOUT", () => {
     const help = MENU_LAYOUT.find((menu) => menu.id === "help");
     const ids = MENU_LAYOUT.flatMap((menu) => collectCommandIds(menu.items));
 
-    expect(collectCommandIds(help?.items ?? [])).toContain("check-for-updates");
-    expect(ids.filter((id) => id === "check-for-updates")).toHaveLength(1);
+    expect(collectCommandIds(help?.items ?? [])).toContain("help.check-for-updates");
+    expect(ids.filter((id) => id === "help.check-for-updates")).toHaveLength(1);
   });
 
   it("puts Open Recent in the File menu", () => {

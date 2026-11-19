@@ -111,7 +111,7 @@ vi.mock("./components/editor-page/top-bar", () => ({
         <button type="button" onClick={run("app.settings")}>
           open-settings
         </button>
-        <button type="button" onClick={run("check-for-updates")}>
+        <button type="button" onClick={run("help.check-for-updates")}>
           check-for-updates
         </button>
         <button type="button" onClick={run("help.shortcuts")}>

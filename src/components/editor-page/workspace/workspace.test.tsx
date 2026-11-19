@@ -18,7 +18,7 @@ function stubScroller(element: HTMLElement, scrollHeight: number, clientHeight: 
   });
 }
 
-function renderPanes(viewMode: "split" | "preview" | "edit", syncScroll = true) {
+function renderPanes(viewMode: "split" | "read" | "write", syncScroll = true) {
   const settings = createDefaultSettings();
   settings.preview.syncScroll = syncScroll;
   useSettingsStore.setState({ settings });
@@ -65,23 +65,23 @@ describe("Workspace with a sidebar (#16)", () => {
     expect(screen.getByText("Left").parentElement).toHaveStyle({ width: "55%" });
   });
 
-  it("is a single editor pane with no preview in live view, like edit view", () => {
-    render(<Workspace viewMode="live" sidebar={<div>Outline</div>} left={<div>Left</div>} right={<div>Right</div>} />);
+  it("is a single editor pane with no preview in write view", () => {
+    render(<Workspace viewMode="write" sidebar={<div>Outline</div>} left={<div>Left</div>} right={<div>Right</div>} />);
 
     expect(screen.getByRole("region", { name: "Editor workspace" })).toHaveTextContent("Left");
     expect(screen.queryByText("Right")).not.toBeInTheDocument();
     expect(screen.getByText("Outline")).toBeInTheDocument();
   });
 
-  it("shows the sidebar in edit view too", () => {
-    render(<Workspace viewMode="edit" sidebar={<div>Outline</div>} left={<div>Left</div>} right={<div>Right</div>} />);
+  it("shows the sidebar in read view too", () => {
+    render(<Workspace viewMode="read" sidebar={<div>Outline</div>} left={<div>Left</div>} right={<div>Right</div>} />);
 
     expect(screen.getByText("Outline")).toBeInTheDocument();
   });
 
   // On a phone a 16rem column leaves the editor a few characters wide, so below the md breakpoint
   // the sidebar floats over the panes instead of taking space from them.
-  it.each(["edit", "split"] as const)("floats the sidebar over the panes on narrow screens in %s view", (viewMode) => {
+  it.each(["write", "split", "read"] as const)("floats the sidebar over the panes on narrow screens in %s view", (viewMode) => {
     const { container } = render(
       <Workspace viewMode={viewMode} sidebar={<div>Outline</div>} left={<div>Left</div>} right={<div>Right</div>} />,
     );
@@ -105,13 +105,13 @@ describe("Workspace scroll sync (#12)", () => {
     expect(preview!.scrollTop).toBe(1200);
   });
 
-  it("also syncs in preview view, where both panes are showing", () => {
-    const { editor, preview } = renderPanes("preview");
+  it("does not sync in read view, where only the preview is showing", () => {
+    const { editor, preview } = renderPanes("read");
 
     editor.scrollTop = 750;
     fireEvent.scroll(editor);
 
-    expect(preview!.scrollTop).toBe(1200);
+    expect(preview!.scrollTop).toBe(0);
   });
 
   it("leaves the panes independent when the setting is off", () => {
@@ -123,8 +123,8 @@ describe("Workspace scroll sync (#12)", () => {
     expect(preview!.scrollTop).toBe(0);
   });
 
-  it("has no preview to sync with in edit view", () => {
-    const { editor, preview } = renderPanes("edit");
+  it("has no preview to sync with in write view", () => {
+    const { editor, preview } = renderPanes("write");
 
     editor.scrollTop = 750;
     expect(() => fireEvent.scroll(editor)).not.toThrow();
@@ -167,8 +167,8 @@ describe("Workspace", () => {
     expect(screen.getByText("Left").parentElement).toHaveStyle({ width: "55%" });
   });
 
-  it("renders only the editor in edit mode", () => {
-    render(<Workspace sidebar={<div>Sidebar</div>} left={<div>Left</div>} right={<div>Right</div>} viewMode="edit" />);
+  it("renders only the editor in write mode", () => {
+    render(<Workspace sidebar={<div>Sidebar</div>} left={<div>Left</div>} right={<div>Right</div>} viewMode="write" />);
 
     expect(screen.getByText("Sidebar")).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Editor workspace" })).toBeInTheDocument();
@@ -176,11 +176,27 @@ describe("Workspace", () => {
     expect(screen.queryByRole("separator", { name: "Resize editor and preview panes" })).not.toBeInTheDocument();
   });
 
-  it("renders a preview-dominant layout in preview mode", () => {
-    render(<Workspace sidebar={<div>Sidebar</div>} left={<div>Left</div>} right={<div>Right</div>} viewMode="preview" />);
+  it("renders the preview full width in read mode, with no divider", () => {
+    render(<Workspace sidebar={<div>Sidebar</div>} left={<div>Left</div>} right={<div>Right</div>} viewMode="read" />);
 
     expect(screen.getByText("Sidebar")).toBeInTheDocument();
-    expect(screen.getByRole("region", { name: "Preview workspace" })).toHaveStyle({ width: "68%" });
-    expect(screen.getByRole("region", { name: "Editor workspace" })).toHaveStyle({ width: "32%" });
+    const reader = screen.getByRole("region", { name: "Reader workspace" });
+    expect(reader).toHaveTextContent("Right");
+    expect(reader).not.toHaveAttribute("style");
+    expect(screen.queryByRole("separator")).not.toBeInTheDocument();
+  });
+
+  it("keeps the editor mounted but hidden in read mode, so its state survives a round trip", () => {
+    const { rerender } = render(<Workspace left={<input aria-label="Draft" />} right={<div>Right</div>} viewMode="write" />);
+    fireEvent.change(screen.getByLabelText("Draft"), { target: { value: "typed" } });
+
+    rerender(<Workspace left={<input aria-label="Draft" />} right={<div>Right</div>} viewMode="read" />);
+    const parked = screen.getByDisplayValue("typed", { exact: true }).closest("[hidden]");
+    expect(parked).not.toBeNull();
+    expect(parked).toHaveAttribute("aria-hidden", "true");
+    expect(screen.queryByRole("region", { name: "Editor workspace" })).not.toBeInTheDocument();
+
+    rerender(<Workspace left={<input aria-label="Draft" />} right={<div>Right</div>} viewMode="write" />);
+    expect(screen.getByLabelText("Draft")).toHaveValue("typed");
   });
 });

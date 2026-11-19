@@ -20,16 +20,12 @@ export function Workspace({ sidebar, left, right, viewMode }: WorkspaceProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
   const syncScroll = useSettingsStore((state) => state.settings.preview.syncScroll);
-  // Live and Edit views show no preview, so there is nothing to keep in step there.
-  useScrollSync(containerRef, (viewMode === "split" || viewMode === "preview") && syncScroll);
+  // Only Side-by-side shows both panes at once, so only there is there anything to keep in step.
+  useScrollSync(containerRef, viewMode === "split" && syncScroll);
 
   useEffect(() => {
     if (viewMode === "split") {
       setSplitPct(50);
-    }
-
-    if (viewMode === "preview") {
-      setSplitPct(32);
     }
   }, [viewMode]);
 
@@ -66,25 +62,34 @@ export function Workspace({ sidebar, left, right, viewMode }: WorkspaceProps) {
     }
   }, []);
 
-  if (viewMode === "live" || viewMode === "edit") {
+  // Write and Read share one tree: the editor's section stays at the same position in both, so
+  // React keeps it mounted (undo history, cursor, find bar) while Read hides it behind the preview.
+  if (viewMode === "write" || viewMode === "read") {
+    const reading = viewMode === "read";
+
     return (
       <div className="workspace relative flex min-h-0 flex-1 overflow-hidden px-3 pb-3 pt-2.5">
         {sidebar ? <div className={SIDEBAR_SLOT}>{sidebar}</div> : null}
-        <section className="min-h-0 flex-1 overflow-hidden" role="region" aria-label="Editor workspace">
+        <section
+          className="min-h-0 flex-1 overflow-hidden"
+          role="region"
+          aria-label="Editor workspace"
+          hidden={reading}
+          aria-hidden={reading || undefined}
+        >
           {left}
         </section>
+        {reading ? (
+          <section className="min-h-0 flex-1 overflow-hidden" role="region" aria-label="Reader workspace">
+            {right}
+          </section>
+        ) : null}
       </div>
     );
   }
 
   const editorWidth = splitPct;
   const previewWidth = 100 - splitPct;
-  const primaryPane = viewMode === "preview" ? right : left;
-  const secondaryPane = viewMode === "preview" ? left : right;
-  const primaryLabel = viewMode === "preview" ? "Preview workspace" : "Editor workspace";
-  const secondaryLabel = viewMode === "preview" ? "Editor workspace" : "Preview workspace";
-  const primaryStyle = viewMode === "preview" ? { width: `${previewWidth}%` } : { width: `${editorWidth}%` };
-  const secondaryStyle = viewMode === "preview" ? { width: `${editorWidth}%` } : { width: `${previewWidth}%` };
 
   return (
     <div
@@ -103,11 +108,11 @@ export function Workspace({ sidebar, left, right, viewMode }: WorkspaceProps) {
       <div ref={containerRef} className="flex min-h-0 min-w-0 flex-1 gap-2">
         <section
           className="min-h-0 overflow-hidden"
-          style={primaryStyle}
+          style={{ width: `${editorWidth}%` }}
           role="region"
-          aria-label={primaryLabel}
+          aria-label="Editor workspace"
         >
-          {primaryPane}
+          {left}
         </section>
         <div
           className="workspace__divider relative h-auto w-3 shrink-0 cursor-col-resize rounded-full outline-none before:absolute before:inset-y-2 before:left-1/2 before:w-0.5 before:-translate-x-1/2 before:rounded-full before:bg-border before:transition-colors hover:before:bg-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:before:bg-primary"
@@ -122,11 +127,11 @@ export function Workspace({ sidebar, left, right, viewMode }: WorkspaceProps) {
         />
         <section
           className="min-h-0 overflow-hidden"
-          style={secondaryStyle}
+          style={{ width: `${previewWidth}%` }}
           role="region"
-          aria-label={secondaryLabel}
+          aria-label="Preview workspace"
         >
-          {secondaryPane}
+          {right}
         </section>
       </div>
     </div>

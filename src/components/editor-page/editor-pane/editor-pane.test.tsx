@@ -210,24 +210,29 @@ describe("EditorPane", () => {
     expect(screen.getByTestId("editor-surface")).toHaveAttribute("data-line-numbers", "hidden");
   });
 
-  it("turns Live rendering on and off with the view mode, without rebuilding the editor", () => {
+  it("turns Live rendering on and off with the live flag, without rebuilding the editor", () => {
     vi.mocked(EditorState.create).mockClear();
-    const { rerender } = render(<EditorPane theme="light" viewMode="edit" />);
+    const { rerender } = render(<EditorPane theme="light" live={false} />);
     expect(liveExtension).not.toHaveBeenCalled();
     mockState.dispatchSpy.mockClear();
 
-    rerender(<EditorPane theme="light" viewMode="live" />);
+    rerender(<EditorPane theme="light" live />);
     expect(liveExtension).toHaveBeenCalledTimes(1);
     expect(mockState.dispatchSpy).toHaveBeenCalledWith({ effects: { reconfigured: "live-extension" } });
 
     mockState.dispatchSpy.mockClear();
-    rerender(<EditorPane theme="light" viewMode="split" />);
+    rerender(<EditorPane theme="light" live={false} />);
     expect(mockState.dispatchSpy).toHaveBeenCalledWith({ effects: { reconfigured: [] } });
     expect(EditorState.create).toHaveBeenCalledTimes(1);
   });
 
-  it("boots with Live rendering when it opens in Live mode", () => {
-    render(<EditorPane theme="light" viewMode="live" />);
+  it("is plain markdown when no live flag is given", () => {
+    render(<EditorPane theme="light" />);
+    expect(liveExtension).not.toHaveBeenCalled();
+  });
+
+  it("boots with Live rendering when it opens live", () => {
+    render(<EditorPane theme="light" live />);
     expect(liveExtension).toHaveBeenCalledTimes(1);
   });
 

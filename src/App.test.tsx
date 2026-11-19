@@ -203,7 +203,7 @@ describe("App", () => {
 
     fireEvent.keyDown(window, { key: "k", ctrlKey: true });
     const palette = await screen.findByRole("dialog", { name: "Command palette" });
-    expect(within(palette).getByRole("option", { name: /Save as/ })).toBeInTheDocument();
+    expect(within(palette).getByRole("option", { name: /Save As/ })).toBeInTheDocument();
 
     await user.type(within(palette).getByPlaceholderText("Type a command..."), "split");
     await user.keyboard("{Enter}");

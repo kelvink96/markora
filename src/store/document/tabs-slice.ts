@@ -1,4 +1,5 @@
 import type { StateCreator } from "zustand";
+import { applyLineEnding, detectLineEnding } from "../../features/document/line-endings";
 import { createDocumentTab } from "./factories";
 import { recordRecent } from "./recents";
 import type { DocumentStore, DocumentTabActions } from "./types";
@@ -8,12 +9,16 @@ export const createDocumentTabSlice: StateCreator<DocumentStore, [], [], Documen
   set,
   get,
 ) => ({
-  setContent: (content) =>
+  setContent: (editorText) =>
     set((state) => {
       const normalized = normalizeState(state);
+      // The editor holds text with plain \n; the file keeps whatever ending it came with, so
+      // saving never rewrites a Windows file as Unix (or the reverse).
+      const active = normalized.openDocuments.find((document) => document.id === normalized.activeDocumentId);
+      const content = applyLineEnding(editorText, detectLineEnding(active?.content ?? ""));
+
       // Unchanged text is not an edit. The editor reports every document swap, such as a tab
       // switch, back as a change, and that must not mark the file as unsaved.
-      const active = normalized.openDocuments.find((document) => document.id === normalized.activeDocumentId);
       if (active?.content === content) {
         return normalized;
       }

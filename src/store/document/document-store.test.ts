@@ -47,6 +47,33 @@ describe("DocumentStore", () => {
     expect(useDocumentStore.getState().isDirty).toBe(true);
   });
 
+  it("opening a file with Windows line endings leaves it clean once the editor reports its text", () => {
+    useDocumentStore.getState().openDocument({ content: "# Title\r\n\r\nBody\r\n", filePath: "/win.md", isDirty: false });
+
+    // CodeMirror holds the text with plain \n and reports it that way.
+    useDocumentStore.getState().setContent("# Title\n\nBody\n");
+
+    expect(useDocumentStore.getState().isDirty).toBe(false);
+    expect(useDocumentStore.getState().content).toBe("# Title\r\n\r\nBody\r\n");
+  });
+
+  it("an edit to a file with Windows line endings keeps them", () => {
+    useDocumentStore.getState().openDocument({ content: "# Title\r\n\r\nBody\r\n", filePath: "/win.md", isDirty: false });
+
+    useDocumentStore.getState().setContent("# Title\n\nBody, edited\nMore\n");
+
+    expect(useDocumentStore.getState().isDirty).toBe(true);
+    expect(useDocumentStore.getState().content).toBe("# Title\r\n\r\nBody, edited\r\nMore\r\n");
+  });
+
+  it("an edit to a file with Unix line endings stays Unix", () => {
+    useDocumentStore.getState().openDocument({ content: "a\nb\n", filePath: "/unix.md", isDirty: false });
+
+    useDocumentStore.getState().setContent("a\nb\nc\n");
+
+    expect(useDocumentStore.getState().content).toBe("a\nb\nc\n");
+  });
+
   it("markClean clears the dirty flag", () => {
     useDocumentStore.getState().setContent("# Hello");
     useDocumentStore.getState().markClean();

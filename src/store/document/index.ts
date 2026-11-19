@@ -5,6 +5,7 @@ import { createWorkspaceProjectSlice, initialProject } from "./projects-slice";
 import type { DocumentStore } from "./types";
 
 export { getUntitledStarterContent, untitledStarterContent };
+export { selectHasUnsavedChanges } from "./selectors";
 export type {
   DocumentStore,
   DocumentTab,

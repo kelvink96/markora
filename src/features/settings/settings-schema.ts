@@ -37,6 +37,11 @@ export interface OnboardingSettings {
   tourVersion: number;
 }
 
+export interface UpdateSettings {
+  /** Check for a new version once when the desktop app starts. */
+  checkAutomatically: boolean;
+}
+
 export interface MarkoraSettings {
   appearance: AppearanceSettings;
   editor: EditorSettings;
@@ -44,6 +49,7 @@ export interface MarkoraSettings {
   files: FileSettings;
   authoring: AuthoringDefaults;
   onboarding: OnboardingSettings;
+  updates: UpdateSettings;
 }
 
 /** Bump this when the Tour changes enough that people who saw it should be offered it again. */
@@ -96,6 +102,9 @@ export const defaultSettings: MarkoraSettings = {
   },
   onboarding: {
     tourVersion: 0,
+  },
+  updates: {
+    checkAutomatically: true,
   },
 };
 
@@ -195,5 +204,6 @@ export function normalizeSettings(raw: unknown): MarkoraSettings {
     files: mergeKnown(defaults.files, source.files),
     authoring: mergeKnown(defaults.authoring, source.authoring),
     onboarding,
+    updates: mergeKnown(defaults.updates, source.updates),
   };
 }

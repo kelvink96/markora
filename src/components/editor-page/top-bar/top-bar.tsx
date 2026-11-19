@@ -7,6 +7,7 @@ import { Logo } from "../../logo";
 import { ViewModeSwitcher } from "../view-mode-switcher";
 import type { AppCommand } from "../../../features/commands/palette-commands";
 import { useThemeStore } from "../../../features/theme/theme-store";
+import { useUpdateStore } from "../../../features/updates/update-store";
 import type { WorkspaceViewMode } from "../../../features/workspace/workspace-state";
 import { useDocumentStore } from "../../../store/document";
 import { AppMenus, type RecentFile } from "./menu-renderer";
@@ -21,6 +22,8 @@ interface TopBarProps {
   onThemeToggle?: () => void;
   canInstallApp?: boolean;
   onInstallApp?: () => void;
+  /** False on the web build, where the app cannot update itself, so no update dot is shown. */
+  updatesSupported?: boolean;
   viewMode: WorkspaceViewMode;
   onViewModeChange: (mode: WorkspaceViewMode) => void;
 }
@@ -33,11 +36,14 @@ export function TopBar({
   onThemeToggle = () => {},
   canInstallApp = false,
   onInstallApp = () => {},
+  updatesSupported = false,
   viewMode,
   onViewModeChange,
 }: TopBarProps) {
   const hasActiveDocument = useDocumentStore((state) => Boolean(state.activeDocumentId));
   const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
+  const updateStatus = useUpdateStore((state) => state.status);
+  const updateAvailable = updatesSupported && (updateStatus === "available" || updateStatus === "downloading" || updateStatus === "ready");
 
   return (
     // On narrow screens the tabs wrap onto their own row (order-last + full width) instead of being squeezed out.
@@ -45,7 +51,7 @@ export function TopBar({
       <div className="flex shrink-0 items-center gap-1.5" data-testid="top-bar-menu" data-tour="command-palette">
         <Logo size={24} showLabel={!hasActiveDocument} className="mx-1" />
         <Menubar className="h-auto gap-0.5 border-0 bg-transparent p-0 shadow-none">
-          <AppMenus commands={commands} recentFiles={recentFiles} onOpenRecent={onOpenRecent} />
+          <AppMenus commands={commands} recentFiles={recentFiles} onOpenRecent={onOpenRecent} updateAvailable={updateAvailable} />
         </Menubar>
       </div>
 

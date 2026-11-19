@@ -84,6 +84,26 @@ pub struct OnboardingSettings {
     pub tour_version: u32,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateSettings {
+    // Check for a new version once at launch.
+    #[serde(default = "default_check_automatically")]
+    pub check_automatically: bool,
+}
+
+impl Default for UpdateSettings {
+    fn default() -> Self {
+        Self {
+            check_automatically: default_check_automatically(),
+        }
+    }
+}
+
+fn default_check_automatically() -> bool {
+    true
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct MarkoraSettings {
@@ -95,6 +115,9 @@ pub struct MarkoraSettings {
     // Absent in files saved before the Tour existed.
     #[serde(default)]
     pub onboarding: OnboardingSettings,
+    // Absent in files saved before in-app updates existed.
+    #[serde(default)]
+    pub updates: UpdateSettings,
 }
 
 fn default_color_scheme() -> ColorScheme {
@@ -131,6 +154,7 @@ pub fn default_settings() -> MarkoraSettings {
                 .into(),
         },
         onboarding: OnboardingSettings::default(),
+        updates: UpdateSettings::default(),
     }
 }
 
@@ -346,6 +370,42 @@ mod tests {
         let settings = load_settings_from_dir(&temp_dir).unwrap();
 
         assert_eq!(settings.onboarding.tour_version, 0);
+
+        fs::remove_dir_all(temp_dir).ok();
+    }
+
+    #[test]
+    fn legacy_settings_file_without_updates_checks_automatically() {
+        let temp_dir = temp_settings_dir();
+        let legacy = r##"{
+  "appearance": { "theme": "system", "editorFontSize": 16, "previewFontScale": 1.0,
+                  "editorLineHeight": 1.7, "showStatusBar": true },
+  "editor": { "wordWrap": true, "lineNumbers": false, "highlightActiveLine": true },
+  "preview": { "syncScroll": true, "openLinksExternally": true, "contentWidth": "normal" },
+  "files": { "autosave": false, "restorePreviousSession": false, "confirmOnUnsavedClose": true },
+  "authoring": { "newDocumentTemplate": "# Legacy" }
+}"##;
+        fs::write(settings_file_path(&temp_dir), legacy).unwrap();
+
+        let settings = load_settings_from_dir(&temp_dir).unwrap();
+
+        assert!(settings.updates.check_automatically);
+
+        fs::remove_dir_all(temp_dir).ok();
+    }
+
+    #[test]
+    fn update_check_opt_out_round_trips_and_reset_restores_it() {
+        let temp_dir = temp_settings_dir();
+        let mut settings = default_settings();
+        settings.updates.check_automatically = false;
+        save_settings_to_dir(&temp_dir, &settings).unwrap();
+
+        let reloaded = load_settings_from_dir(&temp_dir).unwrap();
+        assert!(!reloaded.updates.check_automatically);
+
+        let reset = reset_settings_in_dir(&temp_dir).unwrap();
+        assert!(reset.updates.check_automatically);
 
         fs::remove_dir_all(temp_dir).ok();
     }

@@ -24,6 +24,9 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         // Clipboard access is routed through Tauri so editor actions use the native desktop clipboard.
         .plugin(tauri_plugin_clipboard_manager::init())
+        // In-app updates: the updater checks and installs signed releases; process relaunches afterwards.
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
         // Shared state: the files the user has picked (read/write allowlist), remembered
         // across restarts so "restore previous session" can reopen them.
         .setup(|app| {

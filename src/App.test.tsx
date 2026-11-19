@@ -9,6 +9,7 @@ import { useSettingsStore } from "./features/settings/settings-store";
 import { useWorkspaceState } from "./features/workspace/workspace-state";
 import { useEditorCommandState } from "./features/editor/editor-command-state";
 import { useThemeStore } from "./features/theme/theme-store";
+import { useUpdateStore } from "./features/updates/update-store";
 
 /** Settings for a user who has already dealt with the Tour prompt, so it stays out of the way. */
 function createSeenSettings() {
@@ -109,6 +110,9 @@ vi.mock("./components/editor-page/top-bar", () => ({
       <div>
         <button type="button" onClick={run("app.settings")}>
           open-settings
+        </button>
+        <button type="button" onClick={run("help.check-for-updates")}>
+          check-for-updates
         </button>
         <button type="button" onClick={run("help.shortcuts")}>
           open-shortcuts
@@ -508,6 +512,23 @@ describe("App", () => {
     expect(screen.queryByText("Top Bar")).not.toBeInTheDocument();
     expect(screen.queryByText("Footer Status")).not.toBeInTheDocument();
     expect(screen.queryByText(/^\d+ tabs$/)).not.toBeInTheDocument();
+  });
+
+  it("opens settings and checks for updates from the Check for updates command", async () => {
+    const user = userEvent.setup();
+    const check = vi.fn().mockResolvedValue(undefined);
+    const original = useUpdateStore.getState().check;
+    useUpdateStore.setState({ check });
+
+    try {
+      render(<App />);
+      await user.click(screen.getByRole("button", { name: "check-for-updates" }));
+
+      expect(screen.getByRole("heading", { name: "Settings", level: 2 })).toBeInTheDocument();
+      expect(check).toHaveBeenCalledWith();
+    } finally {
+      useUpdateStore.setState({ check: original });
+    }
   });
 
   it("opens the keyboard shortcuts dialog from the help menu action", async () => {

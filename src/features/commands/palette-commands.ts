@@ -52,6 +52,7 @@ export interface PaletteHandlers {
   onOpenDocs: () => void;
   onReportIssue: () => void;
   onTakeTour: () => void;
+  onCheckForUpdates: () => void;
 }
 
 export interface PaletteContext {
@@ -63,6 +64,8 @@ export interface PaletteContext {
   /** The stored appearance settings: the theme preference (not the resolved theme), colour scheme, zoom and status bar. */
   appearance: AppearanceSettings;
   editor: EditorSettings;
+  /** False where the app cannot update itself (the web build); the command is then not offered. */
+  updatesSupported: boolean;
   handlers: PaletteHandlers;
 }
 
@@ -112,6 +115,7 @@ export function buildAppCommands({
   showOutline,
   appearance,
   editor,
+  updatesSupported,
   handlers,
 }: PaletteContext): AppCommand[] {
   const always = (command: Omit<AppCommand, "enabled">): AppCommand => ({ ...command, enabled: true });
@@ -128,6 +132,7 @@ export function buildAppCommands({
     withDocument({ id: "file.export-pdf", label: "Export as PDF", group: "File", keywords: ["print"], run: handlers.onExportPdf }),
     withDocument({ id: "file.close", label: "Close Tab", group: "File", keywords: ["close document"], run: handlers.onCloseTab }),
     always({ id: "app.settings", label: "Settings", group: "App", keywords: ["preferences", "options"], run: handlers.onOpenSettings }),
+    { ...always({ id: "help.check-for-updates", label: "Check for updates", group: "App", keywords: ["update", "upgrade", "new version", "latest"], run: handlers.onCheckForUpdates }), enabled: updatesSupported },
 
     edit("edit.undo", "Undo", "undo", `${modifier}+Z`),
     edit("edit.redo", "Redo", "redo", `${modifier}+Shift+Z`),

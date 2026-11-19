@@ -9,7 +9,8 @@
   "plugins": {
     "@release-it/bumper": {
       "out": [
-        { "file": "src-tauri/tauri.conf.json", "path": "version" }
+        { "file": "src-tauri/tauri.conf.json", "path": "version" },
+        { "file": "src-tauri/Cargo.toml", "path": "package.version" }
       ]
     }
   }

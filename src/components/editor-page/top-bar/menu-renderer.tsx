@@ -30,10 +30,12 @@ interface AppMenusProps {
   commands: AppCommand[];
   recentFiles: RecentFile[];
   onOpenRecent: (projectId: string, documentId: string) => void;
+  /** Marks the Help menu, where Check for updates lives, with a dot. */
+  updateAvailable?: boolean;
 }
 
 /** The File, Edit, Format, View and Help menus, laid out by MENU_LAYOUT from the shared command list. */
-export function AppMenus({ commands, recentFiles, onOpenRecent }: AppMenusProps) {
+export function AppMenus({ commands, recentFiles, onOpenRecent, updateAvailable = false }: AppMenusProps) {
   const byId = new Map(commands.map((command) => [command.id, command]));
 
   const renderCommand = (node: Extract<MenuNode, { type: "command" }>, inRadioGroup: boolean): ReactNode => {
@@ -142,7 +144,17 @@ export function AppMenus({ commands, recentFiles, onOpenRecent }: AppMenusProps)
     <>
       {MENU_LAYOUT.filter((menu) => hasAnythingToOffer(menu.items)).map((menu) => (
         <MenubarMenu key={menu.id}>
-          <MenubarTrigger>{menu.label}</MenubarTrigger>
+          <MenubarTrigger>
+            {menu.label}
+            {menu.id === "help" && updateAvailable ? (
+              <span
+                role="img"
+                aria-label="Update available"
+                data-testid="update-badge"
+                className="ml-1.5 size-1.5 rounded-full bg-primary"
+              />
+            ) : null}
+          </MenubarTrigger>
           <MenubarContent className="min-w-60">{renderNodes(menu.items)}</MenubarContent>
         </MenubarMenu>
       ))}

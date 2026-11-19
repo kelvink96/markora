@@ -84,3 +84,11 @@ describe("settings-store", () => {
     expect(useSettingsStore.getState().settings.authoring.newDocumentTemplate).toBe("# Draft");
   });
 });
+
+describe("updateUpdates", () => {
+  it("changes the automatic update check", () => {
+    useSettingsStore.getState().updateUpdates({ checkAutomatically: false });
+
+    expect(useSettingsStore.getState().settings.updates.checkAutomatically).toBe(false);
+  });
+});

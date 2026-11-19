@@ -5,6 +5,7 @@ import {
   type EditorSettings,
   type FileSettings,
   type MarkoraSettings,
+  type OnboardingSettings,
   type PreviewSettings,
 } from "./settings-schema";
 
@@ -17,6 +18,7 @@ interface SettingsStore {
   updateEditor: (editor: Partial<EditorSettings>) => void;
   updatePreview: (preview: Partial<PreviewSettings>) => void;
   updateFiles: (files: Partial<FileSettings>) => void;
+  updateOnboarding: (onboarding: Partial<OnboardingSettings>) => void;
   setTemplateDraft: (templateDraft: string) => void;
   saveTemplateDraft: () => void;
   reset: () => void;
@@ -77,6 +79,16 @@ export const useSettingsStore = create<SettingsStore>()((set) => ({
         files: {
           ...state.settings.files,
           ...files,
+        },
+      },
+    })),
+  updateOnboarding: (onboarding) =>
+    set((state) => ({
+      settings: {
+        ...state.settings,
+        onboarding: {
+          ...state.settings.onboarding,
+          ...onboarding,
         },
       },
     })),

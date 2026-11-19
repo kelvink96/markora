@@ -1,14 +1,21 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import packageJson from "../package.json";
 import App from "./App";
 import { untitledStarterContent, useDocumentStore } from "./store/document";
-import { createDefaultSettings } from "./features/settings/settings-schema";
+import { CURRENT_TOUR_VERSION, createDefaultSettings } from "./features/settings/settings-schema";
 import { useSettingsStore } from "./features/settings/settings-store";
 import { useWorkspaceState } from "./features/workspace/workspace-state";
 import { useEditorCommandState } from "./features/editor/editor-command-state";
 import { useThemeStore } from "./features/theme/theme-store";
+
+/** Settings for a user who has already dealt with the Tour prompt, so it stays out of the way. */
+function createSeenSettings() {
+  const settings = createDefaultSettings();
+  settings.onboarding.tourVersion = CURRENT_TOUR_VERSION;
+  return settings;
+}
 
 const { invokeMock, openMock, saveMock, readFileMock, writeFileMock } = vi.hoisted(() => ({
   invokeMock: vi.fn(),
@@ -32,6 +39,17 @@ vi.mock("./platform/files", () => ({
     supportsFileImport: () => false,
     supportsFileExport: () => false,
   }),
+}));
+
+// The tour library is covered by its own tests; here the runner just reports how the tour ended.
+vi.mock("./components/editor-page/tour/tour-runner", () => ({
+  default: ({ onEnd }: { onEnd: (event: "skip" | "finish") => void }) => (
+    <div>
+      <p>tour is running</p>
+      <button onClick={() => onEnd("finish")}>End tour: finish</button>
+      <button onClick={() => onEnd("skip")}>End tour: skip</button>
+    </div>
+  ),
 }));
 
 vi.mock("./platform/persistence/web", () => ({
@@ -81,34 +99,40 @@ vi.mock("./components/editor-page/workspace", () => ({
 vi.mock("./components/editor-page/top-bar", () => ({
   TopBar: ({
     tabs,
-    onOpenSettings,
-    onOpenKeyboardShortcuts,
-    onOpenAbout,
-    onCloseTab,
+    commands,
   }: {
     tabs?: React.ReactNode;
-    onOpenSettings: () => void;
-    onOpenKeyboardShortcuts: () => void;
-    onOpenAbout: () => void;
-    onCloseTab: () => void;
-  }) => (
-    <div>
-      <button type="button" onClick={onOpenSettings}>
-        open-settings
-      </button>
-      <button type="button" onClick={onOpenKeyboardShortcuts}>
-        open-shortcuts
-      </button>
-      <button type="button" onClick={onOpenAbout}>
-        open-about
-      </button>
-      <button type="button" onClick={onCloseTab}>
-        close-from-menu
-      </button>
-      {tabs}
-      <div>Top Bar</div>
-    </div>
-  ),
+    commands: Array<{ id: string; run: () => void }>;
+  }) => {
+    const run = (id: string) => () => commands.find((command) => command.id === id)?.run();
+    return (
+      <div>
+        <button type="button" onClick={run("app.settings")}>
+          open-settings
+        </button>
+        <button type="button" onClick={run("help.shortcuts")}>
+          open-shortcuts
+        </button>
+        <button type="button" onClick={run("help.about")}>
+          open-about
+        </button>
+        <button type="button" onClick={run("file.close")}>
+          close-from-menu
+        </button>
+        <button type="button" onClick={run("view.word-wrap")}>
+          toggle-word-wrap
+        </button>
+        <button type="button" onClick={run("view.zoom-in")}>
+          zoom-in
+        </button>
+        <button type="button" onClick={run("view.theme.dark")}>
+          theme-dark
+        </button>
+        {tabs}
+        <div>Top Bar</div>
+      </div>
+    );
+  },
 }));
 
 vi.mock("./components/editor-page/formatting-toolbar", () => ({
@@ -163,7 +187,7 @@ describe("App", () => {
   beforeEach(() => {
     // @ts-expect-error test shim
     window.__TAURI_INTERNALS__ = {};
-    const settings = createDefaultSettings();
+    const settings = createSeenSettings();
     useDocumentStore.setState({
       openDocuments: [
         { id: "document-1", content: untitledStarterContent, filePath: null, isDirty: false },
@@ -203,7 +227,7 @@ describe("App", () => {
 
     fireEvent.keyDown(window, { key: "k", ctrlKey: true });
     const palette = await screen.findByRole("dialog", { name: "Command palette" });
-    expect(within(palette).getByRole("option", { name: /Save as/ })).toBeInTheDocument();
+    expect(within(palette).getByRole("option", { name: /Save As/ })).toBeInTheDocument();
 
     await user.type(within(palette).getByPlaceholderText("Type a command..."), "split");
     await user.keyboard("{Enter}");
@@ -269,7 +293,7 @@ describe("App", () => {
 
   it("uses the saved template for newly created tabs", async () => {
     const user = userEvent.setup();
-    const settings = createDefaultSettings();
+    const settings = createSeenSettings();
     settings.authoring.newDocumentTemplate = "# Saved template";
     invokeMock.mockImplementation(async (command: string) => {
       if (command === "load_settings") {
@@ -288,7 +312,7 @@ describe("App", () => {
 
   it("closes dirty tabs without confirmation when the setting is disabled", async () => {
     const user = userEvent.setup();
-    const settings = createDefaultSettings();
+    const settings = createSeenSettings();
     settings.files.confirmOnUnsavedClose = false;
     invokeMock.mockImplementation(async (command: string) => {
       if (command === "load_settings") {
@@ -307,7 +331,7 @@ describe("App", () => {
 
   it("closes all tabs without confirmation when the unsaved-close setting is disabled", async () => {
     const user = userEvent.setup();
-    const settings = createDefaultSettings();
+    const settings = createSeenSettings();
     settings.files.confirmOnUnsavedClose = false;
     invokeMock.mockImplementation(async (command: string) => {
       if (command === "load_settings") {
@@ -366,7 +390,7 @@ describe("App", () => {
     readFileMock.mockResolvedValue("# Fresh from disk");
     invokeMock.mockImplementation(async (command: string) => {
       if (command === "load_settings") {
-        return createDefaultSettings();
+        return createSeenSettings();
       }
 
       return undefined;
@@ -422,7 +446,7 @@ describe("App", () => {
     readFileMock.mockResolvedValue("# Empty state open");
     invokeMock.mockImplementation(async (command: string) => {
       if (command === "load_settings") {
-        return createDefaultSettings();
+        return createSeenSettings();
       }
 
       return undefined;
@@ -480,10 +504,10 @@ describe("App", () => {
     render(<App />);
     await user.click(screen.getByRole("button", { name: "open-settings" }));
 
-    expect(screen.getByRole("heading", { name: "Application" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Settings", level: 2 })).toBeInTheDocument();
     expect(screen.queryByText("Top Bar")).not.toBeInTheDocument();
     expect(screen.queryByText("Footer Status")).not.toBeInTheDocument();
-    expect(screen.queryByText(/tabs$/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^\d+ tabs$/)).not.toBeInTheDocument();
   });
 
   it("opens the keyboard shortcuts dialog from the help menu action", async () => {
@@ -520,7 +544,6 @@ describe("App", () => {
 
     render(<App />);
     await user.click(screen.getByRole("button", { name: "open-settings" }));
-    await user.click(screen.getByRole("button", { name: "Editor" }));
     await user.click(screen.getByLabelText("Show line numbers"));
 
     await waitFor(() =>
@@ -536,12 +559,67 @@ describe("App", () => {
     expect(screen.queryByRole("button", { name: "Save changes" })).not.toBeInTheDocument();
   });
 
+  it("toggles word wrap from the View menu command and saves it", async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "toggle-word-wrap" }));
+
+    expect(useSettingsStore.getState().settings.editor.wordWrap).toBe(false);
+    await waitFor(() =>
+      expect(invokeMock).toHaveBeenCalledWith(
+        "save_settings",
+        expect.objectContaining({
+          settings: expect.objectContaining({ editor: expect.objectContaining({ wordWrap: false }) }),
+        }),
+      ),
+    );
+  });
+
+  it("zooms the editor and the preview together from the View menu command and saves it", async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "zoom-in" }));
+
+    const { appearance } = useSettingsStore.getState().settings;
+    expect(appearance.editorFontSize).toBe(18);
+    expect(appearance.previewFontScale).toBe(1.1);
+    await waitFor(() =>
+      expect(invokeMock).toHaveBeenCalledWith(
+        "save_settings",
+        expect.objectContaining({
+          settings: expect.objectContaining({
+            appearance: expect.objectContaining({ editorFontSize: 18, previewFontScale: 1.1 }),
+          }),
+        }),
+      ),
+    );
+  });
+
+  it("sets the theme preference from the View menu and saves it", async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "theme-dark" }));
+
+    expect(useSettingsStore.getState().settings.appearance.theme).toBe("dark");
+    expect(useThemeStore.getState().themePreference).toBe("dark");
+    await waitFor(() =>
+      expect(invokeMock).toHaveBeenCalledWith(
+        "save_settings",
+        expect.objectContaining({
+          settings: expect.objectContaining({ appearance: expect.objectContaining({ theme: "dark" }) }),
+        }),
+      ),
+    );
+  });
+
   it("persists a preview setting as soon as it is changed (#12)", async () => {
     const user = userEvent.setup();
 
     render(<App />);
     await user.click(screen.getByRole("button", { name: "open-settings" }));
-    await user.click(screen.getByRole("button", { name: "Preview" }));
     await user.click(screen.getByRole("switch", { name: "Open links in your browser" }));
 
     await waitFor(() =>
@@ -558,7 +636,7 @@ describe("App", () => {
   });
 
   it("saves a dirty file automatically when autosave is on (#11)", async () => {
-    const autosaveSettings = createDefaultSettings();
+    const autosaveSettings = createSeenSettings();
     autosaveSettings.files.autosave = true;
     invokeMock.mockImplementation(async (command: string) =>
       command === "load_settings" ? autosaveSettings : undefined,
@@ -590,7 +668,7 @@ describe("App", () => {
       "markora:session",
       JSON.stringify({ openPaths: ["D:\\notes\\restored.md"], activePath: "D:\\notes\\restored.md" }),
     );
-    const restoreSettings = createDefaultSettings();
+    const restoreSettings = createSeenSettings();
     restoreSettings.files.restorePreviousSession = true;
     invokeMock.mockImplementation(async (command: string) =>
       command === "load_settings" ? restoreSettings : undefined,
@@ -674,6 +752,142 @@ describe("App", () => {
 
       expect(screen.queryByRole("complementary", { name: "Outline" })).not.toBeInTheDocument();
       expect(useWorkspaceState.getState().showOutline).toBe(false);
+    });
+  });
+
+  describe("tour prompt", () => {
+    function loadSettingsWithTourVersion(tourVersion: number) {
+      const stored = createSeenSettings();
+      stored.onboarding.tourVersion = tourVersion;
+      invokeMock.mockImplementation(async (command: string) =>
+        command === "load_settings" ? stored : undefined,
+      );
+    }
+
+    it("is offered once to an unseen user", async () => {
+      loadSettingsWithTourVersion(0);
+
+      render(<App />);
+
+      expect(await screen.findByRole("dialog", { name: "Take a quick tour?" })).toBeInTheDocument();
+    });
+
+    it("is not offered to a user who has already seen the current tour", async () => {
+      loadSettingsWithTourVersion(CURRENT_TOUR_VERSION);
+
+      render(<App />);
+      await waitFor(() => expect(useSettingsStore.getState().isHydrated).toBe(true));
+
+      expect(screen.queryByRole("dialog", { name: "Take a quick tour?" })).not.toBeInTheDocument();
+    });
+
+    it("is not flashed before the saved settings have loaded", () => {
+      render(<App />);
+
+      expect(screen.queryByRole("dialog", { name: "Take a quick tour?" })).not.toBeInTheDocument();
+    });
+
+    it("replays from the command palette for a user who has already seen it", async () => {
+      const user = userEvent.setup();
+      loadSettingsWithTourVersion(CURRENT_TOUR_VERSION);
+
+      render(<App />);
+      await waitFor(() => expect(useSettingsStore.getState().isHydrated).toBe(true));
+      fireEvent.keyDown(window, { key: "k", ctrlKey: true });
+      const palette = await screen.findByRole("dialog", { name: "Command palette" });
+      await user.type(within(palette).getByPlaceholderText("Type a command..."), "take the tour");
+      await user.keyboard("{Enter}");
+
+      expect(await screen.findByText("tour is running")).toBeInTheDocument();
+    });
+
+    it("starts the tour on a scratch note when accepted, without recording the version yet", async () => {
+      const user = userEvent.setup();
+      loadSettingsWithTourVersion(0);
+
+      render(<App />);
+      await user.click(await screen.findByRole("button", { name: "Start tour" }));
+
+      expect(screen.queryByRole("dialog", { name: "Take a quick tour?" })).not.toBeInTheDocument();
+      expect(await screen.findByText("tour is running")).toBeInTheDocument();
+      expect(useDocumentStore.getState().openDocuments.length).toBeGreaterThan(0);
+      expect(useSettingsStore.getState().settings.onboarding.tourVersion).toBe(0);
+    });
+
+    it.each([
+      ["finish", "End tour: finish"],
+      ["close or skip", "End tour: skip"],
+    ])("records the tour version when the tour ends by %s", async (_how, button) => {
+      const user = userEvent.setup();
+      loadSettingsWithTourVersion(0);
+
+      render(<App />);
+      await user.click(await screen.findByRole("button", { name: "Start tour" }));
+      await user.click(await screen.findByRole("button", { name: button }));
+
+      expect(screen.queryByText("tour is running")).not.toBeInTheDocument();
+      expect(screen.queryByRole("dialog", { name: "Take a quick tour?" })).not.toBeInTheDocument();
+      expect(useSettingsStore.getState().settings.onboarding.tourVersion).toBe(CURRENT_TOUR_VERSION);
+      await waitFor(() =>
+        expect(invokeMock).toHaveBeenCalledWith(
+          "save_settings",
+          expect.objectContaining({
+            settings: expect.objectContaining({ onboarding: { tourVersion: CURRENT_TOUR_VERSION } }),
+          }),
+        ),
+      );
+    });
+
+    it("saves the tour version once even when the tour is ended twice in a row", async () => {
+      const user = userEvent.setup();
+      loadSettingsWithTourVersion(0);
+
+      render(<App />);
+      await user.click(await screen.findByRole("button", { name: "Start tour" }));
+      const finish = await screen.findByRole("button", { name: "End tour: finish" });
+      invokeMock.mockClear();
+      act(() => {
+        finish.click();
+        finish.click();
+      });
+
+      await waitFor(() => expect(invokeMock).toHaveBeenCalledWith("save_settings", expect.anything()));
+      expect(invokeMock.mock.calls.filter(([command]) => command === "save_settings")).toHaveLength(1);
+    });
+
+    it("ignores the palette's take-the-tour command until the saved settings have loaded", async () => {
+      const user = userEvent.setup();
+      invokeMock.mockImplementation(() => new Promise(() => {}));
+
+      render(<App />);
+      fireEvent.keyDown(window, { key: "k", ctrlKey: true });
+      const palette = await screen.findByRole("dialog", { name: "Command palette" });
+      await user.type(within(palette).getByPlaceholderText("Type a command..."), "take the tour");
+      await user.keyboard("{Enter}");
+
+      expect(screen.queryByText("tour is running")).not.toBeInTheDocument();
+      expect(invokeMock).not.toHaveBeenCalledWith("save_settings", expect.anything());
+    });
+
+    it("records the tour version and goes away when skipped", async () => {
+      const user = userEvent.setup();
+      loadSettingsWithTourVersion(0);
+
+      render(<App />);
+      await user.click(await screen.findByRole("button", { name: "Skip" }));
+
+      expect(screen.queryByRole("dialog", { name: "Take a quick tour?" })).not.toBeInTheDocument();
+      expect(useSettingsStore.getState().settings.onboarding.tourVersion).toBe(CURRENT_TOUR_VERSION);
+      await waitFor(() =>
+        expect(invokeMock).toHaveBeenCalledWith(
+          "save_settings",
+          expect.objectContaining({
+            settings: expect.objectContaining({
+              onboarding: { tourVersion: CURRENT_TOUR_VERSION },
+            }),
+          }),
+        ),
+      );
     });
   });
 });

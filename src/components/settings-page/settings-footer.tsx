@@ -11,18 +11,29 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { SectionCard } from "./settings-page-shared";
 
-interface AdvancedSettingsSectionProps {
+interface SettingsFooterProps {
+  version: string;
+  privacyPolicyUrl: string;
   onResetAll: () => void;
 }
 
-export function AdvancedSettingsSection({ onResetAll }: AdvancedSettingsSectionProps) {
+/** About details and the destructive reset, kept out of the way at the bottom of the page. */
+export function SettingsFooter({ version, privacyPolicyUrl, onResetAll }: SettingsFooterProps) {
   return (
-    <SectionCard
-      title="Advanced"
-      description="Use reset carefully. This restores both app preferences and authoring defaults."
-    >
+    <footer className="mt-10 flex flex-wrap items-center justify-between gap-4 border-t pt-6 text-sm text-muted-foreground">
+      <div className="space-y-1">
+        <p>Markora, a desktop-first markdown editor.</p>
+        <p>{`Version ${version}`}</p>
+        <a
+          href={privacyPolicyUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block text-primary underline underline-offset-4"
+        >
+          Privacy policy
+        </a>
+      </div>
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <Button variant="destructive">
@@ -46,6 +57,6 @@ export function AdvancedSettingsSection({ onResetAll }: AdvancedSettingsSectionP
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </SectionCard>
+    </footer>
   );
 }

@@ -6,6 +6,7 @@ import { EditorView as CMView, keymap } from "@codemirror/view";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { readText, writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { useDocumentStore } from "../../../store/document";
+import { toLf } from "../../../features/document/line-endings";
 import { useEditorCommandState } from "../../../features/editor/editor-command-state";
 import { findExtensions } from "../../../features/editor/find-replace";
 import { markoraEditorTheme } from "../../../features/editor/editor-theme";
@@ -209,7 +210,7 @@ export function EditorPane({ theme, viewMode = "edit" }: EditorPaneProps) {
     const { settings } = useSettingsStore.getState();
     const state = EditorState.create({
       // Read the latest store value at creation time so the editor boots with current content.
-      doc: useDocumentStore.getState().content,
+      doc: toLf(useDocumentStore.getState().content),
       extensions: [
         basicSetup,
         // The GFM base adds strikethrough, tables, task lists and bare-URL links to the tree.
@@ -352,10 +353,12 @@ export function EditorPane({ theme, viewMode = "edit" }: EditorPaneProps) {
     if (!view) return;
 
     const current = view.state.doc.toString();
-    if (current !== content) {
+    // The editor holds plain \n; the store keeps the file's own line endings.
+    const next = toLf(content);
+    if (current !== next) {
       // When external state changes, replace the whole document in the editor.
       view.dispatch({
-        changes: { from: 0, to: current.length, insert: content },
+        changes: { from: 0, to: current.length, insert: next },
       });
     }
   }, [content]);

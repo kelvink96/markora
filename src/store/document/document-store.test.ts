@@ -26,6 +26,54 @@ describe("DocumentStore", () => {
     expect(useDocumentStore.getState().isDirty).toBe(true);
   });
 
+  // The editor reports every document swap back as a change, including the one a tab
+  // switch causes. That echo carries the text the tab already has and is not an edit.
+  it("switching to another tab does not mark it dirty when the editor echoes its text back", () => {
+    const store = useDocumentStore.getState();
+    store.openDocument({ content: "# Alpha", filePath: "/alpha.md", isDirty: false });
+    store.openDocument({ content: "# Beta", filePath: "/beta.md", isDirty: false });
+
+    // What the editor does after the swap to beta: report its unchanged text.
+    useDocumentStore.getState().setContent("# Beta");
+
+    const beta = useDocumentStore.getState().openDocuments.find((d) => d.filePath === "/beta.md");
+    expect(beta?.isDirty).toBe(false);
+    expect(useDocumentStore.getState().isDirty).toBe(false);
+  });
+
+  it("setContent keeps an already dirty document dirty when the text is unchanged", () => {
+    useDocumentStore.getState().setContent("# Edited");
+    useDocumentStore.getState().setContent("# Edited");
+    expect(useDocumentStore.getState().isDirty).toBe(true);
+  });
+
+  it("opening a file with Windows line endings leaves it clean once the editor reports its text", () => {
+    useDocumentStore.getState().openDocument({ content: "# Title\r\n\r\nBody\r\n", filePath: "/win.md", isDirty: false });
+
+    // CodeMirror holds the text with plain \n and reports it that way.
+    useDocumentStore.getState().setContent("# Title\n\nBody\n");
+
+    expect(useDocumentStore.getState().isDirty).toBe(false);
+    expect(useDocumentStore.getState().content).toBe("# Title\r\n\r\nBody\r\n");
+  });
+
+  it("an edit to a file with Windows line endings keeps them", () => {
+    useDocumentStore.getState().openDocument({ content: "# Title\r\n\r\nBody\r\n", filePath: "/win.md", isDirty: false });
+
+    useDocumentStore.getState().setContent("# Title\n\nBody, edited\nMore\n");
+
+    expect(useDocumentStore.getState().isDirty).toBe(true);
+    expect(useDocumentStore.getState().content).toBe("# Title\r\n\r\nBody, edited\r\nMore\r\n");
+  });
+
+  it("an edit to a file with Unix line endings stays Unix", () => {
+    useDocumentStore.getState().openDocument({ content: "a\nb\n", filePath: "/unix.md", isDirty: false });
+
+    useDocumentStore.getState().setContent("a\nb\nc\n");
+
+    expect(useDocumentStore.getState().content).toBe("a\nb\nc\n");
+  });
+
   it("markClean clears the dirty flag", () => {
     useDocumentStore.getState().setContent("# Hello");
     useDocumentStore.getState().markClean();
@@ -219,5 +267,31 @@ describe("DocumentStore", () => {
     expect(useDocumentStore.getState().activeProjectId).toBe("project-9");
     expect(useDocumentStore.getState().content).toBe("# Restored");
     expect(useDocumentStore.getState().recentDocuments).toHaveLength(1);
+  });
+});
+
+describe("DocumentStore ensureDocumentOpen (Scratch note)", () => {
+  it("opens an unsaved Scratch note with the given content when no document is open", () => {
+    useDocumentStore.getState().closeAllDocuments();
+
+    useDocumentStore.getState().ensureDocumentOpen("# Template");
+
+    const state = useDocumentStore.getState();
+    expect(state.openDocuments).toHaveLength(1);
+    expect(state.content).toBe("# Template");
+    expect(state.filePath).toBeNull();
+    expect(state.activeDocumentId).toBe(state.openDocuments[0].id);
+  });
+
+  it("creates no extra document when one is already open", () => {
+    useDocumentStore.getState().closeAllDocuments();
+    useDocumentStore.getState().openDocument({ content: "# Mine", filePath: "/mine.md" });
+    const before = useDocumentStore.getState().openDocuments;
+
+    useDocumentStore.getState().ensureDocumentOpen("# Template");
+
+    const state = useDocumentStore.getState();
+    expect(state.openDocuments).toEqual(before);
+    expect(state.content).toBe("# Mine");
   });
 });

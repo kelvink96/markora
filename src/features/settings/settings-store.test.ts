@@ -43,6 +43,21 @@ describe("settings-store", () => {
     expect(useSettingsStore.getState().settings.preview.contentWidth).toBe("wide");
   });
 
+  it("records the tour version", () => {
+    useSettingsStore.getState().updateOnboarding({ tourVersion: 1 });
+
+    expect(useSettingsStore.getState().settings.onboarding.tourVersion).toBe(1);
+  });
+
+  it("keeps the recorded tour version when hydrated from settings that carry it", () => {
+    const stored = createDefaultSettings();
+    stored.onboarding.tourVersion = 1;
+
+    useSettingsStore.getState().hydrate(stored);
+
+    expect(useSettingsStore.getState().settings.onboarding.tourVersion).toBe(1);
+  });
+
   it("resets back to defaults", () => {
     useSettingsStore.getState().updateFiles({ autosave: true });
     useSettingsStore.getState().setTemplateDraft("# Changed");

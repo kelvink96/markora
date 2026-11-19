@@ -1,41 +1,13 @@
-import type { SettingsSection } from "./settings-page-types";
+import type { SettingSection } from "./settings-catalog";
 
-export type SettingsNavigationIcon =
-  | "palette"
-  | "pen-square"
-  | "eye"
-  | "folder-open"
-  | "info"
-  | "sliders-horizontal"
-  | "file-plus-2";
+export type SettingsNavigationIcon = "palette" | "pen-square" | "eye" | "folder-open";
 
-interface SettingsNavigationItem {
-  id: SettingsSection;
-  icon: SettingsNavigationIcon;
-  label: string;
-}
+export const DEFAULT_SETTINGS_SECTION: SettingSection = "appearance";
 
-interface SettingsNavigationGroup {
-  title: string;
-  items: SettingsNavigationItem[];
-}
-
-export const DEFAULT_SETTINGS_SECTION: SettingsSection = "appearance";
-
-export const SETTINGS_NAVIGATION_GROUPS: SettingsNavigationGroup[] = [
-  {
-    title: "Application",
-    items: [
-      { id: "appearance", label: "Appearance", icon: "palette" },
-      { id: "editor", label: "Editor", icon: "pen-square" },
-      { id: "preview", label: "Preview", icon: "eye" },
-      { id: "files", label: "Files", icon: "folder-open" },
-      { id: "about", label: "About", icon: "info" },
-      { id: "advanced", label: "Advanced", icon: "sliders-horizontal" },
-    ],
-  },
-  {
-    title: "Authoring Defaults",
-    items: [{ id: "template", label: "New Document Template", icon: "file-plus-2" }],
-  },
-];
+/** The icon shown beside each section in the jump list. */
+export const SECTION_ICONS: Record<SettingSection, SettingsNavigationIcon> = {
+  appearance: "palette",
+  writing: "pen-square",
+  preview: "eye",
+  files: "folder-open",
+};

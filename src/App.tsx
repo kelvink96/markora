@@ -6,6 +6,7 @@ import {
   useCloseConfirmation,
   useDocumentTitle,
   useExport,
+  useExternalOpen,
   useFileOperations,
   useInstallPrompt,
   useKeyboardShortcuts,
@@ -30,7 +31,10 @@ import { scrollPreviewToHeading } from "./features/outline/scroll-to-heading";
 import { useEditorCommandState } from "./features/editor/editor-command-state";
 import { OutlinePanel } from "./components/editor-page/outline-panel";
 import { resetSettings, saveSettings } from "./features/settings/settings-api";
-import { createDefaultSettings } from "./features/settings/settings-schema";
+import { CURRENT_TOUR_VERSION, isTourUnseen } from "./features/settings/settings-schema";
+import { initialTourState, shouldOfferTour, tourReducer, type TourEvent } from "./features/tour/tour-state";
+import { TourPrompt } from "./components/editor-page/tour-prompt";
+import { Tour } from "./components/editor-page/tour";
 import { useSettingsStore } from "./features/settings/settings-store";
 import { useEditorStatusState } from "./features/workspace/editor-status-state";
 import { useWorkspaceState } from "./features/workspace/workspace-state";
@@ -38,12 +42,17 @@ import { useDocumentStore } from "./store/document";
 import { useThemeStore } from "./features/theme/theme-store";
 import { ErrorBanner } from "./components/editor-page/error-banner";
 import { CommandPalette } from "./components/editor-page/command-palette";
-import { buildPaletteCommands } from "./features/commands/palette-commands";
+import { buildAppCommands, buildPaletteCommands, type PaletteContext } from "./features/commands/palette-commands";
+import { stepZoom } from "./features/settings/zoom";
 import { getModifierLabel } from "./features/shortcuts/modifier-label";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { getFileAdapter } from "./platform/files";
+import { getLinkAdapter } from "./platform/links";
 import { detectPlatform } from "./platform/runtime";
+
+const DOCS_URL = "https://github.com/kelvink96/markora#readme";
+const REPORT_ISSUE_URL = "https://github.com/kelvink96/markora/issues/new";
 
 export default function App() {
   const fileAdapter = useMemo(() => getFileAdapter(), []);
@@ -74,6 +83,8 @@ export default function App() {
   const updateAppearance = useSettingsStore((state) => state.updateAppearance);
   const updateEditor = useSettingsStore((state) => state.updateEditor);
   const updateFiles = useSettingsStore((state) => state.updateFiles);
+  const updateOnboarding = useSettingsStore((state) => state.updateOnboarding);
+  const isSettingsHydrated = useSettingsStore((state) => state.isHydrated);
   const updatePreview = useSettingsStore((state) => state.updatePreview);
   const templateDraft = useSettingsStore((state) => state.templateDraft);
   const setTemplateDraft = useSettingsStore((state) => state.setTemplateDraft);
@@ -99,7 +110,8 @@ export default function App() {
   useWebWorkspacePersistence(isWeb);
   useDocumentTitle();
   useAutosave({ save: handleAutosave, canSaveInPlace });
-  useSessionRestore(fileAdapter, !isWeb);
+  const sessionRestored = useSessionRestore(fileAdapter, !isWeb);
+  useExternalOpen(fileAdapter, sessionRestored);
 
   const handleNew = useCallback(() => {
     newDocument(useSettingsStore.getState().settings.authoring.newDocumentTemplate);
@@ -122,6 +134,31 @@ export default function App() {
     );
   }, []);
 
+  const [tourState, setTourState] = useState(initialTourState);
+  const dispatchTour = useCallback(
+    (event: TourEvent) => {
+      const next = tourReducer(tourState, event);
+      setTourState(next.state);
+      // Read the store, not a closure: Escape and the library's own end event can both land
+      // before a re-render, and the version only needs recording (and saving) once.
+      if (next.recordVersion && isTourUnseen(useSettingsStore.getState().settings)) {
+        updateOnboarding({ tourVersion: CURRENT_TOUR_VERSION });
+        void persistCurrentSettings();
+      }
+    },
+    [persistCurrentSettings, tourState, updateOnboarding],
+  );
+  const startTour = useCallback(() => {
+    // Before hydration the store holds defaults: recording a version now would be overwritten
+    // by (or overwrite) the saved settings.
+    if (!useSettingsStore.getState().isHydrated) return;
+    // The first Tour stop points at the editor toolbar, which needs an open document.
+    useDocumentStore
+      .getState()
+      .ensureDocumentOpen(useSettingsStore.getState().settings.authoring.newDocumentTemplate);
+    dispatchTour("accept");
+  }, [dispatchTour]);
+
   const handleThemeToggle = useCallback(() => {
     toggleTheme();
     const nextThemePreference = useThemeStore.getState().themePreference;
@@ -139,6 +176,68 @@ export default function App() {
   const activeHeadingIndex = findActiveHeadingIndex(headings, line);
   const wordCount = getWordCount(content);
 
+  const openExternal = useCallback((url: string) => {
+    getLinkAdapter()
+      .openExternal(url)
+      .catch((error) => console.error("open link failed:", error));
+  }, []);
+
+  const commandContext: PaletteContext = {
+    modifier: getModifierLabel(),
+    hasActiveDocument: hasOpenDocuments,
+    viewMode,
+    showOutline,
+    appearance: settings.appearance,
+    editor: settings.editor,
+    handlers: {
+      onNew: handleNew,
+      onOpen: () => void handleOpen(),
+      onSave: () => void handleSave(),
+      onSaveAs: () => void handleSaveAs(),
+      onCloseTab: requestCloseCurrentTab,
+      onExportHtml: () => void exportHtml(),
+      onExportPdf: () => void exportPdf(),
+      onOpenSettings: () => setActiveScreen("settings"),
+      onToggleTheme: handleThemeToggle,
+      onToggleOutline: toggleOutline,
+      onViewModeChange: setViewMode,
+      onFormat: runToolbarAction,
+      onEditAction: (action) => void runEditAction(action),
+      onOpenShortcuts: () => setIsKeyboardShortcutsOpen(true),
+      onOpenReleaseNotes: () => setIsReleaseNotesOpen(true),
+      onOpenAbout: () => setIsAboutDialogOpen(true),
+      onToggleStatusBar: () => {
+        updateAppearance({ showStatusBar: !settings.appearance.showStatusBar });
+        void persistCurrentSettings();
+      },
+      onToggleWordWrap: () => {
+        updateEditor({ wordWrap: !settings.editor.wordWrap });
+        void persistCurrentSettings();
+      },
+      onToggleLineNumbers: () => {
+        updateEditor({ lineNumbers: !settings.editor.lineNumbers });
+        void persistCurrentSettings();
+      },
+      onSetThemePreference: (preference) => {
+        useThemeStore.getState().setThemePreference(preference);
+        updateAppearance({ theme: preference });
+        void persistCurrentSettings();
+      },
+      onSetColorScheme: (colorScheme) => {
+        updateAppearance({ colorScheme });
+        void persistCurrentSettings();
+      },
+      onZoom: (direction) => {
+        updateAppearance(stepZoom(settings.appearance, direction));
+        void persistCurrentSettings();
+      },
+      onOpenCommandPalette: () => setIsCommandPaletteOpen(true),
+      onOpenDocs: () => openExternal(DOCS_URL),
+      onReportIssue: () => openExternal(REPORT_ISSUE_URL),
+      onTakeTour: startTour,
+    },
+  };
+
   const tabStrip = hasOpenDocuments ? (
     <TabStrip
       tabs={openDocuments}
@@ -154,23 +253,10 @@ export default function App() {
   const header = (
     <TopBar
       tabs={activeScreen === "workspace" ? tabStrip : null}
-      onOpenSettings={() => setActiveScreen("settings")}
-      onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
-      onOpenKeyboardShortcuts={() => setIsKeyboardShortcutsOpen(true)}
-      onOpenAbout={() => setIsAboutDialogOpen(true)}
-      onOpenReleaseNotes={() => setIsReleaseNotesOpen(true)}
-      onThemeToggle={handleThemeToggle}
-      onNew={handleNew}
-      onOpen={handleOpen}
-      onSave={handleSave}
-      onSaveAs={handleSaveAs}
-      onCloseTab={requestCloseCurrentTab}
-      onExportHtml={() => void exportHtml()}
-      onExportPdf={() => void exportPdf()}
-      showOutline={showOutline}
-      onToggleOutline={toggleOutline}
+      commands={buildAppCommands(commandContext)}
       recentFiles={recentDocuments.slice(0, 8)}
       onOpenRecent={handleOpenRecent}
+      onThemeToggle={handleThemeToggle}
       canInstallApp={canInstall}
       onInstallApp={() => void install()}
       viewMode={viewMode}
@@ -205,12 +291,6 @@ export default function App() {
         onSaveTemplate={(value) => {
           setTemplateDraft(value);
           saveTemplateDraft();
-          void persistCurrentSettings();
-        }}
-        onResetTemplate={() => {
-          const defaultTemplate = createDefaultSettings().authoring.newDocumentTemplate;
-          setTemplateDraft(defaultTemplate);
-          useSettingsStore.getState().saveTemplateDraft();
           void persistCurrentSettings();
         }}
         onResetAll={() => {
@@ -285,36 +365,16 @@ export default function App() {
       <CommandPalette
         open={isCommandPaletteOpen}
         onOpenChange={setIsCommandPaletteOpen}
-        commands={
-          // Built only while open, so it always reflects the current document, view mode and outline state.
-          isCommandPaletteOpen
-            ? buildPaletteCommands({
-                modifier: getModifierLabel(),
-                hasActiveDocument: hasOpenDocuments,
-                viewMode,
-                showOutline,
-                handlers: {
-                  onNew: handleNew,
-                  onOpen: () => void handleOpen(),
-                  onSave: () => void handleSave(),
-                  onSaveAs: () => void handleSaveAs(),
-                  onCloseTab: requestCloseCurrentTab,
-                  onExportHtml: () => void exportHtml(),
-                  onExportPdf: () => void exportPdf(),
-                  onOpenSettings: () => setActiveScreen("settings"),
-                  onToggleTheme: handleThemeToggle,
-                  onToggleOutline: toggleOutline,
-                  onViewModeChange: setViewMode,
-                  onFormat: runToolbarAction,
-                  onEditAction: (action) => void runEditAction(action),
-                  onOpenShortcuts: () => setIsKeyboardShortcutsOpen(true),
-                  onOpenReleaseNotes: () => setIsReleaseNotesOpen(true),
-                  onOpenAbout: () => setIsAboutDialogOpen(true),
-                },
-              })
-            : []
-        }
+        // Built only while open, so it always reflects the current document, view mode and outline state.
+        commands={isCommandPaletteOpen ? buildPaletteCommands(commandContext) : []}
       />
+      <TourPrompt
+        // Only after the saved settings have loaded, so a returning user never sees it flash.
+        open={isSettingsHydrated && activeScreen === "workspace" && shouldOfferTour(settings, tourState)}
+        onSkip={() => dispatchTour("skip")}
+        onStart={startTour}
+      />
+      <Tour run={tourState.running} onEnd={dispatchTour} />
       <Toaster position="bottom-right" />
     </TooltipProvider>
   );

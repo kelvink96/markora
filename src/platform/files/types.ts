@@ -23,6 +23,10 @@ export interface FileAdapter {
   readFile(path: string): Promise<string>;
   writeFile(path: string, content: string): Promise<void>;
   writeWorkspaceFile?(handle: FileSystemFileHandle, content: string): Promise<void>;
+  /** Desktop: files the app was launched with ("Open with", double-click), handed over once. */
+  takeLaunchPaths?(): Promise<string[]>;
+  /** Desktop: files forwarded by a later launch while the app runs. Resolves to an unsubscribe. */
+  onOpenFiles?(handler: (paths: string[]) => void): Promise<() => void>;
   supportsDirectoryAccess(): boolean;
   supportsFileImport(): boolean;
   supportsFileExport(): boolean;

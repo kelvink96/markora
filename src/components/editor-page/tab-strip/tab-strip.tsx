@@ -62,7 +62,7 @@ export function TabStrip({
   };
 
   return (
-    <div className="tab-strip flex min-w-0 flex-1 items-center gap-1">
+    <div data-tour="tabs" className="tab-strip flex min-w-0 flex-1 items-center gap-1">
       <div
         role="tablist"
         aria-label="Open documents"

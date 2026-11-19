@@ -177,6 +177,25 @@ describe("EditorPane", () => {
     });
   });
 
+  it("does not rewrite the editor text when the store's copy only differs in line endings", () => {
+    useDocumentStore.setState({ content: "a\nb" });
+    render(<EditorPane theme="light" />);
+    mockState.dispatchSpy.mockClear();
+
+    // The store keeps a file's own (here Windows) endings; the editor always holds plain \n.
+    act(() => useDocumentStore.setState({ content: "a\r\nb" }));
+
+    expect(mockState.dispatchSpy).not.toHaveBeenCalled();
+  });
+
+  it("hands the editor plain \\n text even when the file uses Windows line endings", () => {
+    useDocumentStore.setState({ content: "a\r\nb" });
+    render(<EditorPane theme="light" />);
+
+    const { calls } = vi.mocked(EditorState.create).mock;
+    expect(calls[calls.length - 1][0]).toMatchObject({ doc: "a\nb" });
+  });
+
   it("marks the editor surface when line numbers are hidden", () => {
     const settings = createDefaultSettings();
     settings.editor.lineNumbers = false;

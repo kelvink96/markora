@@ -1,19 +1,29 @@
 import type { EditorEditAction } from "../editor/editor-command-state";
 import type { MarkdownToolbarAction } from "../editor/markdown-toolbar-actions";
+import type { AppearanceSettings, ColorScheme, EditorSettings, ThemePreference } from "../settings/settings-schema";
+import { canZoom, type ZoomDirection } from "../settings/zoom";
 import type { WorkspaceViewMode } from "../workspace/workspace-state";
 
 export type PaletteGroup = "File" | "Edit" | "Format" | "View" | "App" | "Help";
 
-export interface PaletteCommand {
+/** A command the app offers, from the menus and the palette alike. */
+export interface AppCommand {
   id: string;
+  /** The menu wording; the palette shows the same text. */
   label: string;
   group: PaletteGroup;
   /** Shown beside the command, e.g. "Ctrl+S". Only set when a real shortcut exists. */
   shortcut?: string;
   /** Extra words the search also matches, e.g. "bold" for "Bold" is already in the label, "strong" is not. */
   keywords?: string[];
+  /** False when the command needs something that is not there yet (an open document). Menus grey it out; the palette hides it. */
+  enabled: boolean;
+  /** Set for commands that are on or off, or one of a set (the active view mode); menus show a check. */
+  checked?: boolean;
   run: () => void;
 }
+
+export type PaletteCommand = AppCommand;
 
 export interface PaletteHandlers {
   onNew: () => void;
@@ -32,6 +42,16 @@ export interface PaletteHandlers {
   onOpenShortcuts: () => void;
   onOpenReleaseNotes: () => void;
   onOpenAbout: () => void;
+  onToggleStatusBar: () => void;
+  onToggleWordWrap: () => void;
+  onToggleLineNumbers: () => void;
+  onSetThemePreference: (preference: ThemePreference) => void;
+  onSetColorScheme: (scheme: ColorScheme) => void;
+  onZoom: (direction: ZoomDirection) => void;
+  onOpenCommandPalette: () => void;
+  onOpenDocs: () => void;
+  onReportIssue: () => void;
+  onTakeTour: () => void;
 }
 
 export interface PaletteContext {
@@ -40,14 +60,29 @@ export interface PaletteContext {
   hasActiveDocument: boolean;
   viewMode: WorkspaceViewMode;
   showOutline: boolean;
+  /** The stored appearance settings: the theme preference (not the resolved theme), colour scheme, zoom and status bar. */
+  appearance: AppearanceSettings;
+  editor: EditorSettings;
   handlers: PaletteHandlers;
 }
 
 const VIEW_MODES: Array<{ mode: WorkspaceViewMode; label: string; keywords: string[] }> = [
-  { mode: "live", label: "Live view", keywords: ["hybrid", "wysiwyg", "write", "rendered"] },
-  { mode: "edit", label: "Editor only", keywords: ["edit", "write", "focus"] },
-  { mode: "split", label: "Split view", keywords: ["side by side", "live preview"] },
-  { mode: "preview", label: "Preview only", keywords: ["read", "rendered"] },
+  { mode: "live", label: "Live View", keywords: ["hybrid", "wysiwyg", "write", "rendered"] },
+  { mode: "edit", label: "Edit View", keywords: ["edit", "write", "focus"] },
+  { mode: "split", label: "Split View", keywords: ["side by side", "live preview"] },
+  { mode: "preview", label: "Preview View", keywords: ["read", "rendered"] },
+];
+
+const THEME_OPTIONS: Array<{ value: ThemePreference; label: string; keywords: string[] }> = [
+  { value: "system", label: "System", keywords: ["automatic", "follow system"] },
+  { value: "light", label: "Light", keywords: ["light mode", "bright"] },
+  { value: "dark", label: "Dark", keywords: ["dark mode"] },
+];
+
+const COLOR_SCHEMES: Array<{ value: ColorScheme; label: string; keywords: string[] }> = [
+  { value: "standard", label: "Standard", keywords: ["default"] },
+  { value: "sepia", label: "Sepia", keywords: ["warm", "paper"] },
+  { value: "high-contrast", label: "High Contrast", keywords: ["accessible", "contrast"] },
 ];
 
 const FORMAT_COMMANDS: Array<{ action: MarkdownToolbarAction; label: string; keywords?: string[] }> = [
@@ -66,64 +101,104 @@ const FORMAT_COMMANDS: Array<{ action: MarkdownToolbarAction; label: string; key
 ];
 
 /**
- * The commands the palette lists, built from the current app state. Pure so it can be tested
- * without rendering: the palette component only filters and runs what this returns.
- * Commands that need an open document are left out when there is none.
+ * Every command the app offers, built from the current app state. Pure so it can be tested
+ * without rendering: the menus and the palette only lay out and run what this returns.
+ * Commands that need an open document are present but disabled when there is none.
  */
-export function buildPaletteCommands({
+export function buildAppCommands({
   modifier,
   hasActiveDocument,
   viewMode,
   showOutline,
+  appearance,
+  editor,
   handlers,
-}: PaletteContext): PaletteCommand[] {
-  const commands: PaletteCommand[] = [
-    { id: "file.new", label: "New document", group: "File", shortcut: `${modifier}+N`, keywords: ["create", "blank"], run: handlers.onNew },
-    { id: "file.open", label: "Open file", group: "File", shortcut: `${modifier}+O`, keywords: ["import"], run: handlers.onOpen },
-  ];
+}: PaletteContext): AppCommand[] {
+  const always = (command: Omit<AppCommand, "enabled">): AppCommand => ({ ...command, enabled: true });
+  const withDocument = (command: Omit<AppCommand, "enabled">): AppCommand => ({ ...command, enabled: hasActiveDocument });
+  const edit = (id: string, label: string, action: EditorEditAction, shortcut?: string, keywords?: string[]) =>
+    withDocument({ id, label, group: "Edit", shortcut, keywords, run: () => handlers.onEditAction(action) });
 
-  if (hasActiveDocument) {
-    commands.push(
-      { id: "file.save", label: "Save", group: "File", shortcut: `${modifier}+S`, keywords: ["download"], run: handlers.onSave },
-      { id: "file.save-as", label: "Save as", group: "File", shortcut: `${modifier}+Shift+S`, run: handlers.onSaveAs },
-      { id: "file.export-html", label: "Export as HTML", group: "File", keywords: ["share", "publish"], run: handlers.onExportHtml },
-      { id: "file.export-pdf", label: "Export as PDF", group: "File", keywords: ["print"], run: handlers.onExportPdf },
-      { id: "file.close", label: "Close tab", group: "File", keywords: ["close document"], run: handlers.onCloseTab },
-      { id: "edit.find", label: "Find", group: "Edit", shortcut: `${modifier}+F`, keywords: ["search"], run: () => handlers.onEditAction("find") },
-      { id: "edit.replace", label: "Find and replace", group: "Edit", shortcut: `${modifier}+H`, keywords: ["substitute"], run: () => handlers.onEditAction("replace") },
-      ...FORMAT_COMMANDS.map(({ action, label, keywords }) => ({
+  return [
+    always({ id: "file.new", label: "New", group: "File", shortcut: `${modifier}+N`, keywords: ["create", "blank", "document"], run: handlers.onNew }),
+    always({ id: "file.open", label: "Open", group: "File", shortcut: `${modifier}+O`, keywords: ["import", "file"], run: handlers.onOpen }),
+    withDocument({ id: "file.save", label: "Save", group: "File", shortcut: `${modifier}+S`, keywords: ["download"], run: handlers.onSave }),
+    withDocument({ id: "file.save-as", label: "Save As", group: "File", shortcut: `${modifier}+Shift+S`, run: handlers.onSaveAs }),
+    withDocument({ id: "file.export-html", label: "Export as HTML", group: "File", keywords: ["share", "publish"], run: handlers.onExportHtml }),
+    withDocument({ id: "file.export-pdf", label: "Export as PDF", group: "File", keywords: ["print"], run: handlers.onExportPdf }),
+    withDocument({ id: "file.close", label: "Close Tab", group: "File", keywords: ["close document"], run: handlers.onCloseTab }),
+    always({ id: "app.settings", label: "Settings", group: "App", keywords: ["preferences", "options"], run: handlers.onOpenSettings }),
+
+    edit("edit.undo", "Undo", "undo", `${modifier}+Z`),
+    edit("edit.redo", "Redo", "redo", `${modifier}+Shift+Z`),
+    edit("edit.cut", "Cut", "cut", `${modifier}+X`),
+    edit("edit.copy", "Copy", "copy", `${modifier}+C`),
+    edit("edit.paste", "Paste", "paste", `${modifier}+V`),
+    edit("edit.select-all", "Select All", "selectAll", `${modifier}+A`),
+    edit("edit.find", "Find", "find", `${modifier}+F`, ["search"]),
+    edit("edit.replace", "Replace", "replace", `${modifier}+H`, ["substitute", "find and replace"]),
+
+    ...FORMAT_COMMANDS.map(({ action, label, keywords }) =>
+      withDocument({
         id: `format.${action === "strike" ? "strikethrough" : action}`,
         label,
-        group: "Format" as const,
+        group: "Format",
         keywords,
         run: () => handlers.onFormat(action),
-      })),
-      ...VIEW_MODES.filter(({ mode }) => mode !== viewMode).map(({ mode, label, keywords }) => ({
-        id: `view.mode.${mode}`,
-        label,
-        group: "View" as const,
-        keywords,
-        run: () => handlers.onViewModeChange(mode),
-      })),
-      {
+      }),
+    ),
+
+    ...VIEW_MODES.map(({ mode, label, keywords }) => ({
+      ...withDocument({ id: `view.mode.${mode}`, label, group: "View", keywords, run: () => handlers.onViewModeChange(mode) }),
+      checked: mode === viewMode,
+    })),
+    {
+      ...withDocument({
         id: "view.outline",
-        label: showOutline ? "Hide outline" : "Show outline",
+        label: "Outline",
         group: "View",
         keywords: ["headings", "table of contents", "toc"],
         run: handlers.onToggleOutline,
-      },
+      }),
+      checked: showOutline,
+    },
+    { ...withDocument({ id: "view.status-bar", label: "Status Bar", group: "View", keywords: ["footer", "word count"], run: handlers.onToggleStatusBar }), checked: appearance.showStatusBar },
+    always({ id: "view.theme", label: "Toggle Light/Dark Theme", group: "View", keywords: ["appearance", "dark mode", "light mode"], run: handlers.onToggleTheme }),
+    ...THEME_OPTIONS.map(({ value, label, keywords }) => ({
+      ...always({ id: `view.theme.${value}`, label: `Theme: ${label}`, group: "View" as const, keywords: ["appearance", ...keywords], run: () => handlers.onSetThemePreference(value) }),
+      checked: appearance.theme === value,
+    })),
+    ...COLOR_SCHEMES.map(({ value, label, keywords }) => ({
+      ...always({ id: `view.color-scheme.${value}`, label: `Color Scheme: ${label}`, group: "View" as const, keywords: ["appearance", "colour", ...keywords], run: () => handlers.onSetColorScheme(value) }),
+      checked: appearance.colorScheme === value,
+    })),
+    { ...withDocument({ id: "view.word-wrap", label: "Word Wrap", group: "View", keywords: ["wrap long lines"], run: handlers.onToggleWordWrap }), checked: editor.wordWrap },
+    { ...withDocument({ id: "view.line-numbers", label: "Line Numbers", group: "View", keywords: ["gutter"], run: handlers.onToggleLineNumbers }), checked: editor.lineNumbers },
+    { ...always({ id: "view.zoom-in", label: "Zoom In", group: "View", keywords: ["bigger", "larger", "text size"], run: () => handlers.onZoom("in") }), enabled: canZoom(appearance, "in") },
+    { ...always({ id: "view.zoom-out", label: "Zoom Out", group: "View", keywords: ["smaller", "text size"], run: () => handlers.onZoom("out") }), enabled: canZoom(appearance, "out") },
+    { ...always({ id: "view.zoom-reset", label: "Reset Zoom", group: "View", keywords: ["actual size", "default size"], run: () => handlers.onZoom("reset") }), enabled: canZoom(appearance, "reset") },
+
+    always({ id: "app.palette", label: "Command Palette", group: "Help", shortcut: `${modifier}+K`, keywords: ["commands", "search"], run: handlers.onOpenCommandPalette }),
+    always({ id: "help.tour", label: "Take the tour", group: "Help", keywords: ["onboarding", "walkthrough", "guide", "intro", "welcome"], run: handlers.onTakeTour }),
+    always({ id: "help.shortcuts", label: "Keyboard Shortcuts", group: "Help", keywords: ["keys", "hotkeys"], run: handlers.onOpenShortcuts }),
+    always({ id: "help.release-notes", label: "Release Notes", group: "Help", keywords: ["changelog", "what's new"], run: handlers.onOpenReleaseNotes }),
+    always({ id: "help.docs", label: "Documentation", group: "Help", keywords: ["docs", "guide", "readme"], run: handlers.onOpenDocs }),
+    always({ id: "help.report-issue", label: "Report an Issue", group: "Help", keywords: ["bug", "feedback", "github"], run: handlers.onReportIssue }),
+    always({ id: "help.about", label: "About Markora", group: "Help", keywords: ["version"], run: handlers.onOpenAbout }),
+  ];
+}
+
+/**
+ * The commands the palette lists: everything that can run now, minus the view mode the user is
+ * already in, with the outline worded for what selecting it will do.
+ */
+export function buildPaletteCommands(context: PaletteContext): PaletteCommand[] {
+  return buildAppCommands(context)
+    .filter((command) => command.enabled && command.id !== "app.palette")
+    .filter((command) => !(command.id.startsWith("view.mode.") && command.checked))
+    .map((command) =>
+      command.id === "view.outline" ? { ...command, label: context.showOutline ? "Hide Outline" : "Show Outline" } : command,
     );
-  }
-
-  commands.push(
-    { id: "view.theme", label: "Toggle light/dark theme", group: "View", keywords: ["appearance", "dark mode", "light mode"], run: handlers.onToggleTheme },
-    { id: "app.settings", label: "Open settings", group: "App", keywords: ["preferences", "options"], run: handlers.onOpenSettings },
-    { id: "help.shortcuts", label: "Keyboard shortcuts", group: "Help", keywords: ["keys", "hotkeys"], run: handlers.onOpenShortcuts },
-    { id: "help.release-notes", label: "Release notes", group: "Help", keywords: ["changelog", "what's new"], run: handlers.onOpenReleaseNotes },
-    { id: "help.about", label: "About Markora", group: "Help", keywords: ["version"], run: handlers.onOpenAbout },
-  );
-
-  return commands;
 }
 
 /** 1 for a prefix, 0.8 for a word start, 0.6 for anywhere inside; 0 for no match. */

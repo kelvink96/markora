@@ -12,6 +12,12 @@ describe("FormattingBar", () => {
     expect(screen.getByRole("toolbar", { name: "Formatting" })).toBeInTheDocument();
   });
 
+  it("is the Tour anchor for the formatting stop", () => {
+    render(<FormattingBar />);
+
+    expect(screen.getByTestId("formatting-bar")).toHaveAttribute("data-tour", "formatting-bar");
+  });
+
   it("scrolls sideways when the screen is too narrow, so no button becomes unreachable", () => {
     render(<FormattingBar />);
 

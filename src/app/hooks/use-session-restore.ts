@@ -9,6 +9,8 @@ import { useDocumentStore } from "../../store/document";
  * time (and re-selects the active one), and keeps the saved list up to date as tabs change.
  *
  * On web the workspace itself is stored in the browser, so there is nothing to reopen.
+ *
+ * Returns whether restoring has finished (always true on web).
  */
 export function useSessionRestore(fileAdapter: FileAdapter, isDesktop: boolean) {
   const settingsLoaded = useSettingsStore((state) => state.isHydrated);
@@ -67,4 +69,6 @@ export function useSessionRestore(fileAdapter: FileAdapter, isDesktop: boolean) 
 
     saveSession(JSON.parse(currentSession));
   }, [currentSession, isDesktop, restoreEnabled, restoreFinished]);
+
+  return restoreFinished;
 }

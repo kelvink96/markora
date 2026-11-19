@@ -6,9 +6,9 @@ import type { PaletteCommand } from "../../../features/commands/palette-commands
 
 function commands(): PaletteCommand[] {
   return [
-    { id: "file.new", label: "New document", group: "File", shortcut: "Ctrl+N", run: vi.fn() },
-    { id: "format.bold", label: "Bold", group: "Format", keywords: ["strong"], run: vi.fn() },
-    { id: "view.theme", label: "Toggle light/dark theme", group: "View", keywords: ["dark mode"], run: vi.fn() },
+    { id: "file.new", label: "New document", group: "File", shortcut: "Ctrl+N", enabled: true, run: vi.fn() },
+    { id: "format.bold", label: "Bold", group: "Format", keywords: ["strong"], enabled: true, run: vi.fn() },
+    { id: "view.theme", label: "Toggle light/dark theme", group: "View", keywords: ["dark mode"], enabled: true, run: vi.fn() },
   ];
 }
 
@@ -41,7 +41,7 @@ describe("CommandPalette", () => {
 
   it("does not fuzzy-match scattered letters, so Enter cannot hit a destructive command", async () => {
     const user = userEvent.setup();
-    const list = [...commands(), { id: "file.close", label: "Close tab", group: "File" as const, keywords: ["close document"], run: vi.fn() }];
+    const list = [...commands(), { id: "file.close", label: "Close tab", group: "File" as const, keywords: ["close document"], enabled: true, run: vi.fn() }];
     render(<CommandPalette open onOpenChange={() => {}} commands={list} />);
 
     await user.type(screen.getByPlaceholderText("Type a command..."), "bold");

@@ -18,7 +18,7 @@ const markdownHighlight = HighlightStyle.define([
   { tag: t.monospace, color: "var(--syntax-code)" },
   { tag: t.quote, color: "var(--syntax-quote)", fontStyle: "italic" },
   // Markdown punctuation (# * > - ``` and so on) recedes so the words stand out.
-  { tag: [t.processingInstruction, t.meta, t.contentSeparator, t.list], color: "var(--syntax-marker)" },
+  { tag: [t.processingInstruction, t.meta, t.contentSeparator], color: "var(--syntax-marker)" },
 ]);
 
 const editorTheme = EditorView.theme({

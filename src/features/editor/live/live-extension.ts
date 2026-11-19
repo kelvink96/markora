@@ -89,7 +89,7 @@ const liveTheme = EditorView.baseTheme({
 
   ".cm-live-hr": { borderBottom: "1px solid var(--border)", lineHeight: "0.9" },
   // The dashes stay in the text for the document and screen readers, but are not painted.
-  ".cm-live-hr-text": { color: "transparent" },
+  ".cm-live-hr-text, .cm-live-hr-text *": { color: "transparent !important" },
 
   ".cm-live-li": { paddingLeft: "0.4em !important" },
   ".cm-live-bullet": { color: "transparent", position: "relative" },

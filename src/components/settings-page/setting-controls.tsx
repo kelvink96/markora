@@ -1,10 +1,12 @@
 import type { ReactNode } from "react";
 import { Minus, Plus } from "lucide-react";
-import type {
-  ColorScheme,
-  MarkoraSettings,
-  PreviewSettings,
-  ThemePreference,
+import {
+  EDITOR_FONT_SIZES,
+  PREVIEW_SCALES,
+  type ColorScheme,
+  type MarkoraSettings,
+  type PreviewSettings,
+  type ThemePreference,
 } from "../../features/settings/settings-schema";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -12,20 +14,13 @@ import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { SwatchGroup, SwatchPreview } from "./swatches";
 
-export const EDITOR_FONT_SIZES = [12, 13, 14, 15, 16, 18, 20, 24];
 const LINE_SPACINGS = [
   { value: 1.5, label: "Compact" },
   { value: 1.7, label: "Comfortable" },
   { value: 1.9, label: "Relaxed" },
   { value: 2.1, label: "Spacious" },
 ];
-const PREVIEW_SCALES = [
-  { value: 0.9, label: "90%" },
-  { value: 1, label: "100%" },
-  { value: 1.1, label: "110%" },
-  { value: 1.25, label: "125%" },
-  { value: 1.5, label: "150%" },
-];
+const PREVIEW_SCALE_OPTIONS = PREVIEW_SCALES.map((value) => ({ value, label: `${Math.round(value * 100)}%` }));
 const CONTENT_WIDTHS: Array<{ value: PreviewSettings["contentWidth"]; label: string }> = [
   { value: "narrow", label: "Narrow" },
   { value: "normal", label: "Normal" },
@@ -247,7 +242,7 @@ export function renderControl(id: string, { settings, previewThemeMode, update }
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {PREVIEW_SCALES.map((option) => (
+            {PREVIEW_SCALE_OPTIONS.map((option) => (
               <SelectItem key={option.value} value={String(option.value)}>
                 {option.label}
               </SelectItem>

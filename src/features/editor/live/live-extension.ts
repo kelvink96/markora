@@ -12,9 +12,9 @@ export interface LiveOptions {
 
 /**
  * Live mode for the CodeMirror editor: renders markdown elements in place and shows raw markdown
- * on the lines the cursor or selection touches. Add it to the editor only while the view mode is
- * "live" (the editor keeps it in a Compartment). Rendering never changes the document; the only
- * edit Live mode makes is a task checkbox toggle, as an ordinary undoable transaction.
+ * on the lines the cursor or selection touches. Add it to the editor only in the Write view with
+ * Show syntax off (the editor keeps it in a Compartment). Rendering never changes the document; the
+ * only edit Live mode makes is a task checkbox toggle, as an ordinary undoable transaction.
  */
 export function liveExtension({ handlers = liveHandlers, onOpenLink }: LiveOptions = {}): Extension {
   const plugin = ViewPlugin.fromClass(

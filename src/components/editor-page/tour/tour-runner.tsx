@@ -1,8 +1,9 @@
 import { Joyride, type EventData } from "react-joyride";
-import { isTourEnded, TOUR_STOPS, type TourEvent } from "../../../features/tour/tour-state";
+import { detectPlatform } from "../../../platform/runtime";
+import { isTourEnded, stopsForPlatform, TOUR_STOPS, type TourEvent } from "../../../features/tour/tour-state";
 import { TourTooltip } from "./tour-tooltip";
 
-const steps = TOUR_STOPS.map(({ target, title, content }) => ({
+const steps = stopsForPlatform(TOUR_STOPS, detectPlatform()).map(({ target, title, content }) => ({
   target,
   title,
   content,

@@ -31,6 +31,12 @@ describe("TabStrip", () => {
     expect(screen.getByRole("button", { name: "New tab" })).toBeInTheDocument();
   });
 
+  it("is the Tour anchor for the tabs stop", () => {
+    renderStrip();
+
+    expect(screen.getByRole("tablist").parentElement).toHaveAttribute("data-tour", "tabs");
+  });
+
   it("tells screen readers which tabs have unsaved changes, not just sighted users", () => {
     renderStrip();
 

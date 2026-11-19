@@ -1,3 +1,4 @@
+import type { MarkoraPlatform } from "../../platform/runtime";
 import { isTourUnseen, type MarkoraSettings } from "../settings/settings-schema";
 
 /** One Tour stop: the area it points at (a `data-tour` anchor) and what it says. */
@@ -5,6 +6,8 @@ export interface TourStop {
   target: string;
   title: string;
   content: string;
+  /** Platforms the stop is shown on; omitted means every platform. */
+  platforms?: MarkoraPlatform[];
 }
 
 export const TOUR_STOPS: TourStop[] = [
@@ -14,7 +17,35 @@ export const TOUR_STOPS: TourStop[] = [
     content:
       "Live renders as you type, Edit shows raw markdown, Split shows both, and Preview shows the result.",
   },
+  {
+    target: '[data-tour="formatting-bar"]',
+    title: "Format without memorising markdown",
+    content:
+      "Use these buttons to add headings, lists, links and more. You can also type / in the editor to open a menu of blocks.",
+  },
+  {
+    target: '[data-tour="command-palette"]',
+    title: "Find any command",
+    content:
+      "Press Ctrl+K (Cmd+K on Mac) to search every command, the same ones as in these menus, and run it with Enter.",
+  },
+  {
+    target: '[data-tour="theme"]',
+    title: "Make it yours",
+    content:
+      "Switch between light and dark here. Open Settings from the menus or the command palette for colour schemes, zoom and more.",
+  },
+  {
+    target: '[data-tour="tabs"]',
+    title: "Keep several notes open",
+    content: "Each document gets a tab. Use + to start a new one and the x on a tab to close it.",
+  },
 ];
+
+/** The stops that apply on a platform, in order. */
+export function stopsForPlatform(stops: TourStop[], platform: MarkoraPlatform): TourStop[] {
+  return stops.filter((stop) => !stop.platforms || stop.platforms.includes(platform));
+}
 
 export interface TourState {
   running: boolean;

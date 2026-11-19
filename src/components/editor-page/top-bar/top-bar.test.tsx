@@ -431,4 +431,11 @@ describe("TopBar", () => {
       expect(screen.queryByRole("button", { name: "Install app" })).not.toBeInTheDocument();
     });
   });
+
+  it("anchors the Tour: menus for the command palette stop, theme toggle for the theme stop", () => {
+    renderBar();
+
+    expect(screen.getByTestId("top-bar-menu")).toHaveAttribute("data-tour", "command-palette");
+    expect(screen.getByRole("button", { name: "Toggle theme" })).toHaveAttribute("data-tour", "theme");
+  });
 });

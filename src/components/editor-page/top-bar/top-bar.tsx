@@ -42,7 +42,7 @@ export function TopBar({
   return (
     // On narrow screens the tabs wrap onto their own row (order-last + full width) instead of being squeezed out.
     <header className="top-bar flex min-h-12 flex-wrap items-center gap-x-2 gap-y-1 border-b bg-card/70 px-2 py-1.5 backdrop-blur-md md:flex-nowrap md:py-0">
-      <div className="flex shrink-0 items-center gap-1.5" data-testid="top-bar-menu">
+      <div className="flex shrink-0 items-center gap-1.5" data-testid="top-bar-menu" data-tour="command-palette">
         <Logo size={24} showLabel={!hasActiveDocument} className="mx-1" />
         <Menubar className="h-auto gap-0.5 border-0 bg-transparent p-0 shadow-none">
           <AppMenus commands={commands} recentFiles={recentFiles} onOpenRecent={onOpenRecent} />
@@ -59,7 +59,7 @@ export function TopBar({
         ) : null}
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon-sm" aria-label="Toggle theme" onClick={onThemeToggle}>
+            <Button variant="ghost" size="icon-sm" aria-label="Toggle theme" data-tour="theme" onClick={onThemeToggle}>
               {resolvedTheme === "dark" ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
             </Button>
           </TooltipTrigger>

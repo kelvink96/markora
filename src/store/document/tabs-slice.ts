@@ -11,6 +11,13 @@ export const createDocumentTabSlice: StateCreator<DocumentStore, [], [], Documen
   setContent: (content) =>
     set((state) => {
       const normalized = normalizeState(state);
+      // Unchanged text is not an edit. The editor reports every document swap, such as a tab
+      // switch, back as a change, and that must not mark the file as unsaved.
+      const active = normalized.openDocuments.find((document) => document.id === normalized.activeDocumentId);
+      if (active?.content === content) {
+        return normalized;
+      }
+
       const openDocuments = normalized.openDocuments.map((document) =>
         document.id === normalized.activeDocumentId ? { ...document, content, isDirty: true } : document,
       );

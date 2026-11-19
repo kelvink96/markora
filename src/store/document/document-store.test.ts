@@ -26,6 +26,27 @@ describe("DocumentStore", () => {
     expect(useDocumentStore.getState().isDirty).toBe(true);
   });
 
+  // The editor reports every document swap back as a change, including the one a tab
+  // switch causes. That echo carries the text the tab already has and is not an edit.
+  it("switching to another tab does not mark it dirty when the editor echoes its text back", () => {
+    const store = useDocumentStore.getState();
+    store.openDocument({ content: "# Alpha", filePath: "/alpha.md", isDirty: false });
+    store.openDocument({ content: "# Beta", filePath: "/beta.md", isDirty: false });
+
+    // What the editor does after the swap to beta: report its unchanged text.
+    useDocumentStore.getState().setContent("# Beta");
+
+    const beta = useDocumentStore.getState().openDocuments.find((d) => d.filePath === "/beta.md");
+    expect(beta?.isDirty).toBe(false);
+    expect(useDocumentStore.getState().isDirty).toBe(false);
+  });
+
+  it("setContent keeps an already dirty document dirty when the text is unchanged", () => {
+    useDocumentStore.getState().setContent("# Edited");
+    useDocumentStore.getState().setContent("# Edited");
+    expect(useDocumentStore.getState().isDirty).toBe(true);
+  });
+
   it("markClean clears the dirty flag", () => {
     useDocumentStore.getState().setContent("# Hello");
     useDocumentStore.getState().markClean();

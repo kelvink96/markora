@@ -23,6 +23,14 @@ export const desktopFileAdapter: FileAdapter = {
     const { invoke } = await import("@tauri-apps/api/core");
     await invoke("write_file", { path, content });
   },
+  async takeLaunchPaths() {
+    const { invoke } = await import("@tauri-apps/api/core");
+    return invoke<string[]>("take_pending_open_paths");
+  },
+  async onOpenFiles(handler) {
+    const { listen } = await import("@tauri-apps/api/event");
+    return listen<string[]>("open-files", (event) => handler(event.payload));
+  },
   supportsDirectoryAccess() {
     return false;
   },

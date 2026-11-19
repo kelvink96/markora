@@ -44,6 +44,15 @@
       "digestAlgorithm": "sha256",
       "timestampUrl": ""
     },
-    "publisher": "Kelvin Kiprop"
+    "publisher": "Kelvin Kiprop",
+    "fileAssociations": [
+      {
+        "ext": ["md", "markdown"],
+        "name": "Markdown document",
+        "description": "Markdown document",
+        "mimeType": "text/markdown",
+        "role": "Editor"
+      }
+    ]
   }
 }

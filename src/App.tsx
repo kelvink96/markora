@@ -6,6 +6,7 @@ import {
   useCloseConfirmation,
   useDocumentTitle,
   useExport,
+  useExternalOpen,
   useFileOperations,
   useInstallPrompt,
   useKeyboardShortcuts,
@@ -99,7 +100,8 @@ export default function App() {
   useWebWorkspacePersistence(isWeb);
   useDocumentTitle();
   useAutosave({ save: handleAutosave, canSaveInPlace });
-  useSessionRestore(fileAdapter, !isWeb);
+  const sessionRestored = useSessionRestore(fileAdapter, !isWeb);
+  useExternalOpen(fileAdapter, sessionRestored);
 
   const handleNew = useCallback(() => {
     newDocument(useSettingsStore.getState().settings.authoring.newDocumentTemplate);

@@ -66,3 +66,10 @@ Layout:
 - **Sidebar:** I found no sidebar open-state store. If it is local component state, lift it into the workspace store with tests.
 - **Install app** stays a prop on `TopBar`. Before removing the palette/shortcuts/settings/outline icons, confirm each remains reachable by key or menu (palette via Ctrl+K, Shortcuts via Help, Settings via File, Outline via View).
 - **Zoom (my call, user did not pick):** Zoom In/Out/Reset step `appearance.editorFontSize` and `appearance.previewFontScale` together, so they work in every view mode. This replaces the "editor font size only" line under Zoom above.
+
+## Corrections found while planning (these override the sections above)
+- There is no separate sidebar: the only side panel is the outline. Drop the "Sidebar" View item; "Outline" is the toggle.
+- There is no inline-code toolbar action; omit it from Format.
+- Commands carry no icon field (the registry stays UI-free). Icons are an id-to-icon map next to the menu renderer.
+- A menu layout item may override a command label inside its submenu (for example "Theme: Dark" in the palette shows as "Dark" under View > Theme).
+- Zoom steps through the existing allowed lists (editor font sizes 12 to 24, preview scales 0.9 to 1.5), not arbitrary increments.

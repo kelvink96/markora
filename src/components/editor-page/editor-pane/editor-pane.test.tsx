@@ -348,7 +348,35 @@ describe("EditorPane", () => {
     expect(screen.getByRole("option", { name: /table/i })).toBeInTheDocument();
   });
 
-  it("shows an inline formatting flyout when the editor keeps focus with a collapsed cursor", () => {
+  it("shows an inline formatting flyout when text is selected", () => {
+    render(<EditorPane theme="light" />);
+
+    act(() => {
+      mockState.updateListener?.({
+        focusChanged: true,
+        selectionSet: true,
+        view: { hasFocus: true },
+        state: {
+          doc: {
+            toString: () => "Hello world",
+            lineAt: () => ({ number: 1, from: 0 }),
+          },
+          selection: {
+            main: {
+              head: 5,
+              from: 0,
+              to: 5,
+            },
+          },
+        },
+      });
+    });
+
+    expect(screen.getByRole("toolbar", { name: "Inline formatting" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Bold" })).toBeInTheDocument();
+  });
+
+  it("hides the inline formatting flyout when nothing is selected", () => {
     render(<EditorPane theme="light" />);
 
     act(() => {
@@ -372,8 +400,7 @@ describe("EditorPane", () => {
       });
     });
 
-    expect(screen.getByRole("toolbar", { name: "Inline formatting" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Bold" })).toBeInTheDocument();
+    expect(screen.queryByRole("toolbar", { name: "Inline formatting" })).not.toBeInTheDocument();
   });
 
   it("hides the inline formatting flyout while the slash command menu is open", () => {

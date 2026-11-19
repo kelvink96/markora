@@ -194,11 +194,11 @@ export function EditorPane({ theme, viewMode = "edit" }: EditorPaneProps) {
           }
         }
 
-        if (update.view.hasFocus) {
-          const selection = update.state.selection.main;
-          const anchor = selection.from === selection.to ? selection.head : selection.to;
+        // The flyout only appears for a real selection, not for a bare caret.
+        const selection = update.state.selection.main;
+        if (update.view.hasFocus && selection.from !== selection.to) {
           setInlineMenu({
-            position: getFloatingPosition(anchor),
+            position: getFloatingPosition(selection.to),
           });
         } else {
           setInlineMenu(null);

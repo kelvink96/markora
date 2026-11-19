@@ -70,7 +70,7 @@ export function FontSizeStepper({ value, onChange }: { value: number; onChange: 
   const larger = EDITOR_FONT_SIZES.find((size) => size > value);
 
   return (
-    <div className="flex items-center gap-3">
+    <div role="group" aria-label="Editor font size" className="flex items-center gap-3">
       <span aria-hidden="true" className="w-8 text-center" style={{ fontSize: value }}>
         Aa
       </span>
@@ -85,9 +85,9 @@ export function FontSizeStepper({ value, onChange }: { value: number; onChange: 
         >
           <Minus aria-hidden="true" />
         </Button>
-        <output aria-live="polite" className="w-14 text-center text-sm tabular-nums">
+        <span aria-live="polite" className="w-14 text-center text-sm tabular-nums">
           {value} px
-        </output>
+        </span>
         <Button
           type="button"
           variant="outline"

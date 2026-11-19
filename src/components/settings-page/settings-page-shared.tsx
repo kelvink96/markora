@@ -76,6 +76,7 @@ export function SettingRow({
   changed = false,
   onReset,
   stacked = false,
+  labelable = true,
   children,
 }: {
   controlId: string;
@@ -85,6 +86,8 @@ export function SettingRow({
   onReset?: () => void;
   /** Put the control under the label instead of beside it (for wide controls like swatches). */
   stacked?: boolean;
+  /** False when no element has the id `controlId` (groups, steppers); the label is then plain text. */
+  labelable?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -96,9 +99,13 @@ export function SettingRow({
     >
       <div className="min-w-0 space-y-1">
         <div className="flex items-center gap-2">
-          <Label htmlFor={controlId} className="text-sm leading-5">
-            {label}
-          </Label>
+          {labelable ? (
+            <Label htmlFor={controlId} className="text-sm leading-5">
+              {label}
+            </Label>
+          ) : (
+            <span className="text-sm leading-5 font-medium">{label}</span>
+          )}
           {changed ? (
             <button
               type="button"

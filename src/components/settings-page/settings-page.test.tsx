@@ -66,6 +66,29 @@ describe("SettingsPage", () => {
     expect(screen.queryByRole("navigation", { name: "Settings sections" })).toBeNull();
   });
 
+  it("announces the number of matching settings through one always-present status region", async () => {
+    renderPage();
+    const status = screen.getByRole("status");
+    expect(status).toHaveTextContent(/^\d+ settings$/);
+
+    await userEvent.type(search(), "night");
+    expect(screen.getByRole("status")).toBe(status);
+    expect(status).toHaveTextContent("1 setting found");
+
+    await userEvent.clear(search());
+    await userEvent.type(search(), "zzz");
+    expect(status).toHaveTextContent("No settings match");
+  });
+
+  it("only labels controls that exist", () => {
+    renderPage({ canRestoreSession: true });
+
+    for (const label of document.querySelectorAll("label[for]")) {
+      expect(document.getElementById(label.getAttribute("for") ?? "")).not.toBeNull();
+    }
+    expect(screen.getByRole("group", { name: "Editor font size" })).toBeInTheDocument();
+  });
+
   it("shows a message when nothing matches", async () => {
     renderPage();
 

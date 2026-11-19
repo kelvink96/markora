@@ -47,6 +47,9 @@ function isTextField(target: EventTarget | null) {
   return target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName);
 }
 
+/** Settings whose control is a group or composite, so there is no single element for a label to point at. */
+const UNLABELABLE_SETTINGS = new Set(["theme", "colorScheme", "fontSize", "lineSpacing", "lineWidth", "template"]);
+
 const sectionElementId = (section: SettingSection) => `settings-section-${section}`;
 
 export function SettingsPage({
@@ -68,6 +71,14 @@ export function SettingsPage({
   const searchRef = useRef<HTMLInputElement>(null);
   const isSearching = query.trim().length > 0;
   const visible = filterSettings(SETTINGS_CATALOG, query, { desktop: canRestoreSession });
+
+  const countLabel = `${visible.length} ${visible.length === 1 ? "setting" : "settings"}`;
+  const resultsSummary =
+    visible.length === 0
+      ? `No settings match "${query.trim()}".`
+      : isSearching
+        ? `${countLabel} found`
+        : countLabel;
 
   // Routes a full new settings object to the handler of whichever group changed.
   const update = (next: MarkoraSettings) => {
@@ -121,6 +132,7 @@ export function SettingsPage({
         label={definition.label}
         description={definition.description}
         stacked={stacked}
+        labelable={!UNLABELABLE_SETTINGS.has(definition.id)}
         changed={definition.isChanged(settings)}
         onReset={() => update(definition.reset(settings))}
       >
@@ -169,9 +181,12 @@ export function SettingsPage({
               </div>
             </div>
 
+            <p role="status" className="sr-only">
+              {resultsSummary}
+            </p>
             {visible.length === 0 ? (
-              <p role="status" className="py-10 text-center text-sm text-muted-foreground">
-                {`No settings match "${query.trim()}".`}
+              <p aria-hidden="true" className="py-10 text-center text-sm text-muted-foreground">
+                {resultsSummary}
               </p>
             ) : (
               <div className="space-y-8">

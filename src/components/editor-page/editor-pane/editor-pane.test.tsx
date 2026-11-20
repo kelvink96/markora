@@ -121,6 +121,7 @@ vi.mock("@codemirror/view", () => ({
       }),
     },
     lineWrapping: {},
+    contentAttributes: { of: vi.fn((attributes: unknown) => attributes) },
     scrollIntoView: vi.fn((position: number, options: unknown) => ({ scrollIntoView: { position, options } })),
     darkTheme: { of: vi.fn((isDark: boolean) => ({ dark: isDark })) },
   },
@@ -414,6 +415,37 @@ describe("EditorPane", () => {
 
     expect(screen.getByRole("listbox", { name: "Slash commands" })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: /table/i })).toBeInTheDocument();
+  });
+
+  // Focus stays in the editor while the menu is open, so the editor itself has to point at the
+  // highlighted option, or a screen reader never hears the menu at all.
+  it("ties the open slash menu to the editor for assistive technology", () => {
+    render(<EditorPane theme="light" />);
+    mockState.dispatchSpy.mockClear();
+
+    act(() => {
+      mockState.updateListener?.({
+        docChanged: true,
+        selectionSet: true,
+        view: { hasFocus: true },
+        state: {
+          doc: { toString: () => "Hello /ta", lineAt: () => ({ number: 1, from: 0 }) },
+          selection: { main: { head: 9, from: 9, to: 9 } },
+        },
+      });
+    });
+
+    const listbox = screen.getByRole("listbox", { name: "Slash commands" });
+    const selected = screen.getByRole("option", { selected: true });
+    const attributes = mockState.dispatchSpy.mock.calls
+      .map(([transaction]) => (transaction as { effects?: { reconfigured?: unknown } }).effects?.reconfigured)
+      .find((reconfigured) => typeof reconfigured === "object" && reconfigured !== null && "aria-controls" in reconfigured);
+
+    expect(attributes).toMatchObject({
+      "aria-expanded": "true",
+      "aria-controls": listbox.id,
+      "aria-activedescendant": selected.id,
+    });
   });
 
   it("shows an inline formatting flyout when text is selected", () => {

@@ -16,7 +16,7 @@ It includes:
 ## Prerequisites
 
 Before running the app, make sure you have:
-- Node.js and npm
+- Node.js and pnpm
 - Rust via `rustup`
 - Tauri desktop prerequisites for your OS
 
@@ -28,7 +28,7 @@ Windows:
 ## Install
 
 ```bash
-npm install
+pnpm install
 ```
 
 ## Run The App
@@ -36,7 +36,7 @@ npm install
 Start the desktop app in development mode:
 
 ```bash
-npm run tauri dev
+pnpm tauri dev
 ```
 
 What happens:
@@ -47,7 +47,7 @@ What happens:
 If you only want the frontend dev server without the native shell (runs as a browser web app):
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 ## Test And Verify
@@ -55,13 +55,13 @@ npm run dev
 Run the frontend tests:
 
 ```bash
-npx vitest run
+pnpm exec vitest run
 ```
 
 Run the TypeScript check:
 
 ```bash
-npx tsc --noEmit
+pnpm exec tsc --noEmit
 ```
 
 Run the Rust tests:
@@ -76,13 +76,13 @@ cargo test
 Build the frontend bundle:
 
 ```bash
-npm run build
+pnpm build
 ```
 
 Build the desktop app:
 
 ```bash
-npm run tauri build
+pnpm tauri build
 ```
 
 ## Project Structure
@@ -142,7 +142,7 @@ The interface is built on [shadcn/ui](https://ui.shadcn.com) (Radix primitives +
 | Ember (`sepia`) | Warm graphite and amber; cream paper with a burnt-orange accent in light |
 | High Contrast (`high-contrast`) | Black and white, strong borders, no decoration |
 
-To change a colour, edit it in `themes.css`. `src/styles/theme-contrast.test.ts` then checks every scheme and mode for WCAG AA contrast (4.5:1 text, 3:1 focus rings) and that no token is missing, so a bad tweak fails in `npx vitest run`. Dark mode is the `.theme-dark` class that `AppShell` sets on `<html>`; the editor's syntax colours are the `--syntax-*` tokens, so the editor follows the theme with no rebuild.
+To change a colour, edit it in `themes.css`. `src/styles/theme-contrast.test.ts` then checks every scheme and mode for WCAG AA contrast (4.5:1 text, 3:1 focus rings) and that no token is missing, so a bad tweak fails in `pnpm exec vitest run`. Dark mode is the `.theme-dark` class that `AppShell` sets on `<html>`; the editor's syntax colours are the `--syntax-*` tokens, so the editor follows the theme with no rebuild.
 
 Any element can preview a scheme with `data-swatch-scheme` and `data-swatch-mode` (the Settings swatches use this).
 
@@ -154,7 +154,7 @@ npx shadcn@latest add <component> --yes
 
 The CLI needs two follow-ups in this project:
 
-1. It rewrites `import { cn } from "@/lib/utils"` to `from "cn"` and installs an unrelated npm package called `cn`. Change the imports back to `@/lib/utils` and run `npm uninstall cn`.
+1. It rewrites `import { cn } from "@/lib/utils"` to `from "cn"` and installs an unrelated npm package called `cn`. Change the imports back to `@/lib/utils` and run `pnpm remove cn`.
 2. Remove any `"use client"` line it adds, and any Next.js-only dependency (for example `next-themes`).
 
 ## Platform Notes

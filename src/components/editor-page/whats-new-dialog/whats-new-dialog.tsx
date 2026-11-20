@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { PendingWhatsNew } from "../../../features/updates/whats-new-storage";
+import type { PendingWhatsNew } from "../../../platform/updates";
 import { ReleaseNotes } from "../../settings-page/release-notes";
 
 interface WhatsNewDialogProps {

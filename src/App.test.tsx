@@ -12,7 +12,6 @@ import { useWorkspaceState } from "./features/workspace/workspace-state";
 import { useEditorCommandState } from "./features/editor/editor-command-state";
 import { useThemeStore } from "./features/theme/theme-store";
 import { useUpdateStore } from "./features/updates/update-store";
-import { loadPendingWhatsNew, savePendingWhatsNew } from "./features/updates/whats-new-storage";
 import { scrollPreviewToHeading } from "./features/outline/scroll-to-heading";
 import { readShortcuts } from "./components/shortcut-keys";
 
@@ -23,23 +22,34 @@ function createSeenSettings() {
   return settings;
 }
 
-const { invokeMock, openMock, saveMock, readFileMock, writeFileMock, getCurrentVersionMock } = vi.hoisted(() => ({
-  getCurrentVersionMock: vi.fn(),
-  invokeMock: vi.fn(),
-  openMock: vi.fn(),
-  saveMock: vi.fn(),
-  readFileMock: vi.fn(),
-  writeFileMock: vi.fn(),
-}));
+const { invokeMock, openMock, saveMock, readFileMock, writeFileMock, getCurrentVersionMock, pendingStore } = vi.hoisted(
+  () => ({
+    getCurrentVersionMock: vi.fn(),
+    // Stands in for the file the Rust side keeps the pending what's new record in.
+    pendingStore: { record: null as { version: string; notes: string; publishedAt: string | null } | null },
+    invokeMock: vi.fn(),
+    openMock: vi.fn(),
+    saveMock: vi.fn(),
+    readFileMock: vi.fn(),
+    writeFileMock: vi.fn(),
+  }),
+);
 
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: invokeMock,
 }));
 
-// Only the running version matters here; checks fail silently, as they do without a network.
+// Only the running version and the pending record matter here; checks fail silently, as they do offline.
 vi.mock("./platform/updates", () => ({
   getUpdateAdapter: () => ({
     getCurrentVersion: getCurrentVersionMock,
+    savePendingWhatsNew: async (record: typeof pendingStore.record) => {
+      pendingStore.record = record;
+    },
+    loadPendingWhatsNew: async () => pendingStore.record,
+    clearPendingWhatsNew: async () => {
+      pendingStore.record = null;
+    },
     checkForUpdate: vi.fn().mockRejectedValue(new Error("offline")),
     download: vi.fn(),
     install: vi.fn(),
@@ -1349,12 +1359,12 @@ describe("App", () => {
     const pending = { version: "1.6.0", notes: "## What's Changed\n\n* feat: colour schemes", publishedAt: null };
 
     beforeEach(() => {
-      localStorage.clear();
+      pendingStore.record = null;
       getCurrentVersionMock.mockReset().mockResolvedValue("1.6.0");
     });
 
     afterEach(() => {
-      localStorage.clear();
+      pendingStore.record = null;
       // Sticky toasts live in sonner's global store, so one would leak into the next test.
       toast.dismiss();
     });
@@ -1367,11 +1377,11 @@ describe("App", () => {
           ? "<h2>What's Changed</h2><ul><li>feat: colour schemes</li></ul>"
           : undefined;
       });
-      savePendingWhatsNew(pending);
+      pendingStore.record = pending;
 
       render(<App />);
       expect((await screen.findAllByText("Updated to 1.6.0")).length).toBeGreaterThan(0);
-      expect(loadPendingWhatsNew()).toBeNull();
+      expect(pendingStore.record).toBeNull();
 
       // fireEvent: sonner's stylesheet leaves its toasts non-interactive for user-event in jsdom.
       fireEvent.click(screen.getByRole("button", { name: "What's new" }));
@@ -1380,7 +1390,7 @@ describe("App", () => {
     });
 
     it("stays silent when the saved version is not the running one", async () => {
-      savePendingWhatsNew({ ...pending, version: "1.5.0" });
+      pendingStore.record = { ...pending, version: "1.5.0" };
 
       render(<App />);
       await waitFor(() => expect(getCurrentVersionMock).toHaveBeenCalled());
@@ -1393,13 +1403,13 @@ describe("App", () => {
       const stored = createSeenSettings();
       stored.onboarding.tourVersion = 0;
       invokeMock.mockImplementation(async (command: string) => (command === "load_settings" ? stored : undefined));
-      savePendingWhatsNew(pending);
+      pendingStore.record = pending;
 
       render(<App />);
       const prompt = await screen.findByRole("dialog", { name: "Take a quick tour?" });
       await act(async () => {});
       expect(screen.queryByText("Updated to 1.6.0")).not.toBeInTheDocument();
-      expect(loadPendingWhatsNew()).toEqual(pending);
+      expect(pendingStore.record).toEqual(pending);
 
       await user.click(within(prompt).getByRole("button", { name: "Skip" }));
 
@@ -1408,7 +1418,7 @@ describe("App", () => {
 
     it("waits while Focus is on, then announces", async () => {
       useWorkspaceState.setState({ focusMode: true });
-      savePendingWhatsNew(pending);
+      pendingStore.record = pending;
 
       render(<App />);
       await act(async () => {});

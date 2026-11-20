@@ -1,11 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { getUpdateAdapter } from "../../platform/updates";
-import {
-  clearPendingWhatsNew,
-  loadPendingWhatsNew,
-  type PendingWhatsNew,
-} from "./whats-new-storage";
+import { getUpdateAdapter, type PendingWhatsNew } from "../../platform/updates";
 
 const stripLeadingV = (version: string) => version.replace(/^v/i, "");
 
@@ -20,32 +15,33 @@ export function useWhatsNewOnLaunch({ deferred }: { deferred: boolean }) {
   useEffect(() => {
     if (deferred || handled.current) return;
 
-    const record = loadPendingWhatsNew();
-    if (!record) {
-      handled.current = true;
-      return;
-    }
-
-    // StrictMode runs this effect twice; the cleanup drops the first run's late result.
+    // StrictMode runs this effect twice, and `deferred` can flip while we wait; the cleanup drops a
+    // stale run's late result and the next run starts over, so nothing is lost or shown twice.
     let cancelled = false;
-    void getUpdateAdapter()
-      .getCurrentVersion()
-      .then((current) => {
-        if (cancelled || handled.current || !current) return;
+    void (async () => {
+      const adapter = getUpdateAdapter();
+      const record = await adapter.loadPendingWhatsNew();
+      if (cancelled || handled.current) return;
+      if (!record) {
         handled.current = true;
+        return;
+      }
 
-        // Clear as soon as it is decided so the toast can never appear twice, even if the app closes first.
-        clearPendingWhatsNew();
-        if (stripLeadingV(record.version) !== stripLeadingV(current)) return;
+      const current = await adapter.getCurrentVersion();
+      if (cancelled || handled.current || !current) return;
 
-        toast(`Updated to ${record.version}`, {
-          description: "Markora is up to date.",
-          duration: Infinity,
-          action: record.notes.trim()
-            ? { label: "What's new", onClick: () => setDialogRecord(record) }
-            : undefined,
-        });
+      // Decided: from here the toast is never lost to a re-run, so the record can be cleared first.
+      // Clearing as soon as it is decided means it can never appear twice, even if the app closes first.
+      handled.current = true;
+      await adapter.clearPendingWhatsNew().catch((error) => console.error("clear pending what's new failed:", error));
+      if (stripLeadingV(record.version) !== stripLeadingV(current)) return;
+
+      toast(`Updated to ${record.version}`, {
+        description: "Markora is up to date.",
+        duration: Infinity,
+        action: record.notes.trim() ? { label: "What's new", onClick: () => setDialogRecord(record) } : undefined,
       });
+    })().catch((error) => console.error("what's new on launch failed:", error));
 
     return () => {
       cancelled = true;

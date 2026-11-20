@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AppDialogs } from "./app-dialogs";
+import { readShortcuts } from "../../shortcut-keys";
 
 const { openExternal } = vi.hoisted(() => ({ openExternal: vi.fn(() => Promise.resolve()) }));
 vi.mock("../../../platform/links", () => ({ getLinkAdapter: () => ({ openExternal }) }));
@@ -99,8 +100,7 @@ describe("AppDialogs", () => {
       renderDialogs({ shortcutsOpen: true });
 
       const dialog = screen.getByRole("dialog", { name: "Keyboard Shortcuts" });
-      expect(within(dialog).getByText("Ctrl+N")).toBeInTheDocument();
-      expect(within(dialog).getByText("Ctrl+Shift+S")).toBeInTheDocument();
+      expect(readShortcuts(dialog)).toEqual(expect.arrayContaining(["Ctrl+N", "Ctrl+Shift+S"]));
       expect(within(dialog).getByText("Next tab")).toBeInTheDocument();
     });
 

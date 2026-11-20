@@ -19,8 +19,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Kbd } from "@/components/ui/kbd";
 import { ExternalLink } from "../../external-link";
+import { ShortcutKeys } from "../../shortcut-keys";
 import { getModifierLabel } from "../../../features/shortcuts/modifier-label";
 import type { PendingCloseRequest } from "../../../app/hooks";
 
@@ -114,9 +114,9 @@ export function AppDialogs({
             {shortcuts.map(([action, keys]) => (
               <div key={action} className="flex items-center justify-between py-2">
                 <dt>{action}</dt>
-                <dd className="flex gap-1">
+                <dd className="flex items-center gap-2">
                   {keys.map((key) => (
-                    <Kbd key={key}>{key}</Kbd>
+                    <ShortcutKeys key={key} shortcut={key} />
                   ))}
                 </dd>
               </div>

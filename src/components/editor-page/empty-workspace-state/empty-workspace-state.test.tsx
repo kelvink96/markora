@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { EmptyWorkspaceState } from "./empty-workspace-state";
+import { readShortcuts } from "../../shortcut-keys";
 
 describe("EmptyWorkspaceState", () => {
   it("explains that nothing is open and offers the two ways to start", () => {
@@ -32,10 +33,9 @@ describe("EmptyWorkspaceState", () => {
     expect(screen.getByRole("button", { name: "Import files" })).toBeInTheDocument();
   });
 
-  it("shows the keyboard shortcuts for this platform", () => {
-    render(<EmptyWorkspaceState onNewDocument={vi.fn()} onOpenFile={vi.fn()} />);
+  it("shows the keyboard shortcuts for this platform, one key cap per key", () => {
+    const { container } = render(<EmptyWorkspaceState onNewDocument={vi.fn()} onOpenFile={vi.fn()} />);
 
-    expect(screen.getByText("Ctrl+N")).toBeInTheDocument();
-    expect(screen.getByText("Ctrl+O")).toBeInTheDocument();
+    expect(readShortcuts(container)).toEqual(["Ctrl+N", "Ctrl+O", "Ctrl+K"]);
   });
 });

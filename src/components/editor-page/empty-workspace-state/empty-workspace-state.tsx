@@ -1,6 +1,6 @@
 import { FilePlus2, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Kbd } from "@/components/ui/kbd";
+import { ShortcutKeys } from "../../shortcut-keys";
 import { getModifierLabel } from "../../../features/shortcuts/modifier-label";
 
 interface EmptyWorkspaceStateProps {
@@ -39,8 +39,9 @@ export function EmptyWorkspaceState({
             <FolderOpen aria-hidden="true" /> {openFileLabel}
           </Button>
         </div>
-        <p className="relative mt-6 flex items-center gap-2 text-xs text-muted-foreground">
-          <Kbd>{mod}+N</Kbd> new <span aria-hidden="true">·</span> <Kbd>{mod}+O</Kbd> open <span aria-hidden="true">·</span> <Kbd>{mod}+K</Kbd> commands
+        <p className="relative mt-6 flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground">
+          <ShortcutKeys shortcut={`${mod}+N`} /> new <span aria-hidden="true">·</span> <ShortcutKeys shortcut={`${mod}+O`} /> open{" "}
+          <span aria-hidden="true">·</span> <ShortcutKeys shortcut={`${mod}+K`} /> commands
         </p>
       </div>
     </section>

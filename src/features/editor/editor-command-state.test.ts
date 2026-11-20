@@ -3,7 +3,7 @@ import { useEditorCommandState } from "./editor-command-state";
 
 describe("editor-command-state", () => {
   beforeEach(() => {
-    useEditorCommandState.setState({ runToolbarAction: () => {}, runEditAction: async () => {}, focusEditor: () => {} });
+    useEditorCommandState.setState({ runToolbarAction: () => {}, runEditAction: async () => {}, focusEditor: () => {}, moveSection: () => {} });
   });
 
   it("runs the registered toolbar action handler", () => {
@@ -21,6 +21,16 @@ describe("editor-command-state", () => {
     useEditorCommandState.getState().focusEditor();
 
     expect(handler).toHaveBeenCalledTimes(1);
+  });
+
+  it("runs the registered move-section handler, and does nothing before one is registered", () => {
+    expect(() => useEditorCommandState.getState().moveSection(1, 3)).not.toThrow();
+
+    const handler = vi.fn();
+    useEditorCommandState.getState().setMoveSection(handler);
+    useEditorCommandState.getState().moveSection(1, 3);
+
+    expect(handler).toHaveBeenCalledWith(1, 3);
   });
 
   it("runs the registered edit action handler", async () => {

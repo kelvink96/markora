@@ -137,6 +137,10 @@ vi.mock("../../../features/editor/live/live-extension", () => ({
 vi.mock("../../../features/editor/focus/focus-dimming", () => ({
   focusDimming: vi.fn(() => "focus-dimming"),
 }));
+// The real move is exercised against a real editor in features/outline/apply-section-move.test.ts.
+vi.mock("../../../features/outline/apply-section-move", () => ({
+  applySectionMove: vi.fn(() => true),
+}));
 vi.mock("@codemirror/commands", () => ({
   undo: vi.fn((view: { dispatch: (transaction: unknown) => void }) => {
     view.dispatch({ annotation: "undo" });
@@ -168,11 +172,13 @@ vi.mock("../find-bar", () => ({
 import { EditorPane } from "./editor-pane";
 import { liveExtension } from "../../../features/editor/live/live-extension";
 import { focusDimming } from "../../../features/editor/focus/focus-dimming";
+import { applySectionMove } from "../../../features/outline/apply-section-move";
 
 describe("EditorPane", () => {
   beforeEach(() => {
     vi.mocked(liveExtension).mockClear();
     vi.mocked(focusDimming).mockClear();
+    vi.mocked(applySectionMove).mockClear();
     clipboardReadTextMock.mockReset();
     clipboardWriteTextMock.mockReset();
     const settings = createDefaultSettings();
@@ -578,6 +584,20 @@ describe("EditorPane", () => {
       await user.click(screen.getByRole("button", { name: "close-find" }));
 
       expect(screen.queryByRole("search")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("move section action", () => {
+    it("moves a section through applySectionMove on the editor, and stops once the editor is gone", () => {
+      const { unmount } = render(<EditorPane theme="light" />);
+
+      act(() => useEditorCommandState.getState().moveSection(2, 0));
+      expect(applySectionMove).toHaveBeenCalledTimes(1);
+      expect(applySectionMove).toHaveBeenCalledWith(expect.anything(), 2, 0);
+
+      unmount();
+      act(() => useEditorCommandState.getState().moveSection(2, 0));
+      expect(applySectionMove).toHaveBeenCalledTimes(1);
     });
   });
 

@@ -27,6 +27,7 @@ import { AppDialogs } from "./components/editor-page/app-dialogs";
 import { EmptyWorkspaceState } from "./components/editor-page/empty-workspace-state";
 import { getWordCount } from "./features/document/document-actions";
 import { extractHeadings, findActiveHeadingIndex } from "./features/outline/extract-headings";
+import { sectionWordCounts } from "./features/outline/sections";
 import { scrollPreviewToHeading } from "./features/outline/scroll-to-heading";
 import { useEditorCommandState } from "./features/editor/editor-command-state";
 import { OutlinePanel } from "./components/editor-page/outline-panel";
@@ -226,6 +227,7 @@ export default function App() {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [focusActive, setFocusMode]);
   const headings = useMemo(() => extractHeadings(content), [content]);
+  const sectionWords = useMemo(() => sectionWordCounts(content, headings), [content, headings]);
   const activeHeadingIndex = findActiveHeadingIndex(headings, line);
   const wordCount = getWordCount(content);
 
@@ -389,6 +391,9 @@ export default function App() {
             showOutline && !focusActive ? (
               <OutlinePanel
                 headings={headings}
+                wordCounts={sectionWords}
+                // Works in Read too: the editor stays mounted, only hidden.
+                onMoveSection={(fromIndex, slot) => useEditorCommandState.getState().moveSection(fromIndex, slot)}
                 activeIndex={activeHeadingIndex}
                 onClose={toggleOutline}
                 onSelect={(heading) => {

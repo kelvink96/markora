@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { DndContextProps, DragEndEvent } from "@dnd-kit/core";
 import packageJson from "../package.json";
 import App from "./App";
 import { untitledStarterContent, useDocumentStore } from "./store/document";
@@ -83,6 +84,26 @@ vi.mock("./app/app-shell", () => ({
 vi.mock("./features/outline/scroll-to-heading", () => ({
   scrollPreviewToHeading: vi.fn(() => true),
 }));
+
+// jsdom has no layout, so a test runs the handlers a drag would run, taken from the props the outline gives dnd-kit.
+const dnd = vi.hoisted(() => ({ props: null as unknown }));
+vi.mock("@dnd-kit/core", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@dnd-kit/core")>();
+  return {
+    ...actual,
+    DndContext: (props: DndContextProps) => {
+      dnd.props = props;
+      return <actual.DndContext {...props} />;
+    },
+  };
+});
+const dropRow = (active: number, over: number) =>
+  act(() =>
+    (dnd.props as { onDragEnd: (event: DragEndEvent) => void }).onDragEnd({
+      active: { id: String(active) },
+      over: { id: String(over) },
+    } as unknown as DragEndEvent),
+  );
 
 // Counts mounts, so a test can prove an editor was kept (undo history, cursor) rather than rebuilt.
 const editorMounts = vi.hoisted(() => ({ count: 0 }));
@@ -774,7 +795,9 @@ describe("App", () => {
       render(<App />);
 
       const nav = screen.getByRole("navigation", { name: "Document headings" });
-      expect(within(nav).getAllByRole("button").map((button) => button.textContent)).toEqual(["Title", "Setup", "Usage"]);
+      // The drag handles are buttons too (named "Move section: ..."); the rows are the ones without that label.
+      const rows = within(nav).getAllByRole("button").filter((button) => !button.hasAttribute("aria-label"));
+      expect(rows.map((button) => button.textContent)).toEqual(["Title", "Setup", "Usage"]);
     });
 
     it("jumps the editor to a heading's line when it is clicked", async () => {
@@ -803,6 +826,54 @@ describe("App", () => {
 
       expect(scrollPreviewToHeading).toHaveBeenCalledWith(2, 3);
       expect(goToLine).not.toHaveBeenCalled();
+    });
+
+    it("shows each section's word count, sub-sections included", () => {
+      withHeadings();
+      useWorkspaceState.setState({ showOutline: true });
+
+      render(<App />);
+
+      // "# Title" covers the whole document: Title, Setup, text, Usage.
+      expect(screen.getByText("4 words")).toBeInTheDocument();
+      expect(screen.getByText("2 words")).toBeInTheDocument();
+      expect(screen.getByText("1 word")).toBeInTheDocument();
+    });
+
+    it("keeps the word counts up to date as the document changes", () => {
+      withHeadings();
+      useWorkspaceState.setState({ showOutline: true });
+      render(<App />);
+
+      act(() => useDocumentStore.setState({ content: "# Title\n\n## Setup\n\ntext and a few more\n\n## Usage\n" }));
+
+      expect(screen.getByText("8 words")).toBeInTheDocument();
+      expect(screen.getByText("6 words")).toBeInTheDocument();
+    });
+
+    it("gives every outline row a handle for moving its section", () => {
+      withHeadings();
+      useWorkspaceState.setState({ showOutline: true });
+
+      render(<App />);
+
+      for (const name of ["Title", "Setup", "Usage"]) {
+        expect(screen.getByRole("button", { name: `Move section: ${name}` })).toBeInTheDocument();
+      }
+    });
+
+    it.each(["write", "read"] as const)("moves a section in the editor when a row is dropped, in the %s view", (viewMode) => {
+      const moveSection = vi.fn();
+      useEditorCommandState.setState({ moveSection });
+      withHeadings();
+      useWorkspaceState.setState({ showOutline: true, viewMode });
+
+      render(<App />);
+      // Title 0, Setup 1, Usage 2: Usage dropped on Setup lands before Setup.
+      dropRow(2, 1);
+
+      expect(moveSection).toHaveBeenCalledTimes(1);
+      expect(moveSection).toHaveBeenCalledWith(2, 1);
     });
 
     it("closes from its close button", async () => {

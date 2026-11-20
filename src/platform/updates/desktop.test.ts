@@ -1,12 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { desktopUpdateAdapter } from "./desktop";
 
-const { checkMock, relaunchMock, getVersionMock } = vi.hoisted(() => ({
+const { checkMock, relaunchMock, getVersionMock, invokeMock } = vi.hoisted(() => ({
   checkMock: vi.fn(),
   relaunchMock: vi.fn(),
   getVersionMock: vi.fn(),
+  invokeMock: vi.fn(),
 }));
 
+vi.mock("@tauri-apps/api/core", () => ({ invoke: invokeMock }));
 vi.mock("@tauri-apps/api/app", () => ({ getVersion: getVersionMock }));
 vi.mock("@tauri-apps/plugin-updater", () => ({ check: checkMock }));
 vi.mock("@tauri-apps/plugin-process", () => ({ relaunch: relaunchMock }));
@@ -29,6 +31,62 @@ describe("desktopUpdateAdapter", () => {
     checkMock.mockResolvedValue(null);
     await desktopUpdateAdapter.checkForUpdate();
     checkMock.mockReset();
+  });
+
+  describe("pending what's new record", () => {
+    const record = { version: "1.6.0", notes: "## What's Changed", publishedAt: "2026-11-20T10:00:00Z" };
+
+    beforeEach(() => {
+      invokeMock.mockReset();
+    });
+
+    it("saves through the Rust command", async () => {
+      invokeMock.mockResolvedValue(undefined);
+
+      await desktopUpdateAdapter.savePendingWhatsNew(record);
+
+      expect(invokeMock).toHaveBeenCalledWith("save_pending_whats_new", { record });
+    });
+
+    it("lets a failed save reject so the caller can decide", async () => {
+      invokeMock.mockImplementation(async () => {
+        throw new Error("disk full");
+      });
+
+      await expect(desktopUpdateAdapter.savePendingWhatsNew(record)).rejects.toThrow("disk full");
+    });
+
+    it("loads the saved record", async () => {
+      invokeMock.mockResolvedValue(record);
+
+      await expect(desktopUpdateAdapter.loadPendingWhatsNew()).resolves.toEqual(record);
+      expect(invokeMock).toHaveBeenCalledWith("load_pending_whats_new");
+    });
+
+    it.each([[null], [undefined], [{}], [{ version: "" }], [{ version: 7 }], ["text"]])(
+      "loads %j as no record",
+      async (value) => {
+        invokeMock.mockResolvedValue(value);
+
+        await expect(desktopUpdateAdapter.loadPendingWhatsNew()).resolves.toBeNull();
+      },
+    );
+
+    it("loads no record, rather than failing the launch, when the command fails", async () => {
+      invokeMock.mockImplementation(async () => {
+        throw new Error("unreadable");
+      });
+
+      await expect(desktopUpdateAdapter.loadPendingWhatsNew()).resolves.toBeNull();
+    });
+
+    it("clears through the Rust command", async () => {
+      invokeMock.mockResolvedValue(undefined);
+
+      await desktopUpdateAdapter.clearPendingWhatsNew();
+
+      expect(invokeMock).toHaveBeenCalledWith("clear_pending_whats_new");
+    });
   });
 
   it("returns the running app version", async () => {

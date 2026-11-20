@@ -1,4 +1,5 @@
 import { getVersion } from "@tauri-apps/api/app";
+import { invoke } from "@tauri-apps/api/core";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check, type Update } from "@tauri-apps/plugin-updater";
 import type { UpdateAdapter } from "./types";
@@ -17,6 +18,32 @@ export const desktopUpdateAdapter: UpdateAdapter = {
     } catch {
       return null;
     }
+  },
+
+  async savePendingWhatsNew(record) {
+    await invoke("save_pending_whats_new", { record });
+  },
+
+  async loadPendingWhatsNew() {
+    try {
+      const record = await invoke<unknown>("load_pending_whats_new");
+      if (typeof record !== "object" || record === null) return null;
+
+      const { version, notes, publishedAt } = record as Record<string, unknown>;
+      if (typeof version !== "string" || version.length === 0) return null;
+      return {
+        version,
+        notes: typeof notes === "string" ? notes : "",
+        publishedAt: typeof publishedAt === "string" ? publishedAt : null,
+      };
+    } catch {
+      // An unreadable record must not get in the way of launching.
+      return null;
+    }
+  },
+
+  async clearPendingWhatsNew() {
+    await invoke("clear_pending_whats_new");
   },
 
   async checkForUpdate() {

@@ -167,6 +167,7 @@ export function renderControl(id: string, { settings, previewThemeMode, update }
         <SwatchGroup<ColorScheme>
           label="Color scheme"
           testIdPrefix="scheme-swatch"
+          className="md:grid-cols-4"
           value={scheme}
           onValueChange={(colorScheme) => setAppearance({ colorScheme })}
           options={COLOR_SCHEMES.map(({ id, name, description }) => ({

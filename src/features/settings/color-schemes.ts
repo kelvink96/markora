@@ -28,6 +28,13 @@ export const COLOR_SCHEMES = [
     keywords: ["accessible", "contrast"],
     themeColor: { light: "#ffffff", dark: "#000000" },
   },
+  {
+    id: "moss",
+    name: "Moss",
+    description: "Muted green on warm grey, easy on the eyes",
+    keywords: ["green", "forest", "everforest", "nature"],
+    themeColor: { light: "#f8f5e5", dark: "#0d1916" },
+  },
 ] as const;
 
 export type ColorScheme = (typeof COLOR_SCHEMES)[number]["id"];

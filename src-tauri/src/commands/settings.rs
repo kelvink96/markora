@@ -21,6 +21,7 @@ pub enum ColorScheme {
     Standard,
     Sepia,
     HighContrast,
+    Moss,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

@@ -207,3 +207,71 @@
   --brand-from: oklch(0.88 0.17 95);
   --brand-to: oklch(0.9 0.14 200);
 }
+
+/* Moss, light: cream paper with a muted green accent (after Everforest by sainnhe, MIT; retuned for AA contrast) */
+:root[data-color-scheme="moss"],
+[data-swatch-scheme="moss"][data-swatch-mode="light"] {
+  --background: oklch(0.968 0.022 100);
+  --foreground: oklch(0.3 0.025 170);
+  --card: oklch(0.985 0.014 100);
+  --card-foreground: oklch(0.3 0.025 170);
+  --popover: oklch(0.99 0.01 100);
+  --popover-foreground: oklch(0.3 0.025 170);
+  --primary: oklch(0.5 0.12 145);
+  --primary-foreground: oklch(0.985 0.012 100);
+  --secondary: oklch(0.94 0.025 105);
+  --secondary-foreground: oklch(0.3 0.025 170);
+  --muted: oklch(0.95 0.022 102);
+  --muted-foreground: oklch(0.44 0.035 150);
+  --accent: oklch(0.91 0.05 130);
+  --accent-foreground: oklch(0.3 0.07 150);
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.985 0.005 25);
+  --border: oklch(0.89 0.03 105);
+  --input: oklch(0.83 0.035 105);
+  --ring: oklch(0.58 0.13 145);
+  --editor: oklch(0.985 0.014 100);
+  --preview: oklch(0.975 0.018 100);
+  --syntax-heading: oklch(0.42 0.12 145);
+  --syntax-emphasis: oklch(0.48 0.13 60);
+  --syntax-link: oklch(0.46 0.09 215);
+  --syntax-code: oklch(0.44 0.1 95);
+  --syntax-quote: oklch(0.5 0.04 150);
+  --syntax-marker: oklch(0.62 0.08 140);
+  --brand-from: oklch(0.5 0.12 145);
+  --brand-to: oklch(0.6 0.13 105);
+}
+
+/* Moss, dark: slate green-grey with soft green and cream text (after Everforest, retuned for AA contrast) */
+:root[data-color-scheme="moss"].theme-dark,
+[data-swatch-scheme="moss"][data-swatch-mode="dark"] {
+  --background: oklch(0.2 0.018 175);
+  --foreground: oklch(0.9 0.03 100);
+  --card: oklch(0.235 0.02 175);
+  --card-foreground: oklch(0.9 0.03 100);
+  --popover: oklch(0.26 0.022 175);
+  --popover-foreground: oklch(0.9 0.03 100);
+  --primary: oklch(0.77 0.12 135);
+  --primary-foreground: oklch(0.2 0.03 150);
+  --secondary: oklch(0.3 0.022 175);
+  --secondary-foreground: oklch(0.9 0.03 100);
+  --muted: oklch(0.27 0.02 175);
+  --muted-foreground: oklch(0.75 0.03 150);
+  --accent: oklch(0.34 0.05 160);
+  --accent-foreground: oklch(0.95 0.02 100);
+  --destructive: oklch(0.7 0.19 22);
+  --destructive-foreground: oklch(0.16 0.03 22);
+  --border: oklch(0.35 0.025 175);
+  --input: oklch(0.4 0.03 175);
+  --ring: oklch(0.78 0.11 140);
+  --editor: oklch(0.175 0.016 175);
+  --preview: oklch(0.215 0.018 175);
+  --syntax-heading: oklch(0.82 0.11 130);
+  --syntax-emphasis: oklch(0.8 0.1 50);
+  --syntax-link: oklch(0.8 0.08 205);
+  --syntax-code: oklch(0.82 0.1 95);
+  --syntax-quote: oklch(0.76 0.04 150);
+  --syntax-marker: oklch(0.62 0.06 150);
+  --brand-from: oklch(0.77 0.12 135);
+  --brand-to: oklch(0.82 0.11 100);
+}

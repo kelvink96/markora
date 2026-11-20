@@ -24,9 +24,6 @@ dist-ssr
 *.sw?
 .claude/
 
-AGENTS.md
-CLAUDE.md
-
 .superpowers/
 tauri.key
 tauri.key.pub

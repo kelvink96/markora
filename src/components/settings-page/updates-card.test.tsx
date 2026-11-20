@@ -183,6 +183,7 @@ describe("UpdatesCard", () => {
     renderCard(false, onChangeUpdates);
 
     const toggle = screen.getByRole("switch", { name: "Check automatically" });
+    expect(toggle.closest("[data-slot=field]")).toHaveAttribute("data-orientation", "horizontal");
     expect(toggle).toBeChecked();
     await userEvent.click(toggle);
 

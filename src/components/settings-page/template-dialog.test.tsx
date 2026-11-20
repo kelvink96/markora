@@ -10,6 +10,14 @@ async function openDialog() {
 }
 
 describe("TemplateDialog", () => {
+  it("lays out the template box as a labelled Field", async () => {
+    render(<TemplateDialog template="old" onSave={() => {}} />);
+
+    const textarea = await openDialog();
+    expect(textarea.closest("[data-slot=field]")).not.toBeNull();
+    expect(screen.getByText("Template content")).toHaveAttribute("data-slot", "field-label");
+  });
+
   it("saves the edited draft and closes", async () => {
     const onSave = vi.fn();
     render(<TemplateDialog template="old" onSave={onSave} />);

@@ -60,13 +60,16 @@ export function SegmentedControl<T extends string | number>({
   );
 }
 
-/** Steps the editor font size through the allowed sizes, with a sample at the chosen size. */
+/**
+ * Steps the editor font size through the allowed sizes, with a sample at the chosen size. Its settings
+ * row is the group named "Editor font size", so the stepper doesn't name itself again.
+ */
 export function FontSizeStepper({ value, onChange }: { value: number; onChange: (value: number) => void }) {
   const smaller = [...EDITOR_FONT_SIZES].reverse().find((size) => size < value);
   const larger = EDITOR_FONT_SIZES.find((size) => size > value);
 
   return (
-    <div role="group" aria-label="Editor font size" className="flex items-center gap-3">
+    <div className="flex items-center gap-3">
       <span aria-hidden="true" className="w-8 text-center" style={{ fontSize: value }}>
         Aa
       </span>

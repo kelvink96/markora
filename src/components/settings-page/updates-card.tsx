@@ -5,7 +5,7 @@ import { SAVE_BEFORE_RESTART, useUpdateStore } from "../../features/updates/upda
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Progress } from "@/components/ui/progress";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
@@ -123,16 +123,18 @@ export function UpdatesCard({ version, hasUnsavedChanges, onChangeUpdates }: Upd
         </CardContent>
       ) : null}
 
-      <CardFooter className="justify-between gap-3 border-t px-4 [.border-t]:pt-4">
-        <Label htmlFor="setting-updates-check-automatically">Check automatically</Label>
-        <Switch
-          id="setting-updates-check-automatically"
-          checked={checkAutomatically}
-          onCheckedChange={(checked) => {
-            updateUpdates({ checkAutomatically: checked });
-            onChangeUpdates?.();
-          }}
-        />
+      <CardFooter className="border-t px-4 [.border-t]:pt-4">
+        <Field orientation="horizontal" className="justify-between">
+          <FieldLabel htmlFor="setting-updates-check-automatically">Check automatically</FieldLabel>
+          <Switch
+            id="setting-updates-check-automatically"
+            checked={checkAutomatically}
+            onCheckedChange={(checked) => {
+              updateUpdates({ checkAutomatically: checked });
+              onChangeUpdates?.();
+            }}
+          />
+        </Field>
       </CardFooter>
     </Card>
   );

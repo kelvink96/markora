@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Eye, FolderOpen, Palette, PenSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel, FieldTitle } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
 import type { SettingsNavigationIcon } from "./settings-navigation";
 
@@ -62,14 +62,14 @@ export function SettingsGroup({ id, title, children }: { id: string; title: stri
       <h3 id={`${id}-heading`} className="mb-1 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
         {title}
       </h3>
-      <div className="divide-y">{children}</div>
+      <FieldGroup className="gap-0 divide-y">{children}</FieldGroup>
     </section>
   );
 }
 
 /**
- * A label with optional help text on the left and its control on the right (a switch, a select).
- * `controlId` ties the label and the help text to the control for assistive technology.
+ * One setting as a Field: its label and optional help text on the left, the control on the right (a
+ * switch, a select). `controlId` ties the label and the help text to the control for assistive technology.
  * When `changed`, a dot appears that resets just this setting through `onReset`.
  */
 export function SettingRow({
@@ -89,25 +89,31 @@ export function SettingRow({
   onReset?: () => void;
   /** Put the control under the label instead of beside it (for wide controls like swatches). */
   stacked?: boolean;
-  /** False when no element has the id `controlId` (groups, steppers); the label is then plain text. */
+  /**
+   * False when no element has the id `controlId` (groups, steppers). The title then names the row's
+   * group instead of labelling one control.
+   */
   labelable?: boolean;
   children: ReactNode;
 }) {
+  const titleId = `${controlId}-title`;
+
   return (
-    <div
-      className={cn(
-        "gap-3 py-4 first:pt-2 last:pb-2",
-        stacked ? "flex flex-col" : "flex items-start justify-between gap-6",
-      )}
+    <Field
+      orientation={stacked ? "vertical" : "horizontal"}
+      aria-labelledby={labelable ? undefined : titleId}
+      className={cn("py-4 first:pt-2 last:pb-2", stacked ? "gap-3" : "gap-6")}
     >
-      <div className="flex min-w-0 flex-col gap-1">
+      <FieldContent className="min-w-0">
         <div className="flex items-center gap-2">
           {labelable ? (
-            <Label htmlFor={controlId} className="text-sm leading-5">
+            <FieldLabel htmlFor={controlId} className="leading-5">
               {label}
-            </Label>
+            </FieldLabel>
           ) : (
-            <span className="text-sm leading-5 font-medium">{label}</span>
+            <FieldTitle id={titleId} className="leading-5">
+              {label}
+            </FieldTitle>
           )}
           {changed ? (
             // A full-size button around the small dot, pulled into the label's line height so showing it
@@ -125,13 +131,9 @@ export function SettingRow({
             </Button>
           ) : null}
         </div>
-        {description ? (
-          <p id={`${controlId}-description`} className="text-sm text-muted-foreground">
-            {description}
-          </p>
-        ) : null}
-      </div>
+        {description ? <FieldDescription id={`${controlId}-description`}>{description}</FieldDescription> : null}
+      </FieldContent>
       <div className={stacked ? undefined : "shrink-0"}>{children}</div>
-    </div>
+    </Field>
   );
 }

@@ -17,7 +17,7 @@ After an update installed from inside Markora relaunches, the user gets no confi
 - No notes for fresh installs or manual MSI installs (nothing saved, so nothing shown).
 - No way to reopen the dialog later (the Updates card covers the current release).
 - No web behaviour; updates are desktop only.
-- No `MarkoraSettings` / Rust change.
+- No `MarkoraSettings` change. (Amended: the record is now persisted by Rust, see the Amendment below.)
 
 ## Approaches considered
 
@@ -44,3 +44,14 @@ After an update installed from inside Markora relaunches, the user gets no confi
 ## Left to the builder
 
 Exact toast copy polish, the date format, file names beyond the above, and where the dialog component lives (likely `components/editor-page/whats-new-dialog.tsx`).
+
+## Amendment (after the final review): Rust-backed record
+
+**Why:** on Windows the updater exits the app inside `install()`. WebView2 writes localStorage to disk on a delay, so the record saved just before `install()` may never reach disk and the toast would silently never show on the only shipped platform. This could not be ruled out without a real signed update, so the record moves to a file Rust writes and syncs before returning. Approved by the user.
+
+**Changes to the design above:**
+- Rust: new `commands/whats_new.rs` with `save_pending_whats_new(record)`, `load_pending_whats_new() -> Option<record>` and `clear_pending_whats_new()`, storing `pending-whats-new.json` in the app config dir (next to `settings.json`). Save writes a temp file, `sync_all`, then renames over the real one, so a kill mid-write never leaves a torn record. A missing or corrupt file loads as none. `MarkoraSettings` is untouched.
+- Frontend: the localStorage module `whats-new-storage.ts` is removed. The three operations become `UpdateAdapter.savePendingWhatsNew / loadPendingWhatsNew / clearPendingWhatsNew` (desktop: `invoke`; web: no-ops, load returns null), so components still never call Tauri directly. `PendingWhatsNew` moves to `platform/updates/types.ts`.
+- `restart()` awaits the save before `install()`. A failed save does not block the update. A rejected install clears the record (best effort).
+- The hook loads the record through the adapter, so it is asynchronous. It marks the run handled before awaiting the clear, so a Tour/Focus flip during the clear cannot lose the toast.
+- Tests: Rust unit tests for the three functions; the existing frontend tests move to the adapter.

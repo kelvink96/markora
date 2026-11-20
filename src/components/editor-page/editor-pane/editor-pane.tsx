@@ -12,7 +12,6 @@ import { findExtensions } from "../../../features/editor/find-replace";
 import { markoraEditorTheme } from "../../../features/editor/editor-theme";
 import { createEditorSettingsExtensions } from "../../../features/editor/editor-settings-extensions";
 import { liveExtension } from "../../../features/editor/live/live-extension";
-import type { WorkspaceViewMode } from "../../../features/workspace/workspace-state";
 import { applyMarkdownToolbarAction, type MarkdownToolbarAction } from "../../../features/editor/markdown-toolbar-actions";
 import {
   applySlashCommand,
@@ -30,8 +29,8 @@ import { SlashCommandMenu } from "../slash-command-menu/slash-command-menu";
 
 interface EditorPaneProps {
   theme: "light" | "dark";
-  /** Live rendering is only on in "live"; the other modes show the raw markdown. */
-  viewMode?: WorkspaceViewMode;
+  /** Render markdown inline as you type (Write with Show syntax off); otherwise the raw markdown shows. */
+  live?: boolean;
 }
 
 interface SlashMenuState {
@@ -59,7 +58,7 @@ interface InlineMenuState {
   };
 }
 
-export function EditorPane({ theme, viewMode = "edit" }: EditorPaneProps) {
+export function EditorPane({ theme, live = false }: EditorPaneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Keep the imperative CodeMirror instance in a ref so React re-renders do not recreate it.
   const viewRef = useRef<EditorView | null>(null);
@@ -78,7 +77,7 @@ export function EditorPane({ theme, viewMode = "edit" }: EditorPaneProps) {
       createLinkOpener(() => useSettingsStore.getState().settings.preview.openLinksExternally, getLinkAdapter()),
     [],
   );
-  const liveMode = viewMode === "live";
+  const liveMode = live;
   // The mode the editor was last configured with; the creation effect reads it once, then the effect below keeps it current.
   const appliedLiveMode = useRef(liveMode);
   const setCursorPosition = useEditorStatusState((state) => state.setCursorPosition);

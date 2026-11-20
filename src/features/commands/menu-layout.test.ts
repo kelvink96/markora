@@ -8,7 +8,8 @@ function allCommandIds() {
   const context: PaletteContext = {
     modifier: "Ctrl",
     hasActiveDocument: true,
-    viewMode: "live",
+    viewMode: "write",
+    showSyntax: false,
     showOutline: false,
     appearance: { ...defaultSettings.appearance },
     editor: { ...defaultSettings.editor },
@@ -69,6 +70,19 @@ describe("MENU_LAYOUT", () => {
 
   it("puts Open Recent in the File menu", () => {
     expect(MENU_LAYOUT[0].items.some((node) => node.type === "recent")).toBe(true);
+  });
+
+  it("lists Write, Side-by-side and Read under View > Mode, with Show Syntax right after", () => {
+    const view = MENU_LAYOUT.find((menu) => menu.id === "view");
+    const modeIndex = view?.items.findIndex((node) => node.type === "submenu" && node.label === "Mode") ?? -1;
+    const mode = view?.items[modeIndex];
+
+    expect(mode?.type === "submenu" ? collectCommandIds(mode.items) : []).toEqual([
+      "view.mode.write",
+      "view.mode.split",
+      "view.mode.read",
+    ]);
+    expect(collectCommandIds(view?.items.slice(modeIndex + 1, modeIndex + 2) ?? [])).toEqual(["view.syntax"]);
   });
 
   it("shortens option labels inside the Theme and Color Scheme submenus", () => {

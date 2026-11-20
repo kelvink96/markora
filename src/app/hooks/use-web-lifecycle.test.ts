@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { useWebWorkspacePersistence } from "./use-web-lifecycle";
-import { loadViewMode } from "../../features/workspace/view-mode-storage";
+import { loadViewState } from "../../features/workspace/view-mode-storage";
 import { useWorkspaceState } from "../../features/workspace/workspace-state";
 import { useDocumentStore } from "../../store/document";
 import type { WorkspaceSnapshot } from "../../platform/persistence/web";
@@ -45,16 +45,17 @@ describe("useWebWorkspacePersistence", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
-  it("keeps Edit for an upgrading web user whose only older data is the IndexedDB workspace", async () => {
+  it("keeps raw syntax for an upgrading web user whose only older data is the IndexedDB workspace", async () => {
     localStorage.clear();
-    useWorkspaceState.setState({ viewMode: loadViewMode() });
-    expect(useWorkspaceState.getState().viewMode).toBe("live");
+    useWorkspaceState.setState(loadViewState());
+    expect(useWorkspaceState.getState()).toMatchObject({ viewMode: "write", showSyntax: false });
     loadMock.mockResolvedValue(storedSnapshot());
 
     renderHook(() => useWebWorkspacePersistence(true));
 
-    await waitFor(() => expect(useWorkspaceState.getState().viewMode).toBe("edit"));
-    expect(localStorage.getItem("markora:view-mode")).toBe("edit");
+    await waitFor(() => expect(useWorkspaceState.getState().showSyntax).toBe(true));
+    expect(useWorkspaceState.getState().viewMode).toBe("write");
+    expect(localStorage.getItem("markora:show-syntax")).toBe("1");
     localStorage.clear();
   });
 

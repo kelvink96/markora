@@ -2,19 +2,43 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useWorkspaceState } from "./workspace-state";
 
 describe("workspace state", () => {
-  beforeEach(() => useWorkspaceState.setState({ viewMode: "edit", showOutline: false }));
+  beforeEach(() => {
+    localStorage.clear();
+    useWorkspaceState.setState({ viewMode: "write", showSyntax: false, showOutline: false });
+  });
 
-  it("starts in edit view with the outline closed", () => {
-    expect(useWorkspaceState.getState().viewMode).toBe("edit");
+  it("starts in the write view, rendered, with the outline closed", () => {
+    expect(useWorkspaceState.getState().viewMode).toBe("write");
+    expect(useWorkspaceState.getState().showSyntax).toBe(false);
     expect(useWorkspaceState.getState().showOutline).toBe(false);
   });
 
   it("remembers the chosen view mode for the next launch", () => {
-    localStorage.clear();
+    useWorkspaceState.getState().setViewMode("read");
 
-    useWorkspaceState.getState().setViewMode("live");
+    expect(localStorage.getItem("markora:view-mode")).toBe("read");
+  });
 
-    expect(localStorage.getItem("markora:view-mode")).toBe("live");
+  it("toggles Show syntax and remembers it for the next launch", () => {
+    useWorkspaceState.getState().toggleSyntax();
+
+    expect(useWorkspaceState.getState().showSyntax).toBe(true);
+    expect(localStorage.getItem("markora:show-syntax")).toBe("1");
+
+    useWorkspaceState.getState().setShowSyntax(false);
+
+    expect(useWorkspaceState.getState().showSyntax).toBe(false);
+    expect(localStorage.getItem("markora:show-syntax")).toBe("0");
+  });
+
+  it("keeps the Show syntax choice across Write, Side-by-side, Read and back", () => {
+    useWorkspaceState.getState().toggleSyntax();
+
+    useWorkspaceState.getState().setViewMode("split");
+    useWorkspaceState.getState().setViewMode("read");
+    useWorkspaceState.getState().setViewMode("write");
+
+    expect(useWorkspaceState.getState().showSyntax).toBe(true);
   });
 
   describe("at launch", () => {
@@ -25,19 +49,39 @@ describe("workspace state", () => {
       return (await import("./workspace-state")).useWorkspaceState;
     }
 
-    it("opens a brand-new install in live", async () => {
+    it("opens a brand-new install in write with syntax off", async () => {
       localStorage.clear();
-      expect((await freshStore()).getState().viewMode).toBe("live");
+      const state = (await freshStore()).getState();
+      expect(state.viewMode).toBe("write");
+      expect(state.showSyntax).toBe(false);
     });
 
-    it("opens an existing user with no saved mode in edit", async () => {
+    it("opens an existing user with no saved mode in write with syntax on", async () => {
       localStorage.setItem("markora:session", "{}");
-      expect((await freshStore()).getState().viewMode).toBe("edit");
+      const state = (await freshStore()).getState();
+      expect(state.viewMode).toBe("write");
+      expect(state.showSyntax).toBe(true);
     });
 
     it("opens in the last-used mode", async () => {
-      localStorage.setItem("markora:view-mode", "preview");
-      expect((await freshStore()).getState().viewMode).toBe("preview");
+      localStorage.setItem("markora:view-mode", "read");
+      expect((await freshStore()).getState().viewMode).toBe("read");
+    });
+
+    it("opens a legacy edit user in write with syntax on", async () => {
+      localStorage.setItem("markora:view-mode", "edit");
+      const state = (await freshStore()).getState();
+      expect(state.viewMode).toBe("write");
+      expect(state.showSyntax).toBe(true);
+    });
+
+    it("turns syntax on when older data turns up after a launch that only defaulted", async () => {
+      const store = await freshStore();
+      expect(store.getState().showSyntax).toBe(false);
+
+      store.getState().keepEditForPreexistingData();
+
+      expect(store.getState().showSyntax).toBe(true);
     });
   });
 

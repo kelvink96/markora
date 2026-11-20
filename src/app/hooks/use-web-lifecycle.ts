@@ -28,7 +28,7 @@ export function useWebWorkspacePersistence(isWeb: boolean) {
       .then((snapshot) => {
         if (!isActive || !snapshot) return;
         hydrateWorkspace(snapshot);
-        // A stored workspace at startup means this is an upgrade, not a first run: keep Edit.
+        // A stored workspace at startup means this is an upgrade, not a first run: keep raw syntax (the old Edit view).
         useWorkspaceState.getState().keepEditForPreexistingData();
       })
       .catch((error) => console.error("load_workspace_snapshot failed:", error))

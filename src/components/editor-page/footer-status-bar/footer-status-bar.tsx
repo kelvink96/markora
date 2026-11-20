@@ -8,6 +8,12 @@ interface FooterStatusBarProps {
   column: number;
 }
 
+const VIEW_LABELS: Record<WorkspaceViewMode, string> = {
+  write: "Write",
+  split: "Side-by-side",
+  read: "Read",
+};
+
 export function FooterStatusBar({ wordCount, viewMode, line, column }: FooterStatusBarProps) {
   return (
     <footer
@@ -15,11 +21,10 @@ export function FooterStatusBar({ wordCount, viewMode, line, column }: FooterSta
       aria-label="Footer status bar"
     >
       <div className="flex items-center gap-3">
-        <Badge variant="secondary" className="capitalize">
-          {viewMode}
-        </Badge>
+        <Badge variant="secondary">{VIEW_LABELS[viewMode]}</Badge>
         <span>Markdown</span>
-        <span className="font-mono tabular-nums">{`Ln ${line}, Col ${column}`}</span>
+        {/* Read has no editor, so there is no cursor to report. */}
+        {viewMode === "read" ? null : <span className="font-mono tabular-nums">{`Ln ${line}, Col ${column}`}</span>}
       </div>
       <span className="font-mono tabular-nums">
         {wordCount.toLocaleString()} {wordCount === 1 ? "word" : "words"}

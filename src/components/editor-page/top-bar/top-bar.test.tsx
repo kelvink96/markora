@@ -27,6 +27,7 @@ function renderBar({ context = {}, ...props }: BarProps & { context?: Partial<Pa
     modifier: "Ctrl",
     hasActiveDocument: Boolean(useDocumentStore.getState().activeDocumentId),
     viewMode: "split",
+    showSyntax: false,
     showOutline: false,
     appearance: { ...defaultSettings.appearance },
     editor: { ...defaultSettings.editor },
@@ -255,11 +256,11 @@ describe("TopBar", () => {
       await openMenu(user, "View");
       await user.click(await screen.findByRole("menuitem", { name: "Mode" }));
 
-      expect(await screen.findByRole("menuitemradio", { name: /Split View/ })).toHaveAttribute("aria-checked", "true");
-      expect(screen.getByRole("menuitemradio", { name: /Live View/ })).toHaveAttribute("aria-checked", "false");
+      expect(await screen.findByRole("menuitemradio", { name: /Side-by-side View/ })).toHaveAttribute("aria-checked", "true");
+      expect(screen.getByRole("menuitemradio", { name: /Write View/ })).toHaveAttribute("aria-checked", "false");
 
-      await choose(user, screen.getByRole("menuitemradio", { name: /Live View/ }));
-      expect(handlers.onViewModeChange).toHaveBeenCalledWith("live");
+      await choose(user, screen.getByRole("menuitemradio", { name: /Write View/ }));
+      expect(handlers.onViewModeChange).toHaveBeenCalledWith("write");
     });
 
     it("toggles the outline, and shows a check while it is open", async () => {
@@ -415,9 +416,33 @@ describe("TopBar", () => {
       const { onViewModeChange } = renderBar({ viewMode: "split" });
 
       const group = screen.getByRole("radiogroup", { name: "View mode" });
-      await user.click(within(group).getByRole("radio", { name: "Preview view" }));
+      await user.click(within(group).getByRole("radio", { name: "Read view" }));
 
-      expect(onViewModeChange).toHaveBeenCalledWith("preview");
+      expect(onViewModeChange).toHaveBeenCalledWith("read");
+    });
+
+    it("offers Show syntax beside the view switcher in write view only", () => {
+      const { unmount } = render(<TopBar viewMode="write" commands={[]} onViewModeChange={vi.fn()} />);
+      expect(screen.getByRole("switch", { name: "Show syntax" })).toBeInTheDocument();
+      unmount();
+
+      for (const viewMode of ["split", "read"] as const) {
+        const { unmount: close } = render(<TopBar viewMode={viewMode} commands={[]} onViewModeChange={vi.fn()} />);
+        expect(screen.queryByRole("switch", { name: "Show syntax" })).not.toBeInTheDocument();
+        close();
+      }
+    });
+
+    it("reports a Show syntax change", async () => {
+      const user = userEvent.setup();
+      const onShowSyntaxChange = vi.fn();
+      render(
+        <TopBar viewMode="write" showSyntax={false} onShowSyntaxChange={onShowSyntaxChange} commands={[]} onViewModeChange={vi.fn()} />,
+      );
+
+      await user.click(screen.getByRole("switch", { name: "Show syntax" }));
+
+      expect(onShowSyntaxChange).toHaveBeenCalledWith(true);
     });
 
     it("shows an install action only when the web app can be installed", async () => {

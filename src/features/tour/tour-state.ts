@@ -17,7 +17,7 @@ export const TOUR_STOPS: TourStop[] = [
     target: '[data-tour="view-mode"]',
     title: "Choose how you write",
     content:
-      "Live renders as you type, Edit shows raw markdown, Split shows both, and Preview shows the result.",
+      "Write renders as you type (turn on Show syntax to see raw markdown), Side-by-side shows both, and Read shows just the result.",
   },
   {
     target: '[data-tour="formatting-bar"]',

@@ -20,16 +20,12 @@ export function Workspace({ sidebar, left, right, viewMode }: WorkspaceProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
   const syncScroll = useSettingsStore((state) => state.settings.preview.syncScroll);
-  // Live and Edit views show no preview, so there is nothing to keep in step there.
-  useScrollSync(containerRef, (viewMode === "split" || viewMode === "preview") && syncScroll);
+  // Only Side-by-side shows both panes at once, so only there is there anything to keep in step.
+  useScrollSync(containerRef, viewMode === "split" && syncScroll);
 
   useEffect(() => {
     if (viewMode === "split") {
       setSplitPct(50);
-    }
-
-    if (viewMode === "preview") {
-      setSplitPct(32);
     }
   }, [viewMode]);
 
@@ -66,68 +62,68 @@ export function Workspace({ sidebar, left, right, viewMode }: WorkspaceProps) {
     }
   }, []);
 
-  if (viewMode === "live" || viewMode === "edit") {
-    return (
-      <div className="workspace relative flex min-h-0 flex-1 overflow-hidden px-3 pb-3 pt-2.5">
-        {sidebar ? <div className={SIDEBAR_SLOT}>{sidebar}</div> : null}
-        <section className="min-h-0 flex-1 overflow-hidden" role="region" aria-label="Editor workspace">
-          {left}
-        </section>
-      </div>
-    );
-  }
-
-  const editorWidth = splitPct;
-  const previewWidth = 100 - splitPct;
-  const primaryPane = viewMode === "preview" ? right : left;
-  const secondaryPane = viewMode === "preview" ? left : right;
-  const primaryLabel = viewMode === "preview" ? "Preview workspace" : "Editor workspace";
-  const secondaryLabel = viewMode === "preview" ? "Editor workspace" : "Preview workspace";
-  const primaryStyle = viewMode === "preview" ? { width: `${previewWidth}%` } : { width: `${editorWidth}%` };
-  const secondaryStyle = viewMode === "preview" ? { width: `${editorWidth}%` } : { width: `${previewWidth}%` };
+  // One tree for all three views. The editor's section is always the first child of the pane box, so
+  // React keeps it mounted (undo history, cursor, find bar) whichever view is chosen; Read only hides
+  // it, and the preview section after it is shared by Side-by-side and Read for the same reason.
+  const split = viewMode === "split";
+  const reading = viewMode === "read";
 
   return (
     <div
-      className="workspace relative flex min-h-0 flex-1 gap-2 overflow-hidden px-3 pb-3 pt-2.5"
-      onMouseMove={onMouseMove}
-      onMouseUp={() => {
-        dragging.current = false;
-      }}
-      onMouseLeave={() => {
-        dragging.current = false;
-      }}
+      className={`workspace relative flex min-h-0 flex-1 overflow-hidden px-3 pb-3 pt-2.5${split ? " gap-2" : ""}`}
+      onMouseMove={split ? onMouseMove : undefined}
+      onMouseUp={
+        split
+          ? () => {
+              dragging.current = false;
+            }
+          : undefined
+      }
+      onMouseLeave={
+        split
+          ? () => {
+              dragging.current = false;
+            }
+          : undefined
+      }
     >
       {sidebar ? <div className={SIDEBAR_SLOT}>{sidebar}</div> : null}
       {/* The panes' percentage widths (and the divider drag) are measured against this box, so a
           sidebar beside it takes its width off the panes instead of pushing them out of the window. */}
       <div ref={containerRef} className="flex min-h-0 min-w-0 flex-1 gap-2">
         <section
-          className="min-h-0 overflow-hidden"
-          style={primaryStyle}
+          className={split ? "min-h-0 overflow-hidden" : "min-h-0 flex-1 overflow-hidden"}
+          style={split ? { width: `${splitPct}%` } : undefined}
           role="region"
-          aria-label={primaryLabel}
+          aria-label="Editor workspace"
+          hidden={reading}
+          aria-hidden={reading || undefined}
         >
-          {primaryPane}
+          {left}
         </section>
-        <div
-          className="workspace__divider relative h-auto w-3 shrink-0 cursor-col-resize rounded-full outline-none before:absolute before:inset-y-2 before:left-1/2 before:w-0.5 before:-translate-x-1/2 before:rounded-full before:bg-border before:transition-colors hover:before:bg-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:before:bg-primary"
-          role="separator"
-          aria-orientation="vertical"
-          aria-label="Resize editor and preview panes"
-          tabIndex={0}
-          onKeyDown={onDividerKeyDown}
-          onMouseDown={() => {
-            dragging.current = true;
-          }}
-        />
-        <section
-          className="min-h-0 overflow-hidden"
-          style={secondaryStyle}
-          role="region"
-          aria-label={secondaryLabel}
-        >
-          {secondaryPane}
-        </section>
+        {split ? (
+          <div
+            className="workspace__divider relative h-auto w-3 shrink-0 cursor-col-resize rounded-full outline-none before:absolute before:inset-y-2 before:left-1/2 before:w-0.5 before:-translate-x-1/2 before:rounded-full before:bg-border before:transition-colors hover:before:bg-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:before:bg-primary"
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize editor and preview panes"
+            tabIndex={0}
+            onKeyDown={onDividerKeyDown}
+            onMouseDown={() => {
+              dragging.current = true;
+            }}
+          />
+        ) : null}
+        {split || reading ? (
+          <section
+            className={reading ? "min-h-0 flex-1 overflow-hidden" : "min-h-0 overflow-hidden"}
+            style={split ? { width: `${100 - splitPct}%` } : undefined}
+            role="region"
+            aria-label={reading ? "Reader workspace" : "Preview workspace"}
+          >
+            {right}
+          </section>
+        ) : null}
       </div>
     </div>
   );

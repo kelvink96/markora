@@ -1,4 +1,4 @@
-import { Eye, FileInput, PanelsTopLeft, Sparkles, type LucideIcon } from "lucide-react";
+import { BookOpen, Columns2, PencilLine, type LucideIcon } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { WorkspaceViewMode } from "../../../features/workspace/workspace-state";
@@ -9,10 +9,9 @@ interface ViewModeSwitcherProps {
 }
 
 const modes: Array<{ value: WorkspaceViewMode; label: string; ariaLabel: string; icon: LucideIcon }> = [
-  { value: "live", label: "Live", ariaLabel: "Live view", icon: Sparkles },
-  { value: "edit", label: "Edit", ariaLabel: "Edit view", icon: FileInput },
-  { value: "split", label: "Split", ariaLabel: "Split view", icon: PanelsTopLeft },
-  { value: "preview", label: "Preview", ariaLabel: "Preview view", icon: Eye },
+  { value: "write", label: "Write", ariaLabel: "Write view", icon: PencilLine },
+  { value: "split", label: "Side-by-side", ariaLabel: "Side-by-side view", icon: Columns2 },
+  { value: "read", label: "Read", ariaLabel: "Read view", icon: BookOpen },
 ];
 
 export function ViewModeSwitcher({ value, onValueChange }: ViewModeSwitcherProps) {
@@ -30,8 +29,10 @@ export function ViewModeSwitcher({ value, onValueChange }: ViewModeSwitcherProps
       {modes.map(({ value: mode, label, ariaLabel, icon: Icon }) => (
         <Tooltip key={mode}>
           <TooltipTrigger asChild>
-            <ToggleGroupItem value={mode} aria-label={ariaLabel}>
+            <ToggleGroupItem value={mode} aria-label={ariaLabel} className="gap-1.5">
               <Icon aria-hidden="true" />
+              {/* Text names the view from md up; below that the icon and the tooltip carry it. */}
+              <span className="max-md:hidden">{label}</span>
             </ToggleGroupItem>
           </TooltipTrigger>
           <TooltipContent>{label}</TooltipContent>

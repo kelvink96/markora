@@ -47,4 +47,22 @@ describe("FormattingBar", () => {
 
     expect(runToolbarAction).toHaveBeenCalledWith(action);
   });
+
+  it("is inert when disabled (the Read view), so no click can edit a document the user cannot see", async () => {
+    const user = userEvent.setup();
+    const runToolbarAction = vi.fn();
+    useEditorCommandState.setState({ runToolbarAction });
+    render(<FormattingBar disabled />);
+
+    const buttons = screen.getAllByRole("button");
+    expect(buttons.length).toBeGreaterThan(0);
+    for (const button of buttons) {
+      expect(button).toBeDisabled();
+      await user.click(button);
+    }
+
+    expect(runToolbarAction).not.toHaveBeenCalled();
+    // Still there, so the Tour stop that points at it keeps a target.
+    expect(screen.getByTestId("formatting-bar")).toHaveAttribute("data-tour", "formatting-bar");
+  });
 });

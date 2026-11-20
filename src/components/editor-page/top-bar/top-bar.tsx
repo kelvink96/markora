@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Menubar } from "@/components/ui/menubar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Logo } from "../../logo";
-import { ViewModeSwitcher } from "../view-mode-switcher";
+import { SyntaxToggle, ViewModeSwitcher } from "../view-mode-switcher";
 import type { AppCommand } from "../../../features/commands/palette-commands";
 import { useThemeStore } from "../../../features/theme/theme-store";
 import { useUpdateStore } from "../../../features/updates/update-store";
@@ -26,6 +26,9 @@ interface TopBarProps {
   updatesSupported?: boolean;
   viewMode: WorkspaceViewMode;
   onViewModeChange: (mode: WorkspaceViewMode) => void;
+  /** Whether Write shows raw markdown; the toggle appears only in the Write view. */
+  showSyntax?: boolean;
+  onShowSyntaxChange?: (on: boolean) => void;
 }
 
 export function TopBar({
@@ -39,6 +42,8 @@ export function TopBar({
   updatesSupported = false,
   viewMode,
   onViewModeChange,
+  showSyntax = false,
+  onShowSyntaxChange = () => {},
 }: TopBarProps) {
   const hasActiveDocument = useDocumentStore((state) => Boolean(state.activeDocumentId));
   const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
@@ -71,7 +76,13 @@ export function TopBar({
           </TooltipTrigger>
           <TooltipContent>Toggle theme</TooltipContent>
         </Tooltip>
-        {hasActiveDocument ? <ViewModeSwitcher value={viewMode} onValueChange={onViewModeChange} /> : null}
+        {hasActiveDocument ? (
+          <>
+            {/* Show syntax only changes the Write view, so it is only offered there. */}
+            {viewMode === "write" ? <SyntaxToggle checked={showSyntax} onCheckedChange={onShowSyntaxChange} /> : null}
+            <ViewModeSwitcher value={viewMode} onValueChange={onViewModeChange} />
+          </>
+        ) : null}
       </div>
     </header>
   );

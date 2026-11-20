@@ -37,6 +37,7 @@ export interface PaletteHandlers {
   onToggleTheme: () => void;
   onToggleOutline: () => void;
   onViewModeChange: (mode: WorkspaceViewMode) => void;
+  onToggleSyntax: () => void;
   onFormat: (action: MarkdownToolbarAction) => void;
   onEditAction: (action: EditorEditAction) => void;
   onOpenShortcuts: () => void;
@@ -60,6 +61,8 @@ export interface PaletteContext {
   modifier: string;
   hasActiveDocument: boolean;
   viewMode: WorkspaceViewMode;
+  /** Whether Write shows raw markdown instead of rendering it inline. */
+  showSyntax: boolean;
   showOutline: boolean;
   /** The stored appearance settings: the theme preference (not the resolved theme), colour scheme, zoom and status bar. */
   appearance: AppearanceSettings;
@@ -70,10 +73,9 @@ export interface PaletteContext {
 }
 
 const VIEW_MODES: Array<{ mode: WorkspaceViewMode; label: string; keywords: string[] }> = [
-  { mode: "live", label: "Live View", keywords: ["hybrid", "wysiwyg", "write", "rendered"] },
-  { mode: "edit", label: "Edit View", keywords: ["edit", "write", "focus"] },
-  { mode: "split", label: "Split View", keywords: ["side by side", "live preview"] },
-  { mode: "preview", label: "Preview View", keywords: ["read", "rendered"] },
+  { mode: "write", label: "Write View", keywords: ["live", "hybrid", "wysiwyg", "rendered", "edit"] },
+  { mode: "split", label: "Side-by-side View", keywords: ["split", "side by side", "live preview"] },
+  { mode: "read", label: "Read View", keywords: ["preview", "reading", "rendered"] },
 ];
 
 const THEME_OPTIONS: Array<{ value: ThemePreference; label: string; keywords: string[] }> = [
@@ -112,6 +114,7 @@ export function buildAppCommands({
   modifier,
   hasActiveDocument,
   viewMode,
+  showSyntax,
   showOutline,
   appearance,
   editor,
@@ -120,8 +123,10 @@ export function buildAppCommands({
 }: PaletteContext): AppCommand[] {
   const always = (command: Omit<AppCommand, "enabled">): AppCommand => ({ ...command, enabled: true });
   const withDocument = (command: Omit<AppCommand, "enabled">): AppCommand => ({ ...command, enabled: hasActiveDocument });
+  // Read hides the editor, so its editing and formatting commands would change the document out of sight.
+  const withEditor = (command: Omit<AppCommand, "enabled">): AppCommand => ({ ...command, enabled: hasActiveDocument && viewMode !== "read" });
   const edit = (id: string, label: string, action: EditorEditAction, shortcut?: string, keywords?: string[]) =>
-    withDocument({ id, label, group: "Edit", shortcut, keywords, run: () => handlers.onEditAction(action) });
+    withEditor({ id, label, group: "Edit", shortcut, keywords, run: () => handlers.onEditAction(action) });
 
   return [
     always({ id: "file.new", label: "New", group: "File", shortcut: `${modifier}+N`, keywords: ["create", "blank", "document"], run: handlers.onNew }),
@@ -144,7 +149,7 @@ export function buildAppCommands({
     edit("edit.replace", "Replace", "replace", `${modifier}+H`, ["substitute", "find and replace"]),
 
     ...FORMAT_COMMANDS.map(({ action, label, keywords }) =>
-      withDocument({
+      withEditor({
         id: `format.${action === "strike" ? "strikethrough" : action}`,
         label,
         group: "Format",
@@ -157,6 +162,12 @@ export function buildAppCommands({
       ...withDocument({ id: `view.mode.${mode}`, label, group: "View", keywords, run: () => handlers.onViewModeChange(mode) }),
       checked: mode === viewMode,
     })),
+    {
+      ...withDocument({ id: "view.syntax", label: "Show Syntax", group: "View", keywords: ["markdown", "raw", "source", "markers", "rendered"], run: handlers.onToggleSyntax }),
+      // Show syntax only changes the Write view, so there is nothing to toggle elsewhere.
+      enabled: hasActiveDocument && viewMode === "write",
+      checked: showSyntax,
+    },
     {
       ...withDocument({
         id: "view.outline",

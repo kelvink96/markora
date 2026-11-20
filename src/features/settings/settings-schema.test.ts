@@ -24,9 +24,9 @@ describe("settings-schema", () => {
     const template = defaultSettings.authoring.newDocumentTemplate;
 
     expect(template.startsWith("# Welcome to Markora")).toBe(true);
-    expect(template).toContain("Live");
-    expect(template).toContain("Edit");
-    expect(template).toContain("Split");
+    for (const phrase of ["Write", "Side-by-side", "Read", "Show syntax"]) expect(template).toContain(phrase);
+    // The four-view names are gone from the app, so the guide must not teach them.
+    expect(template).not.toMatch(/\b(Live|Edit|Split|Preview)\b/);
     expect(template).not.toMatch(/Start writing your markdown here|placeholder block|Example Outline/);
   });
 

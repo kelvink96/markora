@@ -10,6 +10,7 @@ import { useWorkspaceState } from "./features/workspace/workspace-state";
 import { useEditorCommandState } from "./features/editor/editor-command-state";
 import { useThemeStore } from "./features/theme/theme-store";
 import { useUpdateStore } from "./features/updates/update-store";
+import { scrollPreviewToHeading } from "./features/outline/scroll-to-heading";
 
 /** Settings for a user who has already dealt with the Tour prompt, so it stays out of the way. */
 function createSeenSettings() {
@@ -79,8 +80,16 @@ vi.mock("./app/app-shell", () => ({
   ),
 }));
 
+vi.mock("./features/outline/scroll-to-heading", () => ({
+  scrollPreviewToHeading: vi.fn(() => true),
+}));
+
 vi.mock("./components/editor-page/editor-pane", () => ({
-  EditorPane: () => <div>Editor Pane</div>,
+  EditorPane: ({ live }: { live?: boolean }) => (
+    <div data-testid="editor-pane" data-live={String(Boolean(live))}>
+      Editor Pane
+    </div>
+  ),
 }));
 
 vi.mock("./components/editor-page/preview-pane", () => ({
@@ -140,7 +149,11 @@ vi.mock("./components/editor-page/top-bar", () => ({
 }));
 
 vi.mock("./components/editor-page/formatting-toolbar", () => ({
-  FormattingBar: () => <div>Formatting Bar</div>,
+  FormattingBar: ({ disabled }: { disabled?: boolean }) => (
+    <div data-testid="formatting-bar" data-disabled={String(Boolean(disabled))}>
+      Formatting Bar
+    </div>
+  ),
 }));
 
 vi.mock("./components/editor-page/footer-status-bar", () => ({
@@ -207,7 +220,8 @@ describe("App", () => {
       settings,
       templateDraft: settings.authoring.newDocumentTemplate,
     });
-    useWorkspaceState.setState({ viewMode: "edit" });
+    useWorkspaceState.setState({ viewMode: "write", showSyntax: false });
+    vi.mocked(scrollPreviewToHeading).mockClear();
     useThemeStore.setState({
       themePreference: "system",
       systemTheme: "light",
@@ -761,6 +775,21 @@ describe("App", () => {
       await user.click(screen.getByRole("button", { name: "Usage" }));
 
       expect(goToLine).toHaveBeenCalledWith(7);
+      expect(scrollPreviewToHeading).not.toHaveBeenCalled();
+    });
+
+    it("scrolls the preview, not the hidden editor, when a heading is clicked in Read", async () => {
+      const user = userEvent.setup();
+      const goToLine = vi.fn();
+      useEditorCommandState.setState({ goToLine });
+      withHeadings();
+      useWorkspaceState.setState({ showOutline: true, viewMode: "read" });
+
+      render(<App />);
+      await user.click(screen.getByRole("button", { name: "Usage" }));
+
+      expect(scrollPreviewToHeading).toHaveBeenCalledWith(2, 3);
+      expect(goToLine).not.toHaveBeenCalled();
     });
 
     it("closes from its close button", async () => {
@@ -773,6 +802,73 @@ describe("App", () => {
 
       expect(screen.queryByRole("complementary", { name: "Outline" })).not.toBeInTheDocument();
       expect(useWorkspaceState.getState().showOutline).toBe(false);
+    });
+  });
+
+  describe("view modes", () => {
+    const editor = () => screen.getByTestId("editor-pane");
+
+    it("renders markdown inline in Write while Show syntax is off", () => {
+      useWorkspaceState.setState({ viewMode: "write", showSyntax: false });
+
+      render(<App />);
+
+      expect(editor()).toHaveAttribute("data-live", "true");
+    });
+
+    it("shows raw markdown in Write once Show syntax is on", () => {
+      useWorkspaceState.setState({ viewMode: "write", showSyntax: true });
+
+      render(<App />);
+
+      expect(editor()).toHaveAttribute("data-live", "false");
+    });
+
+    it("shows raw markdown beside the preview in Side-by-side, whatever Show syntax says", () => {
+      useWorkspaceState.setState({ viewMode: "split", showSyntax: false });
+
+      render(<App />);
+
+      expect(editor()).toHaveAttribute("data-live", "false");
+    });
+
+    it("turns Show syntax on and off from the command palette while writing", async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      for (const expected of [true, false]) {
+        fireEvent.keyDown(window, { key: "k", ctrlKey: true });
+        const palette = await screen.findByRole("dialog", { name: "Command palette" });
+        await user.type(within(palette).getByPlaceholderText("Type a command..."), "show syntax");
+        await user.keyboard("{Enter}");
+
+        await waitFor(() => expect(useWorkspaceState.getState().showSyntax).toBe(expected));
+        expect(editor()).toHaveAttribute("data-live", String(!expected));
+      }
+    });
+
+    it.each([
+      ["write", "false"],
+      ["split", "false"],
+      ["read", "true"],
+    ] as const)("disables the formatting bar only in Read, where the editor is hidden (%s)", (viewMode, disabled) => {
+      useWorkspaceState.setState({ viewMode });
+
+      render(<App />);
+
+      expect(screen.getByTestId("formatting-bar")).toHaveAttribute("data-disabled", disabled);
+    });
+
+    it("does not offer Show Syntax outside Write", async () => {
+      const user = userEvent.setup();
+      useWorkspaceState.setState({ viewMode: "read" });
+      render(<App />);
+
+      fireEvent.keyDown(window, { key: "k", ctrlKey: true });
+      const palette = await screen.findByRole("dialog", { name: "Command palette" });
+      await user.type(within(palette).getByPlaceholderText("Type a command..."), "show syntax");
+
+      expect(within(palette).queryByRole("option", { name: /Show Syntax/ })).not.toBeInTheDocument();
     });
   });
 

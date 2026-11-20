@@ -10,7 +10,7 @@ This file provides guidance to AI coding agents (Claude Code, Codex, etc.) when 
 
 ```bash
 npm install              # Install dependencies
-npm run tauri dev        # Run desktop app (Vite + Rust)
+npm run tauri dev        # Run desktop app (Vite + Rust); alias: npm run dev:desktop
 npm run dev              # Frontend dev server only
 npm run build            # TypeScript check + Vite build
 npx vitest run           # Run frontend tests

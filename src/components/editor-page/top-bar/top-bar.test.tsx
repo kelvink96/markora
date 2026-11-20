@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { TopBar } from "./top-bar";
 import { buildAppCommands, type PaletteContext, type PaletteHandlers } from "../../../features/commands/palette-commands";
 import { defaultSettings } from "../../../features/settings/settings-schema";
+import { COLOR_SCHEMES } from "../../../features/settings/color-schemes";
 import { useDocumentStore } from "../../../store/document";
 import { useThemeStore } from "../../../features/theme/theme-store";
 import { useUpdateStore, type UpdateStatus } from "../../../features/updates/update-store";
@@ -301,6 +302,33 @@ describe("TopBar", () => {
       await user.click(await screen.findByRole("menuitem", { name: "Color Scheme" }));
       await choose(user, await screen.findByRole("menuitemradio", { name: "Ember" }));
       expect(handlers.onSetColorScheme).toHaveBeenCalledWith("sepia");
+    });
+
+    it("shows a miniature of each colour scheme beside its name, in the current mode", async () => {
+      const user = userEvent.setup();
+      useThemeStore.setState({ resolvedTheme: "dark" });
+      renderBar();
+
+      await openMenu(user, "View");
+      await user.click(await screen.findByRole("menuitem", { name: "Color Scheme" }));
+
+      for (const { id, name } of COLOR_SCHEMES) {
+        const item = await screen.findByRole("menuitemradio", { name });
+        const preview = item.querySelector("[data-swatch-scheme]");
+        expect(preview).toHaveAttribute("data-swatch-scheme", id);
+        expect(preview).toHaveAttribute("data-swatch-mode", "dark");
+        expect(preview).toHaveAttribute("data-size", "mini");
+      }
+    });
+
+    it("keeps the other submenus text-only", async () => {
+      const user = userEvent.setup();
+      renderBar();
+
+      await openMenu(user, "View");
+      await user.click(await screen.findByRole("menuitem", { name: "Theme" }));
+
+      expect((await screen.findByRole("menuitemradio", { name: "Dark" })).querySelector("[data-swatch-scheme]")).toBeNull();
     });
 
     it("toggles word wrap and line numbers, reflecting the settings", async () => {

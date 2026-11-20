@@ -14,7 +14,8 @@ import { ButtonGroup, ButtonGroupText } from "@/components/ui/button-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { SwatchGroup, SwatchPreview } from "./swatches";
+import { SchemePreview } from "../scheme-preview";
+import { SwatchGroup } from "./swatches";
 
 const LINE_SPACINGS = [
   { value: 1.5, label: "Compact" },
@@ -137,9 +138,9 @@ export function renderControl(id: string, { settings, previewThemeMode, update }
               preview: (
                 // Light on one side of a diagonal, dark on the other: "it depends on your system".
                 <div className="relative">
-                  <SwatchPreview scheme={scheme} mode="light" />
+                  <SchemePreview scheme={scheme} mode="light" />
                   <div className="absolute inset-0 [clip-path:polygon(100%_0,100%_100%,0_100%)]">
-                    <SwatchPreview scheme={scheme} mode="dark" />
+                    <SchemePreview scheme={scheme} mode="dark" />
                   </div>
                 </div>
               ),
@@ -149,14 +150,14 @@ export function renderControl(id: string, { settings, previewThemeMode, update }
               title: "Light",
               description: "Keep the shell bright and airy.",
               attributes: { "data-theme": "light", "data-resolved-theme-mode": "light" },
-              preview: <SwatchPreview scheme={scheme} mode="light" />,
+              preview: <SchemePreview scheme={scheme} mode="light" />,
             },
             {
               value: "dark",
               title: "Dark",
               description: "Use a darker shell for lower-glare editing.",
               attributes: { "data-theme": "dark", "data-resolved-theme-mode": "dark" },
-              preview: <SwatchPreview scheme={scheme} mode="dark" />,
+              preview: <SchemePreview scheme={scheme} mode="dark" />,
             },
           ]}
         />
@@ -173,7 +174,7 @@ export function renderControl(id: string, { settings, previewThemeMode, update }
             title: name,
             description,
             attributes: { "data-color-scheme": id, "data-theme-mode": previewThemeMode },
-            preview: <SwatchPreview scheme={id} mode={previewThemeMode} />,
+            preview: <SchemePreview scheme={id} mode={previewThemeMode} />,
           }))}
         />
       );

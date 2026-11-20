@@ -11,7 +11,7 @@ export const COLOR_SCHEMES = [
     id: "standard",
     name: "Aurora",
     description: "Cool indigo with a violet-to-cyan glow",
-    keywords: ["default", "standard", "indigo"],
+    keywords: ["standard", "indigo"],
     themeColor: { light: "#f9fafe", dark: "#090b16" },
   },
   {
@@ -39,7 +39,7 @@ export const COLOR_SCHEMES = [
     id: "frost",
     name: "Frost",
     description: "Calm arctic blue-grey, low glare",
-    keywords: ["blue", "nord", "arctic", "cool"],
+    keywords: ["default", "blue", "nord", "arctic", "cool"],
     themeColor: { light: "#f0f4f9", dark: "#1b222b" },
   },
   {

@@ -12,8 +12,8 @@ describe("settings-schema", () => {
     expect(defaultSettings.appearance.theme).toBe("system");
   });
 
-  it("defaults to the standard color scheme", () => {
-    expect(defaultSettings.appearance.colorScheme).toBe("standard");
+  it("defaults to the Frost color scheme", () => {
+    expect(defaultSettings.appearance.colorScheme).toBe("frost");
   });
 
   it("dims other paragraphs in Focus by default", () => {
@@ -144,7 +144,7 @@ describe("normalizeSettings", () => {
     });
 
     expect(result.appearance.theme).toBe("system");
-    expect(result.appearance.colorScheme).toBe("standard");
+    expect(result.appearance.colorScheme).toBe("frost");
     expect(result.appearance.editorFontSize).toBe(16);
     expect(result.appearance.showStatusBar).toBe(true);
     expect(result.editor.wordWrap).toBe(true);

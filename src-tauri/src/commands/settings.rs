@@ -132,7 +132,7 @@ pub struct MarkoraSettings {
 }
 
 fn default_color_scheme() -> ColorScheme {
-    ColorScheme::Standard
+    ColorScheme::Frost
 }
 
 pub fn default_settings() -> MarkoraSettings {
@@ -254,6 +254,11 @@ mod tests {
         let path = env::temp_dir().join(format!("markora-settings-{unique}"));
         fs::create_dir_all(&path).unwrap();
         path
+    }
+
+    #[test]
+    fn new_installs_default_to_the_frost_colour_scheme() {
+        assert_eq!(default_settings().appearance.color_scheme, ColorScheme::Frost);
     }
 
     #[test]
@@ -551,7 +556,8 @@ mod tests {
 
         let settings = load_settings_from_dir(&temp_dir).unwrap();
 
-        assert_eq!(settings.appearance.color_scheme, ColorScheme::Standard);
+        // A file saved before colour schemes existed has no choice recorded, so it gets the default.
+        assert_eq!(settings.appearance.color_scheme, ColorScheme::Frost);
 
         fs::remove_dir_all(temp_dir).ok();
     }

@@ -9,7 +9,7 @@ describe("COLOR_SCHEMES", () => {
     expect(new Set(COLOR_SCHEME_IDS).size).toBe(COLOR_SCHEMES.length);
   });
 
-  it("starts with the default scheme, which keeps its saved id", () => {
+  it("lists Aurora first, keeping its saved id", () => {
     expect(COLOR_SCHEME_IDS[0]).toBe("standard");
   });
 

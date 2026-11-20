@@ -79,7 +79,7 @@ export const defaultNewDocumentTemplate =
 export const defaultSettings: MarkoraSettings = {
   appearance: {
     theme: "system",
-    colorScheme: "standard",
+    colorScheme: "frost",
     // 16px / 1.7 is what the editor has always rendered at.
     editorFontSize: 16,
     previewFontScale: 1,

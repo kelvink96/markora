@@ -38,6 +38,8 @@ import { TourPrompt } from "./components/editor-page/tour-prompt";
 import { Tour } from "./components/editor-page/tour";
 import { useSettingsStore } from "./features/settings/settings-store";
 import { useUpdateCheckOnLaunch } from "./features/updates/use-update-check";
+import { useWhatsNewOnLaunch } from "./features/updates/use-whats-new-on-launch";
+import { WhatsNewDialog } from "./components/editor-page/whats-new-dialog";
 import { useEditorStatusState } from "./features/workspace/editor-status-state";
 import { useWorkspaceState } from "./features/workspace/workspace-state";
 import { useDocumentStore } from "./store/document";
@@ -201,6 +203,11 @@ export default function App() {
   // Derived rather than trusted from the store: if Focus can't apply (no document, another screen, another
   // view) the chrome is back, so there is never a state with no way to get out.
   const focusActive = focusMode && viewMode === "write" && hasOpenDocuments && activeScreen === "workspace";
+
+  // The post-update toast waits for the Tour and Focus so it never competes with them.
+  const { dialogRecord: whatsNewRecord, closeDialog: closeWhatsNew } = useWhatsNewOnLaunch({
+    deferred: tourState.running || focusActive,
+  });
 
   // Focus that can't apply (last tab closed, Settings opened) is switched off, not just hidden, so it
   // can't come back by itself the next time a document or the editor screen returns.
@@ -469,6 +476,7 @@ export default function App() {
         onStart={startTour}
       />
       <Tour run={tourState.running} onEnd={dispatchTour} />
+      <WhatsNewDialog record={whatsNewRecord} onClose={closeWhatsNew} />
       <Toaster position="bottom-right" />
     </TooltipProvider>
   );

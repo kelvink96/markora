@@ -31,7 +31,7 @@ export function useWhatsNewOnLaunch({ deferred }: { deferred: boolean }) {
     void getUpdateAdapter()
       .getCurrentVersion()
       .then((current) => {
-        if (cancelled || handled.current || current === null) return;
+        if (cancelled || handled.current || !current) return;
         handled.current = true;
 
         // Clear as soon as it is decided so the toast can never appear twice, even if the app closes first.

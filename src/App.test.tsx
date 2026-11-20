@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { toast } from "sonner";
 import type { DndContextProps, DragEndEvent } from "@dnd-kit/core";
 import packageJson from "../package.json";
 import App from "./App";
@@ -11,6 +12,7 @@ import { useWorkspaceState } from "./features/workspace/workspace-state";
 import { useEditorCommandState } from "./features/editor/editor-command-state";
 import { useThemeStore } from "./features/theme/theme-store";
 import { useUpdateStore } from "./features/updates/update-store";
+import { loadPendingWhatsNew, savePendingWhatsNew } from "./features/updates/whats-new-storage";
 import { scrollPreviewToHeading } from "./features/outline/scroll-to-heading";
 import { readShortcuts } from "./components/shortcut-keys";
 
@@ -21,7 +23,8 @@ function createSeenSettings() {
   return settings;
 }
 
-const { invokeMock, openMock, saveMock, readFileMock, writeFileMock } = vi.hoisted(() => ({
+const { invokeMock, openMock, saveMock, readFileMock, writeFileMock, getCurrentVersionMock } = vi.hoisted(() => ({
+  getCurrentVersionMock: vi.fn(),
   invokeMock: vi.fn(),
   openMock: vi.fn(),
   saveMock: vi.fn(),
@@ -31,6 +34,17 @@ const { invokeMock, openMock, saveMock, readFileMock, writeFileMock } = vi.hoist
 
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: invokeMock,
+}));
+
+// Only the running version matters here; checks fail silently, as they do without a network.
+vi.mock("./platform/updates", () => ({
+  getUpdateAdapter: () => ({
+    getCurrentVersion: getCurrentVersionMock,
+    checkForUpdate: vi.fn().mockRejectedValue(new Error("offline")),
+    download: vi.fn(),
+    install: vi.fn(),
+    relaunch: vi.fn(),
+  }),
 }));
 
 vi.mock("./platform/files", () => ({
@@ -1328,6 +1342,60 @@ describe("App", () => {
           }),
         ),
       );
+    });
+  });
+
+  describe("what's new after an update", () => {
+    const pending = { version: "1.6.0", notes: "## What's Changed\n\n* feat: colour schemes", publishedAt: null };
+
+    beforeEach(() => {
+      localStorage.clear();
+      getCurrentVersionMock.mockReset().mockResolvedValue("1.6.0");
+    });
+
+    afterEach(() => {
+      localStorage.clear();
+      // Sticky toasts live in sonner's global store, so one would leak into the next test.
+      toast.dismiss();
+    });
+
+    it("announces the update once and opens the notes from the toast", async () => {
+      // On desktop the notes are rendered by the Rust command.
+      invokeMock.mockImplementation(async (command: string) =>
+        command === "parse_markdown" ? "<h2>What's Changed</h2><ul><li>feat: colour schemes</li></ul>" : undefined,
+      );
+      savePendingWhatsNew(pending);
+
+      render(<App />);
+      expect((await screen.findAllByText("Updated to 1.6.0")).length).toBeGreaterThan(0);
+      expect(loadPendingWhatsNew()).toBeNull();
+
+      // fireEvent: sonner's stylesheet leaves its toasts non-interactive for user-event in jsdom.
+      fireEvent.click(screen.getByRole("button", { name: "What's new" }));
+      expect(await screen.findByRole("dialog", { name: "What's new in 1.6.0" })).toBeInTheDocument();
+      expect(await screen.findByRole("heading", { name: "What's Changed" })).toBeInTheDocument();
+    });
+
+    it("stays silent when the saved version is not the running one", async () => {
+      savePendingWhatsNew({ ...pending, version: "1.5.0" });
+
+      render(<App />);
+      await waitFor(() => expect(getCurrentVersionMock).toHaveBeenCalled());
+
+      expect(screen.queryByText(/^Updated to/)).not.toBeInTheDocument();
+    });
+
+    it("waits while Focus is on, then announces", async () => {
+      useWorkspaceState.setState({ focusMode: true });
+      savePendingWhatsNew(pending);
+
+      render(<App />);
+      await act(async () => {});
+      expect(screen.queryByText("Updated to 1.6.0")).not.toBeInTheDocument();
+
+      act(() => useWorkspaceState.setState({ focusMode: false }));
+
+      expect((await screen.findAllByText("Updated to 1.6.0")).length).toBeGreaterThan(0);
     });
   });
 });

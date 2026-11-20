@@ -104,6 +104,15 @@ describe("AppDialogs", () => {
       expect(within(dialog).getByText("Next tab")).toBeInTheDocument();
     });
 
+    // Two shortcuts for one action would otherwise read as a single five-key combination.
+    it("separates alternative shortcuts for the same action with \"or\"", () => {
+      renderDialogs({ shortcutsOpen: true });
+
+      const row = screen.getByText("Open the command palette").closest("div")!;
+      expect(readShortcuts(row)).toEqual(["Ctrl+K", "Ctrl+Shift+P"]);
+      expect(row).toHaveTextContent(/Ctrl\s*K\s*or\s*Ctrl/);
+    });
+
     it("closes from its Close button and from Escape", async () => {
       const user = userEvent.setup();
       const handlers = renderDialogs({ shortcutsOpen: true });

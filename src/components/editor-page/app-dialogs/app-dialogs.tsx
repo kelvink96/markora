@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -115,8 +116,11 @@ export function AppDialogs({
               <div key={action} className="flex items-center justify-between py-2">
                 <dt>{action}</dt>
                 <dd className="flex items-center gap-2">
-                  {keys.map((key) => (
-                    <ShortcutKeys key={key} shortcut={key} />
+                  {keys.map((key, index) => (
+                    <Fragment key={key}>
+                      {index > 0 ? <span className="text-xs text-muted-foreground">or</span> : null}
+                      <ShortcutKeys shortcut={key} />
+                    </Fragment>
                   ))}
                 </dd>
               </div>

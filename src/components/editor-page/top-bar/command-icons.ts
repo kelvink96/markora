@@ -1,4 +1,5 @@
 import {
+  ArrowDownToLine,
   BookOpen,
   Bold,
   Bug,
@@ -21,14 +22,17 @@ import {
   List,
   ListChecks,
   ListOrdered,
+  LoaderCircle,
   Palette,
   PanelLeftClose,
   PanelsTopLeft,
   Printer,
   Quote,
   Redo2,
+  RefreshCw,
   Replace,
   RotateCcw,
+  RotateCw,
   Save,
   Scissors,
   Search,
@@ -84,6 +88,10 @@ export const COMMAND_ICONS: Record<string, LucideIcon> = {
   "help.docs": LifeBuoy,
   "help.report-issue": Bug,
   "help.about": Info,
+  "help.check-for-updates": RefreshCw,
+  "help.update-available": ArrowDownToLine,
+  "help.update-downloading": LoaderCircle,
+  "help.update-restart": RotateCw,
 };
 
 /** The icon on a submenu's trigger, by its label. */

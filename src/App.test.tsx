@@ -580,6 +580,24 @@ describe("App", () => {
     }
   });
 
+  it("opens settings without checking again when a release is already waiting", async () => {
+    const user = userEvent.setup();
+    const check = vi.fn().mockResolvedValue(undefined);
+    const original = useUpdateStore.getState();
+    useUpdateStore.setState({ check, status: "available", update: { version: "1.6.0", notes: "", publishedAt: null } });
+
+    try {
+      render(<App />);
+      await user.click(screen.getByRole("button", { name: "check-for-updates" }));
+
+      expect(screen.getByRole("heading", { name: "Settings", level: 2 })).toBeInTheDocument();
+      // The launch-time check is silent and carries options; the command would call it with none.
+      expect(check).not.toHaveBeenCalledWith();
+    } finally {
+      useUpdateStore.setState({ check: original.check, status: original.status, update: original.update });
+    }
+  });
+
   it("opens the keyboard shortcuts dialog from the help menu action", async () => {
     const user = userEvent.setup();
 

@@ -1,14 +1,17 @@
 import { useState } from "react";
-import { CircleAlert } from "lucide-react";
+import { ChevronRight, CircleAlert } from "lucide-react";
 import { useSettingsStore } from "../../features/settings/settings-store";
 import { SAVE_BEFORE_RESTART, useUpdateStore } from "../../features/updates/update-store";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Progress } from "@/components/ui/progress";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
+import { ReleaseNotes } from "./release-notes";
 
 interface UpdatesCardProps {
   version: string;
@@ -56,7 +59,7 @@ export function UpdatesCard({ version, hasUnsavedChanges, onChangeUpdates }: Upd
     (status === "available" && update !== null) || status === "downloading" || status === "ready" || Boolean(errorMessage);
 
   return (
-    <Card role="region" aria-label="Updates" className="mt-10 gap-4 py-4 text-sm">
+    <Card id="settings-updates" role="region" aria-label="Updates" className="mt-10 gap-4 py-4 text-sm">
       <CardHeader className="px-4">
         <CardTitle role="heading" aria-level={3}>
           Updates
@@ -91,9 +94,22 @@ export function UpdatesCard({ version, hasUnsavedChanges, onChangeUpdates }: Upd
       {hasBody ? (
         <CardContent className="flex flex-col gap-4 px-4">
           {status === "available" && update ? (
-            <div className="flex flex-col gap-1">
-              <p>{`Version ${update.version} is available.`}</p>
-              {update.notes ? <p className="whitespace-pre-wrap text-muted-foreground">{update.notes}</p> : null}
+            <div className="flex flex-col gap-2">
+              <p className="flex items-center gap-2">
+                <span>{`New release ${update.version}`}</span>
+                <Badge>New</Badge>
+              </p>
+              {update.notes.trim() ? (
+                <Collapsible className="group/notes flex flex-col gap-2">
+                  <CollapsibleTrigger className="flex w-fit items-center gap-1 text-muted-foreground hover:text-foreground">
+                    <ChevronRight aria-hidden="true" className="size-4 transition-transform group-data-[state=open]/notes:rotate-90" />
+                    What's new
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <ReleaseNotes markdown={update.notes} />
+                  </CollapsibleContent>
+                </Collapsible>
+              ) : null}
             </div>
           ) : null}
 

@@ -2,6 +2,7 @@ import type { EditorEditAction } from "../editor/editor-command-state";
 import type { MarkdownToolbarAction } from "../editor/markdown-toolbar-actions";
 import { COLOR_SCHEMES } from "../settings/color-schemes";
 import type { AppearanceSettings, ColorScheme, EditorSettings, ThemePreference } from "../settings/settings-schema";
+import type { UpdateStatus } from "../updates/update-store";
 import { canZoom, type ZoomDirection } from "../settings/zoom";
 import type { WorkspaceViewMode } from "../workspace/workspace-state";
 
@@ -21,6 +22,12 @@ export interface AppCommand {
   enabled: boolean;
   /** Set for commands that are on or off, or one of a set (the active view mode); menus show a check. */
   checked?: boolean;
+  /** Key into the menu icon table when the icon is not simply the command id (it changes with state). */
+  icon?: string;
+  /** A small tag beside the label, e.g. "New". */
+  badge?: string;
+  /** Work is in progress: menus show the icon spinning. */
+  busy?: boolean;
   run: () => void;
 }
 
@@ -73,6 +80,8 @@ export interface PaletteContext {
   editor: EditorSettings;
   /** False where the app cannot update itself (the web build); the command is then not offered. */
   updatesSupported: boolean;
+  /** Where the in-app update is, so the update command can say what a click will do. Defaults to idle. */
+  update?: { status: UpdateStatus; version: string | null };
   handlers: PaletteHandlers;
 }
 
@@ -103,6 +112,21 @@ const FORMAT_COMMANDS: Array<{ action: MarkdownToolbarAction; label: string; key
   { action: "image", label: "Image", keywords: ["picture", "photo"] },
 ];
 
+/** The wording, icon and tags of the update command for the current update state. */
+function updateEntry({ status, version }: NonNullable<PaletteContext["update"]>): Pick<AppCommand, "label" | "icon" | "badge" | "busy"> {
+  const name = version ?? "";
+  switch (status) {
+    case "available":
+      return { label: `Update available: ${name}`, icon: "help.update-available", badge: "New" };
+    case "downloading":
+      return { label: `Downloading ${name}…`, icon: "help.update-downloading", busy: true };
+    case "ready":
+      return { label: `Restart to update to ${name}`, icon: "help.update-restart" };
+    default:
+      return { label: "Check for updates", icon: "help.check-for-updates" };
+  }
+}
+
 /**
  * Every command the app offers, built from the current app state. Pure so it can be tested
  * without rendering: the menus and the palette only lay out and run what this returns.
@@ -118,6 +142,7 @@ export function buildAppCommands({
   appearance,
   editor,
   updatesSupported,
+  update = { status: "idle", version: null },
   handlers,
 }: PaletteContext): AppCommand[] {
   const always = (command: Omit<AppCommand, "enabled">): AppCommand => ({ ...command, enabled: true });
@@ -136,7 +161,7 @@ export function buildAppCommands({
     withDocument({ id: "file.export-pdf", label: "Export as PDF", group: "File", keywords: ["print"], run: handlers.onExportPdf }),
     withDocument({ id: "file.close", label: "Close Tab", group: "File", keywords: ["close document"], run: handlers.onCloseTab }),
     always({ id: "app.settings", label: "Settings", group: "App", keywords: ["preferences", "options"], run: handlers.onOpenSettings }),
-    { ...always({ id: "help.check-for-updates", label: "Check for updates", group: "App", keywords: ["update", "upgrade", "new version", "latest"], run: handlers.onCheckForUpdates }), enabled: updatesSupported },
+    { ...always({ id: "help.check-for-updates", group: "App", keywords: ["update", "upgrade", "new version", "latest"], run: handlers.onCheckForUpdates, ...updateEntry(update) }), enabled: updatesSupported && update.status !== "downloading" },
 
     edit("edit.undo", "Undo", "undo", `${modifier}+Z`),
     edit("edit.redo", "Redo", "redo", `${modifier}+Shift+Z`),

@@ -76,10 +76,10 @@ Business logic that is independent of UI components lives here:
 ```
 App.tsx (file ops, keyboard shortcuts: Ctrl+N/O/S/Shift+S/Shift+F/K/Tab, web lifecycle)
 └── AppShell
-    ├── TopBar (toolbar actions, web install button)
-    ├── TabStrip (document tabs)
+    ├── TopBar (menus, view controls, web install button)
+    │   └── TabStrip (document tabs, on their own row)
     ├── Workspace
-    │   ├── WorkspaceSidebar (projects, files, recents)
+    │   ├── sidebar slot: OutlinePanel (when Outline is on)
     │   ├── EditorPane (CodeMirror 6 wrapper)
     │   └── PreviewPane (HTML from platform markdown adapter)
     └── FooterStatusBar

@@ -13,6 +13,7 @@ import { markoraEditorTheme } from "../../../features/editor/editor-theme";
 import { createEditorSettingsExtensions } from "../../../features/editor/editor-settings-extensions";
 import { liveExtension } from "../../../features/editor/live/live-extension";
 import { focusDimming } from "../../../features/editor/focus/focus-dimming";
+import { applySectionMove } from "../../../features/outline/apply-section-move";
 import { applyMarkdownToolbarAction, type MarkdownToolbarAction } from "../../../features/editor/markdown-toolbar-actions";
 import {
   applySlashCommand,
@@ -91,6 +92,7 @@ export function EditorPane({ theme, live = false, focusDim = false }: EditorPane
   const setRunEditAction = useEditorCommandState((state) => state.setRunEditAction);
   const setGoToLine = useEditorCommandState((state) => state.setGoToLine);
   const setFocusEditor = useEditorCommandState((state) => state.setFocusEditor);
+  const setMoveSection = useEditorCommandState((state) => state.setMoveSection);
   const [slashMenu, setSlashMenu] = useState<SlashMenuState | null>(null);
   const [inlineMenu, setInlineMenu] = useState<InlineMenuState | null>(null);
   const [find, setFind] = useState<FindState | null>(null);
@@ -295,6 +297,13 @@ export function EditorPane({ theme, live = false, focusDim = false }: EditorPane
     });
     return () => setGoToLine(() => {});
   }, [setGoToLine]);
+
+  useEffect(() => {
+    setMoveSection((fromIndex, slot) => {
+      if (viewRef.current) applySectionMove(viewRef.current, fromIndex, slot);
+    });
+    return () => setMoveSection(() => {});
+  }, [setMoveSection]);
 
   useEffect(() => {
     setFocusEditor(() => viewRef.current?.focus());

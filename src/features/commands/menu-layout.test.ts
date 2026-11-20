@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { COLOR_SCHEMES } from "../settings/color-schemes";
 import { defaultSettings } from "../settings/settings-schema";
 import { buildAppCommands, type PaletteContext, type PaletteHandlers } from "./palette-commands";
 import { collectCommandIds, MENU_LAYOUT, type MenuNode } from "./menu-layout";
@@ -103,7 +104,7 @@ describe("MENU_LAYOUT", () => {
       node?.type === "submenu" ? node.items.map((item) => (item.type === "command" ? item.label : null)) : [];
 
     expect(labels(submenu("Theme"))).toEqual(["System", "Light", "Dark"]);
-    expect(labels(submenu("Color Scheme"))).toEqual(["Standard", "Sepia", "High Contrast"]);
+    expect(labels(submenu("Color Scheme"))).toEqual(COLOR_SCHEMES.map((scheme) => scheme.name));
   });
 });
 

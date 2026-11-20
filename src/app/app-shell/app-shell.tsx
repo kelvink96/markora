@@ -1,12 +1,11 @@
 import { useEffect, type ReactNode } from "react";
-import type { ColorScheme } from "../../features/settings/settings-schema";
+import { COLOR_SCHEMES, type ColorScheme } from "../../features/settings/color-schemes";
 
 // The browser / PWA chrome colour: each theme's background, so the window frame blends in.
-const themeColor: Record<ColorScheme, Record<"light" | "dark", string>> = {
-  standard: { light: "#f9fafe", dark: "#090b16" },
-  sepia: { light: "#faf3e5", dark: "#130d09" },
-  "high-contrast": { light: "#ffffff", dark: "#000000" },
-};
+const themeColor = Object.fromEntries(COLOR_SCHEMES.map((scheme) => [scheme.id, scheme.themeColor])) as Record<
+  ColorScheme,
+  Record<"light" | "dark", string>
+>;
 
 interface AppShellProps {
   themeMode: "light" | "dark";

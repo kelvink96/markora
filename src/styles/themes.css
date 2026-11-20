@@ -207,3 +207,279 @@
   --brand-from: oklch(0.88 0.17 95);
   --brand-to: oklch(0.9 0.14 200);
 }
+
+/* Moss, light: cream paper with a muted green accent (after Everforest by sainnhe, MIT; retuned for AA contrast) */
+:root[data-color-scheme="moss"],
+[data-swatch-scheme="moss"][data-swatch-mode="light"] {
+  --background: oklch(0.968 0.022 100);
+  --foreground: oklch(0.3 0.025 170);
+  --card: oklch(0.985 0.014 100);
+  --card-foreground: oklch(0.3 0.025 170);
+  --popover: oklch(0.99 0.01 100);
+  --popover-foreground: oklch(0.3 0.025 170);
+  --primary: oklch(0.5 0.12 145);
+  --primary-foreground: oklch(0.985 0.012 100);
+  --secondary: oklch(0.94 0.025 105);
+  --secondary-foreground: oklch(0.3 0.025 170);
+  --muted: oklch(0.95 0.022 102);
+  --muted-foreground: oklch(0.44 0.035 150);
+  --accent: oklch(0.91 0.05 130);
+  --accent-foreground: oklch(0.3 0.07 150);
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.985 0.005 25);
+  --border: oklch(0.89 0.03 105);
+  --input: oklch(0.83 0.035 105);
+  --ring: oklch(0.58 0.13 145);
+  --editor: oklch(0.985 0.014 100);
+  --preview: oklch(0.975 0.018 100);
+  --syntax-heading: oklch(0.42 0.12 145);
+  --syntax-emphasis: oklch(0.48 0.13 60);
+  --syntax-link: oklch(0.46 0.09 215);
+  --syntax-code: oklch(0.44 0.1 95);
+  --syntax-quote: oklch(0.5 0.04 150);
+  --syntax-marker: oklch(0.62 0.08 140);
+  --brand-from: oklch(0.5 0.12 145);
+  --brand-to: oklch(0.6 0.13 105);
+}
+
+/* Moss, dark: slate green-grey with soft green and cream text (after Everforest, retuned for AA contrast) */
+:root[data-color-scheme="moss"].theme-dark,
+[data-swatch-scheme="moss"][data-swatch-mode="dark"] {
+  --background: oklch(0.2 0.018 175);
+  --foreground: oklch(0.9 0.03 100);
+  --card: oklch(0.235 0.02 175);
+  --card-foreground: oklch(0.9 0.03 100);
+  --popover: oklch(0.26 0.022 175);
+  --popover-foreground: oklch(0.9 0.03 100);
+  --primary: oklch(0.77 0.12 135);
+  --primary-foreground: oklch(0.2 0.03 150);
+  --secondary: oklch(0.3 0.022 175);
+  --secondary-foreground: oklch(0.9 0.03 100);
+  --muted: oklch(0.27 0.02 175);
+  --muted-foreground: oklch(0.75 0.03 150);
+  --accent: oklch(0.34 0.05 160);
+  --accent-foreground: oklch(0.95 0.02 100);
+  --destructive: oklch(0.7 0.19 22);
+  --destructive-foreground: oklch(0.16 0.03 22);
+  --border: oklch(0.35 0.025 175);
+  --input: oklch(0.4 0.03 175);
+  --ring: oklch(0.78 0.11 140);
+  --editor: oklch(0.175 0.016 175);
+  --preview: oklch(0.215 0.018 175);
+  --syntax-heading: oklch(0.82 0.11 130);
+  --syntax-emphasis: oklch(0.8 0.1 50);
+  --syntax-link: oklch(0.8 0.08 205);
+  --syntax-code: oklch(0.82 0.1 95);
+  --syntax-quote: oklch(0.76 0.04 150);
+  --syntax-marker: oklch(0.62 0.06 150);
+  --brand-from: oklch(0.77 0.12 135);
+  --brand-to: oklch(0.82 0.11 100);
+}
+
+/* Frost, light: snow-white with an arctic blue accent (after Nord by Arctic Ice Studio, MIT; retuned for AA contrast) */
+:root[data-color-scheme="frost"],
+[data-swatch-scheme="frost"][data-swatch-mode="light"] {
+  --background: oklch(0.965 0.008 250);
+  --foreground: oklch(0.3 0.03 255);
+  --card: oklch(0.985 0.005 250);
+  --card-foreground: oklch(0.3 0.03 255);
+  --popover: oklch(0.99 0.004 250);
+  --popover-foreground: oklch(0.3 0.03 255);
+  --primary: oklch(0.48 0.1 250);
+  --primary-foreground: oklch(0.985 0.005 250);
+  --secondary: oklch(0.94 0.012 250);
+  --secondary-foreground: oklch(0.3 0.03 255);
+  --muted: oklch(0.95 0.01 250);
+  --muted-foreground: oklch(0.45 0.04 255);
+  --accent: oklch(0.91 0.03 235);
+  --accent-foreground: oklch(0.28 0.06 250);
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.985 0.005 25);
+  --border: oklch(0.89 0.015 250);
+  --input: oklch(0.83 0.02 250);
+  --ring: oklch(0.55 0.12 245);
+  --editor: oklch(0.985 0.005 250);
+  --preview: oklch(0.975 0.007 250);
+  --syntax-heading: oklch(0.42 0.1 250);
+  --syntax-emphasis: oklch(0.48 0.1 320);
+  --syntax-link: oklch(0.46 0.09 215);
+  --syntax-code: oklch(0.45 0.09 160);
+  --syntax-quote: oklch(0.5 0.035 250);
+  --syntax-marker: oklch(0.62 0.06 245);
+  --brand-from: oklch(0.48 0.1 250);
+  --brand-to: oklch(0.62 0.1 210);
+}
+
+/* Frost, dark: slate blue-grey with a soft frost-blue accent (after Nord, retuned for AA contrast) */
+:root[data-color-scheme="frost"].theme-dark,
+[data-swatch-scheme="frost"][data-swatch-mode="dark"] {
+  --background: oklch(0.25 0.02 255);
+  --foreground: oklch(0.95 0.01 250);
+  --card: oklch(0.285 0.022 255);
+  --card-foreground: oklch(0.95 0.01 250);
+  --popover: oklch(0.31 0.025 255);
+  --popover-foreground: oklch(0.95 0.01 250);
+  --primary: oklch(0.78 0.08 215);
+  --primary-foreground: oklch(0.22 0.03 255);
+  --secondary: oklch(0.34 0.025 255);
+  --secondary-foreground: oklch(0.95 0.01 250);
+  --muted: oklch(0.31 0.022 255);
+  --muted-foreground: oklch(0.78 0.03 250);
+  --accent: oklch(0.38 0.04 250);
+  --accent-foreground: oklch(0.96 0.01 250);
+  --destructive: oklch(0.7 0.19 22);
+  --destructive-foreground: oklch(0.16 0.03 22);
+  --border: oklch(0.4 0.03 255);
+  --input: oklch(0.45 0.035 255);
+  --ring: oklch(0.8 0.08 215);
+  --editor: oklch(0.22 0.018 255);
+  --preview: oklch(0.265 0.02 255);
+  --syntax-heading: oklch(0.82 0.08 225);
+  --syntax-emphasis: oklch(0.8 0.08 320);
+  --syntax-link: oklch(0.8 0.08 235);
+  --syntax-code: oklch(0.82 0.09 150);
+  --syntax-quote: oklch(0.78 0.03 250);
+  --syntax-marker: oklch(0.65 0.05 245);
+  --brand-from: oklch(0.78 0.08 215);
+  --brand-to: oklch(0.72 0.1 255);
+}
+
+/* Rosé, light: cream dawn with a dusty rose accent (after Rosé Pine, MIT; retuned for AA contrast) */
+:root[data-color-scheme="rose"],
+[data-swatch-scheme="rose"][data-swatch-mode="light"] {
+  --background: oklch(0.97 0.015 70);
+  --foreground: oklch(0.36 0.05 295);
+  --card: oklch(0.985 0.01 70);
+  --card-foreground: oklch(0.36 0.05 295);
+  --popover: oklch(0.99 0.007 70);
+  --popover-foreground: oklch(0.36 0.05 295);
+  --primary: oklch(0.5 0.13 5);
+  --primary-foreground: oklch(0.985 0.01 70);
+  --secondary: oklch(0.94 0.02 70);
+  --secondary-foreground: oklch(0.36 0.05 295);
+  --muted: oklch(0.95 0.018 70);
+  --muted-foreground: oklch(0.47 0.05 295);
+  --accent: oklch(0.92 0.04 40);
+  --accent-foreground: oklch(0.32 0.08 5);
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.985 0.005 25);
+  --border: oklch(0.9 0.025 70);
+  --input: oklch(0.84 0.03 70);
+  --ring: oklch(0.58 0.13 5);
+  --editor: oklch(0.985 0.01 70);
+  --preview: oklch(0.978 0.013 70);
+  --syntax-heading: oklch(0.45 0.13 5);
+  --syntax-emphasis: oklch(0.48 0.1 300);
+  --syntax-link: oklch(0.46 0.09 225);
+  --syntax-code: oklch(0.44 0.09 60);
+  --syntax-quote: oklch(0.5 0.05 295);
+  --syntax-marker: oklch(0.64 0.08 15);
+  --brand-from: oklch(0.5 0.13 5);
+  --brand-to: oklch(0.68 0.12 70);
+}
+
+/* Rosé, dark: deep plum with soft rose and gold (after Rosé Pine, retuned for AA contrast) */
+:root[data-color-scheme="rose"].theme-dark,
+[data-swatch-scheme="rose"][data-swatch-mode="dark"] {
+  --background: oklch(0.2 0.03 295);
+  --foreground: oklch(0.9 0.04 300);
+  --card: oklch(0.235 0.034 295);
+  --card-foreground: oklch(0.9 0.04 300);
+  --popover: oklch(0.265 0.037 295);
+  --popover-foreground: oklch(0.9 0.04 300);
+  --primary: oklch(0.8 0.09 15);
+  --primary-foreground: oklch(0.2 0.03 295);
+  --secondary: oklch(0.3 0.035 295);
+  --secondary-foreground: oklch(0.9 0.04 300);
+  --muted: oklch(0.27 0.032 295);
+  --muted-foreground: oklch(0.75 0.04 300);
+  --accent: oklch(0.34 0.05 300);
+  --accent-foreground: oklch(0.95 0.02 300);
+  --destructive: oklch(0.7 0.19 22);
+  --destructive-foreground: oklch(0.16 0.03 22);
+  --border: oklch(0.35 0.04 295);
+  --input: oklch(0.4 0.045 295);
+  --ring: oklch(0.82 0.09 15);
+  --editor: oklch(0.175 0.028 295);
+  --preview: oklch(0.215 0.032 295);
+  --syntax-heading: oklch(0.82 0.08 15);
+  --syntax-emphasis: oklch(0.8 0.1 305);
+  --syntax-link: oklch(0.8 0.08 205);
+  --syntax-code: oklch(0.84 0.1 75);
+  --syntax-quote: oklch(0.76 0.04 300);
+  --syntax-marker: oklch(0.62 0.06 300);
+  --brand-from: oklch(0.8 0.09 15);
+  --brand-to: oklch(0.84 0.1 75);
+}
+
+/* Ink, light: pure grayscale on white paper; only errors keep their red */
+:root[data-color-scheme="ink"],
+[data-swatch-scheme="ink"][data-swatch-mode="light"] {
+  --background: oklch(0.975 0 0);
+  --foreground: oklch(0.18 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0 0);
+  --primary: oklch(0.22 0 0);
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.95 0 0);
+  --secondary-foreground: oklch(0.18 0 0);
+  --muted: oklch(0.955 0 0);
+  --muted-foreground: oklch(0.45 0 0);
+  --accent: oklch(0.92 0 0);
+  --accent-foreground: oklch(0.2 0 0);
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.985 0.005 25);
+  --border: oklch(0.9 0 0);
+  --input: oklch(0.8 0 0);
+  --ring: oklch(0.4 0 0);
+  --editor: oklch(1 0 0);
+  --preview: oklch(0.99 0 0);
+  --syntax-heading: oklch(0.15 0 0);
+  --syntax-emphasis: oklch(0.35 0 0);
+  --syntax-link: oklch(0.3 0 0);
+  --syntax-code: oklch(0.38 0 0);
+  --syntax-quote: oklch(0.48 0 0);
+  --syntax-marker: oklch(0.62 0 0);
+  --brand-from: oklch(0.25 0 0);
+  --brand-to: oklch(0.55 0 0);
+  --syntax-link-decoration: underline;
+  --syntax-code-background: var(--muted);
+}
+
+/* Ink, dark: pure grayscale on near-black; only errors keep their red */
+:root[data-color-scheme="ink"].theme-dark,
+[data-swatch-scheme="ink"][data-swatch-mode="dark"] {
+  --background: oklch(0.15 0 0);
+  --foreground: oklch(0.95 0 0);
+  --card: oklch(0.19 0 0);
+  --card-foreground: oklch(0.95 0 0);
+  --popover: oklch(0.22 0 0);
+  --popover-foreground: oklch(0.95 0 0);
+  --primary: oklch(0.93 0 0);
+  --primary-foreground: oklch(0.15 0 0);
+  --secondary: oklch(0.26 0 0);
+  --secondary-foreground: oklch(0.95 0 0);
+  --muted: oklch(0.23 0 0);
+  --muted-foreground: oklch(0.75 0 0);
+  --accent: oklch(0.3 0 0);
+  --accent-foreground: oklch(0.97 0 0);
+  --destructive: oklch(0.7 0.19 22);
+  --destructive-foreground: oklch(0.16 0.03 22);
+  --border: oklch(0.32 0 0);
+  --input: oklch(0.4 0 0);
+  --ring: oklch(0.8 0 0);
+  --editor: oklch(0.12 0 0);
+  --preview: oklch(0.17 0 0);
+  --syntax-heading: oklch(0.98 0 0);
+  --syntax-emphasis: oklch(0.86 0 0);
+  --syntax-link: oklch(0.88 0 0);
+  --syntax-code: oklch(0.82 0 0);
+  --syntax-quote: oklch(0.75 0 0);
+  --syntax-marker: oklch(0.62 0 0);
+  --brand-from: oklch(0.9 0 0);
+  --brand-to: oklch(0.6 0 0);
+  --syntax-link-decoration: underline;
+  --syntax-code-background: var(--muted);
+}

@@ -16,6 +16,9 @@ import {
 } from "@/components/ui/menubar";
 import type { AppCommand } from "../../../features/commands/palette-commands";
 import { collectCommandIds, MENU_LAYOUT, type MenuNode } from "../../../features/commands/menu-layout";
+import { COLOR_SCHEMES } from "../../../features/settings/color-schemes";
+import { useThemeStore } from "../../../features/theme/theme-store";
+import { SchemePreview } from "../../scheme-preview";
 import { COMMAND_ICONS, SUBMENU_ICONS } from "./command-icons";
 
 const ICON_CLASS = "size-4";
@@ -37,15 +40,19 @@ interface AppMenusProps {
 /** The File, Edit, Format, View and Help menus, laid out by MENU_LAYOUT from the shared command list. */
 export function AppMenus({ commands, recentFiles, onOpenRecent, updateAvailable = false }: AppMenusProps) {
   const byId = new Map(commands.map((command) => [command.id, command]));
+  // The colour scheme entries show a miniature drawn in the mode you're in, as the Settings swatches do.
+  const mode = useThemeStore((state) => state.resolvedTheme);
 
   const renderCommand = (node: Extract<MenuNode, { type: "command" }>, inRadioGroup: boolean): ReactNode => {
     const command = byId.get(node.id);
     if (!command) return null;
 
     const Icon = COMMAND_ICONS[command.id];
+    const scheme = COLOR_SCHEMES.find(({ id }) => command.id === `view.color-scheme.${id}`);
     const content = (
       <>
         {Icon ? <Icon className={ICON_CLASS} /> : null}
+        {scheme ? <SchemePreview scheme={scheme.id} mode={mode} size="mini" /> : null}
         {node.label ?? command.label}
         {command.shortcut ? (
           <>

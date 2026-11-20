@@ -5,17 +5,25 @@ import { tags as t } from "@lezer/highlight";
 
 /*
  * Markora's editor look. Every colour is a CSS variable from the active theme, so the editor
- * follows the scheme (Aurora / Ember / High contrast) and light/dark mode with no rebuild.
+ * follows the scheme and light/dark mode with no rebuild.
+ *
+ * Links and inline code also read two optional tokens, --syntax-link-decoration and
+ * --syntax-code-background. A scheme with no hue (Ink) sets them to add an underline and a tint, since
+ * colour can't tell those roles apart there; every other scheme leaves them unset and gets the fallbacks.
  */
 
-const markdownHighlight = HighlightStyle.define([
+export const markdownHighlight = HighlightStyle.define([
   { tag: t.heading, color: "var(--syntax-heading)", fontWeight: "700" },
   { tag: t.strong, color: "var(--foreground)", fontWeight: "700" },
   { tag: t.emphasis, color: "var(--syntax-emphasis)", fontStyle: "italic" },
   { tag: t.strikethrough, color: "var(--muted-foreground)", textDecoration: "line-through" },
-  { tag: t.link, color: "var(--syntax-link)" },
+  { tag: t.link, color: "var(--syntax-link)", textDecoration: "var(--syntax-link-decoration, none)" },
   { tag: t.url, color: "var(--syntax-link)", textDecoration: "underline" },
-  { tag: t.monospace, color: "var(--syntax-code)" },
+  {
+    tag: t.monospace,
+    color: "var(--syntax-code)",
+    backgroundColor: "var(--syntax-code-background, transparent)",
+  },
   { tag: t.quote, color: "var(--syntax-quote)", fontStyle: "italic" },
   // Markdown punctuation (# * > - ``` and so on) recedes so the words stand out.
   { tag: [t.processingInstruction, t.meta, t.contentSeparator], color: "var(--syntax-marker)" },

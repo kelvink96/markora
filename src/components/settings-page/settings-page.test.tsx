@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createDefaultSettings, type MarkoraSettings } from "../../features/settings/settings-schema";
+import { COLOR_SCHEMES } from "../../features/settings/color-schemes";
 import { detectPlatform } from "../../platform/runtime";
 import { SettingsPage } from "./settings-page";
 
@@ -47,8 +48,16 @@ describe("SettingsPage", () => {
     const nav = screen.getByRole("navigation", { name: "Settings sections" });
     expect(within(nav).getAllByRole("button")).toHaveLength(4);
     expect(screen.getAllByTestId(/theme-swatch-/i)).toHaveLength(3);
-    expect(screen.getAllByTestId(/scheme-swatch-/i)).toHaveLength(3);
+    expect(screen.getAllByTestId(/scheme-swatch-/i)).toHaveLength(COLOR_SCHEMES.length);
     expect(screen.getByTestId("theme-swatch-system")).toHaveAttribute("data-resolved-theme-mode", "light");
+  });
+
+  // Seven or more cards in three columns would leave a long, ragged last row.
+  it("lays the colour schemes out four to a row", () => {
+    renderPage();
+
+    expect(screen.getByRole("radiogroup", { name: "Color scheme" })).toHaveClass("md:grid-cols-4");
+    expect(screen.getByRole("radiogroup", { name: "Theme mode" })).toHaveClass("md:grid-cols-3");
   });
 
   it("scrolls to a group from the jump list", async () => {

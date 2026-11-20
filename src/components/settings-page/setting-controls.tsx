@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Minus, Plus } from "lucide-react";
+import { COLOR_SCHEMES } from "../../features/settings/color-schemes";
 import {
   EDITOR_FONT_SIZES,
   PREVIEW_SCALES,
@@ -13,7 +14,8 @@ import { ButtonGroup, ButtonGroupText } from "@/components/ui/button-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { SwatchGroup, SwatchPreview } from "./swatches";
+import { SchemePreview } from "../scheme-preview";
+import { SwatchGroup } from "./swatches";
 
 const LINE_SPACINGS = [
   { value: 1.5, label: "Compact" },
@@ -136,9 +138,9 @@ export function renderControl(id: string, { settings, previewThemeMode, update }
               preview: (
                 // Light on one side of a diagonal, dark on the other: "it depends on your system".
                 <div className="relative">
-                  <SwatchPreview scheme={scheme} mode="light" />
+                  <SchemePreview scheme={scheme} mode="light" />
                   <div className="absolute inset-0 [clip-path:polygon(100%_0,100%_100%,0_100%)]">
-                    <SwatchPreview scheme={scheme} mode="dark" />
+                    <SchemePreview scheme={scheme} mode="dark" />
                   </div>
                 </div>
               ),
@@ -148,14 +150,14 @@ export function renderControl(id: string, { settings, previewThemeMode, update }
               title: "Light",
               description: "Keep the shell bright and airy.",
               attributes: { "data-theme": "light", "data-resolved-theme-mode": "light" },
-              preview: <SwatchPreview scheme={scheme} mode="light" />,
+              preview: <SchemePreview scheme={scheme} mode="light" />,
             },
             {
               value: "dark",
               title: "Dark",
               description: "Use a darker shell for lower-glare editing.",
               attributes: { "data-theme": "dark", "data-resolved-theme-mode": "dark" },
-              preview: <SwatchPreview scheme={scheme} mode="dark" />,
+              preview: <SchemePreview scheme={scheme} mode="dark" />,
             },
           ]}
         />
@@ -165,31 +167,16 @@ export function renderControl(id: string, { settings, previewThemeMode, update }
         <SwatchGroup<ColorScheme>
           label="Color scheme"
           testIdPrefix="scheme-swatch"
+          className="md:grid-cols-4"
           value={scheme}
           onValueChange={(colorScheme) => setAppearance({ colorScheme })}
-          options={[
-            {
-              value: "standard",
-              title: "Aurora",
-              description: "Cool indigo with a violet-to-cyan glow",
-              attributes: { "data-color-scheme": "standard", "data-theme-mode": previewThemeMode },
-              preview: <SwatchPreview scheme="standard" mode={previewThemeMode} />,
-            },
-            {
-              value: "sepia",
-              title: "Ember",
-              description: "Warm graphite and amber, cream paper in light",
-              attributes: { "data-color-scheme": "sepia", "data-theme-mode": previewThemeMode },
-              preview: <SwatchPreview scheme="sepia" mode={previewThemeMode} />,
-            },
-            {
-              value: "high-contrast",
-              title: "High Contrast",
-              description: "Maximum contrast, no decoration",
-              attributes: { "data-color-scheme": "high-contrast", "data-theme-mode": previewThemeMode },
-              preview: <SwatchPreview scheme="high-contrast" mode={previewThemeMode} />,
-            },
-          ]}
+          options={COLOR_SCHEMES.map(({ id, name, description }) => ({
+            value: id,
+            title: name,
+            description,
+            attributes: { "data-color-scheme": id, "data-theme-mode": previewThemeMode },
+            preview: <SchemePreview scheme={id} mode={previewThemeMode} />,
+          }))}
         />
       );
     case "statusBar":

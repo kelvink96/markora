@@ -2,6 +2,8 @@
  * How the menu bar arranges the app's commands. Pure data: each entry names a command from
  * `buildAppCommands` by id, so labels, shortcuts and enabled state come from one place.
  */
+import { COLOR_SCHEMES } from "../settings/color-schemes";
+
 export type MenuNode =
   /** A command by id. `label` shortens it inside a submenu ("Theme: Dark" shows as "Dark" under Theme). */
   | { type: "command"; id: string; label?: string }
@@ -91,11 +93,10 @@ export const MENU_LAYOUT: MenuDefinition[] = [
         command("view.theme.light", "Light"),
         command("view.theme.dark", "Dark"),
       ]),
-      submenu("Color Scheme", [
-        command("view.color-scheme.standard", "Standard"),
-        command("view.color-scheme.sepia", "Sepia"),
-        command("view.color-scheme.high-contrast", "High Contrast"),
-      ]),
+      submenu(
+        "Color Scheme",
+        COLOR_SCHEMES.map(({ id, name }) => command(`view.color-scheme.${id}`, name)),
+      ),
       separator,
       command("view.word-wrap"),
       command("view.line-numbers"),

@@ -3,6 +3,9 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AppDialogs } from "./app-dialogs";
 
+const { openExternal } = vi.hoisted(() => ({ openExternal: vi.fn(() => Promise.resolve()) }));
+vi.mock("../../../platform/links", () => ({ getLinkAdapter: () => ({ openExternal }) }));
+
 function renderDialogs(overrides: Partial<Parameters<typeof AppDialogs>[0]> = {}) {
   const handlers = {
     onCancelClose: vi.fn(),
@@ -112,14 +115,13 @@ describe("AppDialogs", () => {
     });
   });
 
-  it("shows the version and a safe privacy link in About", () => {
+  it("shows the version and a privacy link in About that opens outside the app", async () => {
     renderDialogs({ aboutOpen: true });
 
     const dialog = screen.getByRole("dialog", { name: "About Markora" });
     expect(within(dialog).getByText("Version 9.9.9")).toBeInTheDocument();
-    const link = within(dialog).getByRole("link", { name: "Privacy Policy" });
-    expect(link).toHaveAttribute("target", "_blank");
-    expect(link).toHaveAttribute("rel", "noopener noreferrer");
+    await userEvent.click(within(dialog).getByRole("link", { name: "Privacy Policy" }));
+    expect(openExternal).toHaveBeenCalledWith("https://kelvink96.github.io/markora/privacy");
   });
 
   it("points release notes at the releases page", () => {

@@ -43,6 +43,20 @@ describe("FindBar", () => {
     expect(screen.getByRole("textbox", { name: "Find" })).toHaveFocus();
   });
 
+  // One field: the match count and the case / word / regex options sit inside the search box.
+  it("builds the search box from InputGroup, with the count and options inside it", () => {
+    renderBar("cat dog cat", { initialSearch: "cat" });
+
+    const group = screen.getByRole("textbox", { name: "Find" }).closest("[data-slot=input-group]");
+    expect(group).not.toBeNull();
+    expect(group).toContainElement(screen.getByRole("status"));
+    for (const name of ["Match case", "Match whole word", "Use regular expression"]) {
+      expect(group).toContainElement(screen.getByRole("button", { name }));
+    }
+    // Previous and next stay outside, beside the field.
+    expect(group).not.toContainElement(screen.getByRole("button", { name: "Next match" }));
+  });
+
   it("fills the find box with the selected text and shows its matches", () => {
     renderBar("cat dog cat", { initialSearch: "cat" });
 
@@ -124,7 +138,8 @@ describe("FindBar", () => {
 
     await user.type(screen.getByRole("textbox", { name: "Find" }), "(");
 
-    expect(screen.getByRole("status")).toHaveTextContent("Invalid regular expression");
+    // Short, because it shows inside the search field; the field's error state carries the rest.
+    expect(screen.getByRole("status")).toHaveTextContent("Invalid regex");
     expect(screen.getByRole("textbox", { name: "Find" })).toHaveAttribute("aria-invalid", "true");
   });
 

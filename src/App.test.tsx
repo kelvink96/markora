@@ -84,13 +84,25 @@ vi.mock("./features/outline/scroll-to-heading", () => ({
   scrollPreviewToHeading: vi.fn(() => true),
 }));
 
-vi.mock("./components/editor-page/editor-pane", () => ({
-  EditorPane: ({ live }: { live?: boolean }) => (
-    <div data-testid="editor-pane" data-live={String(Boolean(live))}>
-      Editor Pane
-    </div>
-  ),
-}));
+// Counts mounts, so a test can prove an editor was kept (undo history, cursor) rather than rebuilt.
+const editorMounts = vi.hoisted(() => ({ count: 0 }));
+
+vi.mock("./components/editor-page/editor-pane", async () => {
+  // Imported here: a hoisted factory can't see the file's top-level imports.
+  const { useEffect } = await import("react");
+  return {
+  EditorPane: ({ live, focusDim }: { live?: boolean; focusDim?: boolean }) => {
+    useEffect(() => {
+      editorMounts.count += 1;
+    }, []);
+    return (
+      <div data-testid="editor-pane" data-live={String(Boolean(live))} data-focus-dim={String(Boolean(focusDim))}>
+        Editor Pane
+      </div>
+    );
+  },
+  };
+});
 
 vi.mock("./components/editor-page/preview-pane", () => ({
   PreviewPane: () => <div>Preview Pane</div>,
@@ -220,7 +232,8 @@ describe("App", () => {
       settings,
       templateDraft: settings.authoring.newDocumentTemplate,
     });
-    useWorkspaceState.setState({ viewMode: "write", showSyntax: false });
+    useWorkspaceState.setState({ viewMode: "write", showSyntax: false, focusMode: false });
+    editorMounts.count = 0;
     vi.mocked(scrollPreviewToHeading).mockClear();
     useThemeStore.setState({
       themePreference: "system",
@@ -869,6 +882,163 @@ describe("App", () => {
       await user.type(within(palette).getByPlaceholderText("Type a command..."), "show syntax");
 
       expect(within(palette).queryByRole("option", { name: /Show Syntax/ })).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Focus", () => {
+    const editor = () => screen.getByTestId("editor-pane");
+    const toggleWithShortcut = () => fireEvent.keyDown(window, { key: "F", ctrlKey: true, shiftKey: true });
+    const chrome = () => [
+      screen.queryByText("Top Bar"),
+      screen.queryByTestId("formatting-bar"),
+      screen.queryByText("Footer Status"),
+      screen.queryByRole("complementary", { name: "Outline" }),
+    ];
+    const hydrated = () => waitFor(() => expect(useSettingsStore.getState().isHydrated).toBe(true));
+
+    async function runFromPalette(user: ReturnType<typeof userEvent.setup>, query: string) {
+      fireEvent.keyDown(window, { key: "k", ctrlKey: true });
+      const palette = await screen.findByRole("dialog", { name: "Command palette" });
+      await user.type(within(palette).getByPlaceholderText("Type a command..."), query);
+      await user.keyboard("{Enter}");
+    }
+
+    it("hides the top bar, formatting bar, status bar and outline while on, and brings them back", () => {
+      useWorkspaceState.setState({ showOutline: true });
+      render(<App />);
+      for (const element of chrome()) expect(element).toBeInTheDocument();
+
+      act(() => useWorkspaceState.getState().setFocusMode(true));
+      for (const element of chrome()) expect(element).not.toBeInTheDocument();
+
+      act(() => useWorkspaceState.getState().setFocusMode(false));
+      for (const element of chrome()) expect(element).toBeInTheDocument();
+      expect(useWorkspaceState.getState().showOutline).toBe(true);
+    });
+
+    it("toggles with Ctrl+Shift+F", () => {
+      render(<App />);
+
+      toggleWithShortcut();
+      expect(useWorkspaceState.getState().focusMode).toBe(true);
+
+      toggleWithShortcut();
+      expect(useWorkspaceState.getState().focusMode).toBe(false);
+    });
+
+    it("toggles from the command palette", async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      await runFromPalette(user, "focus");
+
+      await waitFor(() => expect(useWorkspaceState.getState().focusMode).toBe(true));
+    });
+
+    it("does nothing from the shortcut outside Write", () => {
+      useWorkspaceState.setState({ viewMode: "read" });
+      render(<App />);
+
+      toggleWithShortcut();
+
+      expect(useWorkspaceState.getState().focusMode).toBe(false);
+    });
+
+    it("says how to leave when it turns on, and only then", async () => {
+      render(<App />);
+
+      toggleWithShortcut();
+      expect(await screen.findByText("Focus on. Esc to exit.")).toBeInTheDocument();
+      // The toast renders its text in more than one place (title and screen-reader copy), so compare counts.
+      const whileOn = screen.getAllByText("Focus on. Esc to exit.").length;
+
+      toggleWithShortcut();
+      expect(screen.getAllByText("Focus on. Esc to exit.")).toHaveLength(whileOn);
+    });
+
+    it("keeps the same editor, so undo history and the cursor survive", () => {
+      render(<App />);
+      expect(editorMounts.count).toBe(1);
+
+      act(() => useWorkspaceState.getState().setFocusMode(true));
+      act(() => useWorkspaceState.getState().setFocusMode(false));
+
+      expect(editorMounts.count).toBe(1);
+    });
+
+    it.each([
+      ["narrow", "60ch"],
+      ["normal", "72ch"],
+      ["wide", "90ch"],
+    ] as const)("centers the editor at the %s content width while on, and not otherwise", async (width, measure) => {
+      render(<App />);
+      await hydrated();
+      act(() => useSettingsStore.getState().updatePreview({ contentWidth: width }));
+      const wrapper = editor().parentElement as HTMLElement;
+      expect(wrapper.style.maxWidth).toBe("");
+
+      act(() => useWorkspaceState.getState().setFocusMode(true));
+      expect(wrapper.style.maxWidth).toBe(measure);
+
+      act(() => useWorkspaceState.getState().setFocusMode(false));
+      expect(wrapper.style.maxWidth).toBe("");
+    });
+
+    it("dims other paragraphs only while on and the setting is on", async () => {
+      render(<App />);
+      await hydrated();
+      expect(editor()).toHaveAttribute("data-focus-dim", "false");
+
+      act(() => useWorkspaceState.getState().setFocusMode(true));
+      expect(editor()).toHaveAttribute("data-focus-dim", "true");
+
+      act(() => useSettingsStore.getState().updateEditor({ focusDimming: false }));
+      expect(editor()).toHaveAttribute("data-focus-dim", "false");
+    });
+
+    it("leaves on Esc, but not when something earlier already used the Esc", () => {
+      render(<App />);
+      act(() => useWorkspaceState.getState().setFocusMode(true));
+
+      // The find bar, slash menu, menus and dialogs all prevent default on the Esc they act on.
+      const widget = (event: Event) => event.preventDefault();
+      document.addEventListener("keydown", widget, true);
+      fireEvent.keyDown(document.body, { key: "Escape" });
+      expect(useWorkspaceState.getState().focusMode).toBe(true);
+
+      document.removeEventListener("keydown", widget, true);
+      fireEvent.keyDown(document.body, { key: "Escape" });
+      expect(useWorkspaceState.getState().focusMode).toBe(false);
+    });
+
+    it("does not leave on other keys", () => {
+      render(<App />);
+      act(() => useWorkspaceState.getState().setFocusMode(true));
+
+      fireEvent.keyDown(document.body, { key: "Enter" });
+
+      expect(useWorkspaceState.getState().focusMode).toBe(true);
+    });
+
+    it("brings the chrome back when the last document is closed, so nobody is left without controls", () => {
+      render(<App />);
+      act(() => useWorkspaceState.getState().setFocusMode(true));
+      expect(screen.queryByText("Top Bar")).not.toBeInTheDocument();
+
+      act(() => useDocumentStore.setState({ openDocuments: [], activeDocumentId: "" }));
+
+      expect(screen.getByText("Top Bar")).toBeInTheDocument();
+    });
+
+    it("turns off when the view changes to Read", async () => {
+      const user = userEvent.setup();
+      render(<App />);
+      act(() => useWorkspaceState.getState().setFocusMode(true));
+
+      await runFromPalette(user, "read view");
+
+      await waitFor(() => expect(useWorkspaceState.getState().viewMode).toBe("read"));
+      expect(useWorkspaceState.getState().focusMode).toBe(false);
     });
   });
 

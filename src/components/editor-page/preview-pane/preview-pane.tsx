@@ -6,13 +6,13 @@ import { getLinkAdapter } from "../../../platform/links";
 import { classifyLink } from "../../../features/preview/preview-links";
 import { highlightCodeBlocks } from "../../../features/preview/highlight-code";
 import { useSettingsStore } from "../../../features/settings/settings-store";
+import { CONTENT_WIDTH_MEASURE } from "../../../features/preview/content-width";
 
 // DOMPurify's default URL allowlist plus Tauri's asset:// scheme, which the desktop
 // renderer uses for images next to the open file (http://asset.localhost passes already).
 const ALLOWED_URI_REGEXP =
   /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp|matrix|asset):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i;
 
-const CONTENT_WIDTH_MEASURE = { narrow: "60ch", normal: "72ch", wide: "90ch" } as const;
 
 function sanitize(html: string) {
   return DOMPurify.sanitize(html, { ALLOWED_URI_REGEXP });

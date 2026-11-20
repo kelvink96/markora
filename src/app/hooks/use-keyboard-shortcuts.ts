@@ -8,10 +8,12 @@ interface ShortcutHandlers {
   onSaveAs: () => void | Promise<void>;
   /** Ctrl/Cmd+K or Ctrl/Cmd+Shift+P. */
   onCommandPalette?: () => void;
+  /** Ctrl/Cmd+Shift+F. */
+  onToggleFocus?: () => void;
 }
 
-/** Global Ctrl/Cmd shortcuts: N, O, S, Shift+S, K / Shift+P (command palette) and Ctrl+Tab / Ctrl+Shift+Tab tab cycling. */
-export function useKeyboardShortcuts({ onNew, onOpen, onSave, onSaveAs, onCommandPalette }: ShortcutHandlers) {
+/** Global Ctrl/Cmd shortcuts: N, O, S, Shift+S, K / Shift+P (command palette), Shift+F (Focus) and Ctrl+Tab / Ctrl+Shift+Tab tab cycling. */
+export function useKeyboardShortcuts({ onNew, onOpen, onSave, onSaveAs, onCommandPalette, onToggleFocus }: ShortcutHandlers) {
   const selectDocument = useDocumentStore((state) => state.selectDocument);
 
   useEffect(() => {
@@ -24,6 +26,11 @@ export function useKeyboardShortcuts({ onNew, onOpen, onSave, onSaveAs, onComman
       if ((key === "k" && !event.shiftKey) || (key === "p" && event.shiftKey)) {
         event.preventDefault();
         onCommandPalette?.();
+      }
+
+      if (key === "f" && event.shiftKey) {
+        event.preventDefault();
+        onToggleFocus?.();
       }
 
       if (event.key === "n") {
@@ -60,5 +67,5 @@ export function useKeyboardShortcuts({ onNew, onOpen, onSave, onSaveAs, onComman
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onCommandPalette, onNew, onOpen, onSave, onSaveAs, selectDocument]);
+  }, [onCommandPalette, onNew, onOpen, onSave, onSaveAs, onToggleFocus, selectDocument]);
 }

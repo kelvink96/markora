@@ -9,6 +9,7 @@ import {
   type ThemePreference,
 } from "../../features/settings/settings-schema";
 import { Button } from "@/components/ui/button";
+import { ButtonGroup, ButtonGroupText } from "@/components/ui/button-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -69,7 +70,7 @@ export function FontSizeStepper({ value, onChange }: { value: number; onChange: 
       <span aria-hidden="true" className="w-8 text-center" style={{ fontSize: value }}>
         Aa
       </span>
-      <div className="flex items-center gap-1">
+      <ButtonGroup>
         <Button
           type="button"
           variant="outline"
@@ -80,9 +81,9 @@ export function FontSizeStepper({ value, onChange }: { value: number; onChange: 
         >
           <Minus aria-hidden="true" />
         </Button>
-        <span aria-live="polite" className="w-14 text-center text-sm tabular-nums">
+        <ButtonGroupText aria-live="polite" className="min-w-16 justify-center font-normal tabular-nums">
           {value} px
-        </span>
+        </ButtonGroupText>
         <Button
           type="button"
           variant="outline"
@@ -93,7 +94,7 @@ export function FontSizeStepper({ value, onChange }: { value: number; onChange: 
         >
           <Plus aria-hidden="true" />
         </Button>
-      </div>
+      </ButtonGroup>
     </div>
   );
 }

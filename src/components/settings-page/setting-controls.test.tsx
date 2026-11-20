@@ -39,6 +39,15 @@ describe("SegmentedControl", () => {
 });
 
 describe("FontSizeStepper", () => {
+  it("joins the buttons and the value into one ButtonGroup", () => {
+    render(<FontSizeStepper value={16} onChange={() => {}} />);
+
+    const group = screen.getByRole("button", { name: "Increase font size" }).closest("[data-slot=button-group]");
+    expect(group).not.toBeNull();
+    expect(group).toContainElement(screen.getByRole("button", { name: "Decrease font size" }));
+    expect(group).toHaveTextContent("16 px");
+  });
+
   it("disables increase at the largest size", () => {
     render(<FontSizeStepper value={24} onChange={() => {}} />);
 

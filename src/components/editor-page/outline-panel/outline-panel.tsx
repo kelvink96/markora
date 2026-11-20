@@ -15,6 +15,7 @@ import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalList
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, ListTree, X } from "lucide-react";
 import { type Ref, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Heading } from "../../../features/outline/extract-headings";
@@ -42,6 +43,8 @@ interface RowProps {
   /** The shallowest level in the document: indentation is relative to it. */
   topLevel: number;
   isActive: boolean;
+  /** A sub-section of the section being dragged: invisible, but it keeps its space so nothing shifts mid-drag. */
+  concealed?: boolean;
   buttonRef?: Ref<HTMLButtonElement>;
   wordCount?: number;
   onSelect: (heading: Heading) => void;
@@ -76,7 +79,7 @@ function RowContent({ heading, topLevel, isActive, buttonRef, wordCount, onSelec
 
 function PlainRow(props: RowProps) {
   return (
-    <li className="flex items-center">
+    <li className="flex items-center" style={props.concealed ? { visibility: "hidden" } : undefined} aria-hidden={props.concealed || undefined}>
       <RowContent {...props} />
     </li>
   );
@@ -91,7 +94,8 @@ function SortableRow(props: RowProps) {
   return (
     <li
       ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition }}
+      style={{ transform: CSS.Transform.toString(transform), transition, visibility: props.concealed ? "hidden" : undefined }}
+      aria-hidden={props.concealed || undefined}
       className={cn("group flex items-center gap-0.5", isDragging && "opacity-40")}
     >
       <button
@@ -129,13 +133,16 @@ export function OutlinePanel({ headings, activeIndex, onSelect, onClose, wordCou
   // Indent relative to the shallowest level in the document, so a document that starts at ## isn't pushed right.
   const topLevel = headings.length > 0 ? Math.min(...headings.map((heading) => heading.level)) : 1;
 
-  const visibleHeadings = useMemo(() => {
-    if (draggingIndex === null || !headings[draggingIndex]) return headings;
+  // While a section is dragged its sub-sections go with it, so their rows are concealed.
+  const concealedIndices = useMemo(() => {
+    const concealed = new Set<number>();
+    if (draggingIndex === null || !headings[draggingIndex]) return concealed;
 
     const { level } = headings[draggingIndex];
-    let end = draggingIndex + 1;
-    while (end < headings.length && headings[end].level > level) end++;
-    return headings.filter((heading) => heading.index <= draggingIndex || heading.index >= end);
+    for (let index = draggingIndex + 1; index < headings.length && headings[index].level > level; index++) {
+      concealed.add(index);
+    }
+    return concealed;
   }, [headings, draggingIndex]);
 
   const title = (id: string | number) => headings[Number(id)]?.text ?? "";
@@ -165,6 +172,7 @@ export function OutlinePanel({ headings, activeIndex, onSelect, onClose, wordCou
       heading,
       topLevel,
       isActive: heading.index === activeIndex,
+      concealed: concealedIndices.has(heading.index),
       buttonRef: heading.index === activeIndex ? activeItem : undefined,
       wordCount: wordCounts?.[heading.index],
       onSelect,
@@ -201,24 +209,28 @@ export function OutlinePanel({ headings, activeIndex, onSelect, onClose, wordCou
               onDragCancel={() => setDraggingIndex(null)}
               accessibility={{ announcements }}
             >
-              <SortableContext items={visibleHeadings.map((heading) => String(heading.index))} strategy={verticalListSortingStrategy}>
-                <ul className="space-y-0.5">{visibleHeadings.map(rowFor)}</ul>
+              <SortableContext items={headings.map((heading) => String(heading.index))} strategy={verticalListSortingStrategy}>
+                <ul className="space-y-0.5">{headings.map(rowFor)}</ul>
               </SortableContext>
-              <DragOverlay>
-                {draggedHeading ? (
-                  <div className="flex items-center justify-between gap-3 rounded-md border bg-popover px-3 py-1.5 text-sm shadow-lg">
-                    <span className="truncate font-medium">{draggedHeading.text}</span>
-                    {wordCounts?.[draggedHeading.index] === undefined ? null : (
-                      <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                        {wordsLabel(wordCounts[draggedHeading.index])}
-                      </span>
-                    )}
-                  </div>
-                ) : null}
-              </DragOverlay>
+              {/* In the page body: the panel's backdrop blur would make a fixed-position overlay sit relative to the panel. */}
+              {createPortal(
+                <DragOverlay>
+                  {draggedHeading ? (
+                    <div className="flex items-center justify-between gap-3 rounded-md border bg-popover px-3 py-1.5 text-sm shadow-lg">
+                      <span className="truncate font-medium">{draggedHeading.text}</span>
+                      {wordCounts?.[draggedHeading.index] === undefined ? null : (
+                        <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                          {wordsLabel(wordCounts[draggedHeading.index])}
+                        </span>
+                      )}
+                    </div>
+                  ) : null}
+                </DragOverlay>,
+                document.body,
+              )}
             </DndContext>
           ) : (
-            <ul className="space-y-0.5">{visibleHeadings.map(rowFor)}</ul>
+            <ul className="space-y-0.5">{headings.map(rowFor)}</ul>
           )}
         </nav>
       )}

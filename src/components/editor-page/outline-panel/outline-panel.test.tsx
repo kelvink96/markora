@@ -17,6 +17,8 @@ vi.mock("@dnd-kit/core", async (importOriginal) => {
       dnd.props = props;
       return <actual.DndContext {...props} />;
     },
+    // The real overlay renders nothing until dnd-kit itself starts a drag, which jsdom can't do.
+    DragOverlay: ({ children }: { children?: React.ReactNode }) => <div data-testid="drag-overlay">{children}</div>,
   };
 });
 const dndProps = () => dnd.props as Required<Pick<DndContextProps, "onDragStart" | "onDragEnd" | "onDragCancel">> & {
@@ -221,6 +223,35 @@ describe("OutlinePanel section moves", () => {
     expect(announcements.onDragEnd(ids(1, 2) as never)).toBe("Move cancelled");
     expect(announcements.onDragEnd(ids(1, null) as never)).toBe("Move cancelled");
     expect(announcements.onDragCancel(ids(1, null) as never)).toBe("Move cancelled");
+  });
+
+  it("keeps the hidden sub-section rows' space while dragging, so the rows below don't move under dnd-kit", () => {
+    renderMovable();
+
+    act(() => dndProps().onDragStart({ active: { id: "1" } } as unknown as DragStartEvent));
+
+    // Taking them out of the list shifted the rows mid-drag and dnd-kit lost track of where the pointer was
+    // (seen in a real browser), so they stay in place, just invisible and out of the accessibility tree.
+    const concealed = screen.getByText("Install").closest("li");
+    expect(concealed).toHaveStyle({ visibility: "hidden" });
+    expect(concealed).toHaveAttribute("aria-hidden", "true");
+    expect(screen.getByText("Usage").closest("li")).not.toHaveStyle({ visibility: "hidden" });
+
+    act(() => dndProps().onDragCancel(ids(1, null) as never));
+    expect(screen.getByText("Install").closest("li")).not.toHaveStyle({ visibility: "hidden" });
+  });
+
+  it("draws the dragged row outside the panel, whose backdrop blur would otherwise make it position against the panel", () => {
+    renderMovable({ wordCounts: [4, 2, 1, 1] });
+
+    act(() => dndProps().onDragStart({ active: { id: "1" } } as unknown as DragStartEvent));
+
+    // A backdrop-filter makes position: fixed children position against the panel, not the window: the
+    // overlay (and so dnd-kit's idea of where the dragged row is) sat a panel-offset away from the pointer.
+    const overlay = screen.getByTestId("drag-overlay");
+    expect(overlay).toHaveTextContent("Setup");
+    expect(overlay).toHaveTextContent("2 words");
+    expect(overlay.closest("aside")).toBeNull();
   });
 
   it("offers no handles when it was not given a way to move sections", () => {

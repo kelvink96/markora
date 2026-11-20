@@ -111,6 +111,21 @@ describe("theme palettes", () => {
     });
   });
 
+  it.each(THEMES.filter(([, , id]) => id === "ink"))(
+    "%s has no colour at all, apart from errors, and adds underline and tint cues instead",
+    (_name, selector) => {
+      const tokens = blocks.get(selector)!;
+
+      for (const [token, value] of tokens) {
+        if (token.startsWith("destructive") || !value.startsWith("oklch(")) continue;
+        expect(parseOklch(value)[1], `--${token} should be a pure grey`).toBe(0);
+      }
+      // Links and code can't be told apart by hue here, so the editor gets a non-colour cue for each.
+      expect(tokens.get("syntax-link-decoration")).toBe("underline");
+      expect(tokens.get("syntax-code-background")).toBe("var(--muted)");
+    },
+  );
+
   it.each(THEMES.filter(([, , id]) => id === "high-contrast"))(
     "%s has form-control borders that meet the 3:1 non-text contrast rule",
     (_name, selector) => {

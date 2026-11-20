@@ -5,7 +5,7 @@ import { COLOR_SCHEMES, COLOR_SCHEME_IDS } from "./color-schemes";
 
 describe("COLOR_SCHEMES", () => {
   it("lists every scheme once, with the names Settings, the menus and the palette all show", () => {
-    expect(COLOR_SCHEMES.map((scheme) => scheme.name)).toEqual(["Aurora", "Ember", "High Contrast", "Moss", "Frost", "Rosé"]);
+    expect(COLOR_SCHEMES.map((scheme) => scheme.name)).toEqual(["Aurora", "Ember", "High Contrast", "Moss", "Frost", "Rosé", "Ink"]);
     expect(new Set(COLOR_SCHEME_IDS).size).toBe(COLOR_SCHEMES.length);
   });
 

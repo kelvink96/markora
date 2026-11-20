@@ -106,6 +106,7 @@ Also in `src/components/editor-page/`: `ViewModeSwitcher` (Write / Side-by-side 
 - **Preview** (`features/preview/`): `classifyLink` decides in-app vs external links; external ones open via the `LinkAdapter` (`platform/links/`), never directly.
 - **Session** (`features/session/`): open tabs are saved and restored when `files.restorePreviousSession` is on.
 - **Settings**: `MarkoraSettings` is shared between `settings-schema.ts` and the Rust settings file (`src-tauri/src/commands/settings.rs`). Adding a setting means updating both, plus `normalizeSettings` and the settings catalog.
+- **Colour schemes**: `features/settings/color-schemes.ts` is the one list (id, name, description, keywords, window colour). The type, settings allowlist, View menu, command palette and Settings swatches all derive from it; a new scheme also needs light and dark blocks in `styles/themes.css` and a variant in the Rust `ColorScheme` enum, and tests fail until all three agree. `SchemePreview` draws the miniature used by Settings and the View menu.
 
 ## Implementation Guidance
 

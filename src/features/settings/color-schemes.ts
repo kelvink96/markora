@@ -49,6 +49,13 @@ export const COLOR_SCHEMES = [
     keywords: ["rose", "pink", "pine", "soft", "pastel"],
     themeColor: { light: "#fcf4eb", dark: "#171322" },
   },
+  {
+    id: "ink",
+    name: "Ink",
+    description: "Pure grayscale: no colour at all, only errors stay red",
+    keywords: ["grayscale", "greyscale", "monochrome", "black and white", "mono", "minimal", "e-ink"],
+    themeColor: { light: "#f7f7f7", dark: "#0b0b0b" },
+  },
 ] as const;
 
 export type ColorScheme = (typeof COLOR_SCHEMES)[number]["id"];

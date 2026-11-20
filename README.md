@@ -134,13 +134,21 @@ src-tauri/
 
 The interface is built on [shadcn/ui](https://ui.shadcn.com) (Radix primitives + Tailwind CSS v4). The shadcn components live in `src/components/ui/` and are owned by this repo, so edit them directly.
 
-**Themes.** `src/styles/themes.css` defines three colour schemes, each in light and dark, in OKLCH:
+**Themes.** `src/styles/themes.css` defines seven colour schemes, each in light and dark, in OKLCH:
 
 | Scheme (setting value) | Look |
 | --- | --- |
 | Aurora (`standard`) | Cool indigo ink with a violet to cyan brand gradient |
 | Ember (`sepia`) | Warm graphite and amber; cream paper with a burnt-orange accent in light |
 | High Contrast (`high-contrast`) | Black and white, strong borders, no decoration |
+| Moss (`moss`) | Muted green on warm grey; cream paper in light, slate green in dark |
+| Frost (`frost`) | Calm arctic blue-grey with a frost-blue accent |
+| Rosé (`rose`) | Dusty rose and gold; cream dawn in light, deep plum in dark |
+| Ink (`ink`) | Pure grayscale: no hue at all, only errors stay red. Links get an underline and inline code a tint instead of a colour |
+
+Moss, Frost and Rosé are inspired by [Everforest](https://github.com/sainnhe/everforest) (sainnhe), [Nord](https://www.nordtheme.com) (Arctic Ice Studio) and [Rosé Pine](https://rosepinetheme.com); all three are MIT licensed. The colours are retuned to pass the contrast checks below, not copied. Aurora, Ember, High Contrast and Ink are original.
+
+**Adding a scheme.** Add it to `COLOR_SCHEMES` in `src/features/settings/color-schemes.ts` (the type, settings, View menu, command palette, window colour and Settings swatches all follow that list), add its light and dark blocks to `themes.css`, and add the variant to the `ColorScheme` enum in `src-tauri/src/commands/settings.rs`. Tests fail until all three agree.
 
 To change a colour, edit it in `themes.css`. `src/styles/theme-contrast.test.ts` then checks every scheme and mode for WCAG AA contrast (4.5:1 text, 3:1 focus rings) and that no token is missing, so a bad tweak fails in `pnpm exec vitest run`. Dark mode is the `.theme-dark` class that `AppShell` sets on `<html>`; the editor's syntax colours are the `--syntax-*` tokens, so the editor follows the theme with no rebuild.
 

@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { CircleAlert } from "lucide-react";
 import { useSettingsStore } from "../../features/settings/settings-store";
 import { SAVE_BEFORE_RESTART, useUpdateStore } from "../../features/updates/update-store";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -112,9 +114,11 @@ export function UpdatesCard({ version, hasUnsavedChanges, onChangeUpdates }: Upd
           ) : null}
 
           {errorMessage ? (
-            <p role="alert" className="text-destructive">
-              {errorMessage}
-            </p>
+            <Alert variant="destructive">
+              <CircleAlert aria-hidden="true" />
+              <AlertTitle>Couldn't update</AlertTitle>
+              <AlertDescription>{errorMessage}</AlertDescription>
+            </Alert>
           ) : null}
         </CardContent>
       ) : null}

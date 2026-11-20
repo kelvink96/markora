@@ -161,7 +161,10 @@ describe("UpdatesCard", () => {
     seed({ status: "error", error: "Network down" });
     renderCard();
 
-    expect(screen.getByText("Network down")).toBeInTheDocument();
+    const alert = screen.getByRole("alert");
+    expect(alert).toHaveAttribute("data-slot", "alert");
+    expect(alert).toHaveTextContent("Couldn't update");
+    expect(alert).toHaveTextContent("Network down");
     await userEvent.click(screen.getByRole("button", { name: "Try again" }));
     expect(check).toHaveBeenCalledTimes(1);
   });

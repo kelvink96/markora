@@ -35,6 +35,13 @@ export const COLOR_SCHEMES = [
     keywords: ["green", "forest", "everforest", "nature"],
     themeColor: { light: "#f8f5e5", dark: "#0d1916" },
   },
+  {
+    id: "frost",
+    name: "Frost",
+    description: "Calm arctic blue-grey, low glare",
+    keywords: ["blue", "nord", "arctic", "cool"],
+    themeColor: { light: "#f0f4f9", dark: "#1b222b" },
+  },
 ] as const;
 
 export type ColorScheme = (typeof COLOR_SCHEMES)[number]["id"];

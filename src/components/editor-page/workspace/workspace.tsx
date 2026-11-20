@@ -70,7 +70,7 @@ export function Workspace({ sidebar, left, right, viewMode }: WorkspaceProps) {
 
   return (
     <div
-      className={`workspace relative flex min-h-0 flex-1 overflow-hidden px-3 pb-3 pt-2.5${split ? " gap-2" : ""}`}
+      className={`workspace relative flex min-h-0 flex-1 overflow-hidden px-3 pb-3 pt-2.5 gap-2`}
       onMouseMove={split ? onMouseMove : undefined}
       onMouseUp={
         split

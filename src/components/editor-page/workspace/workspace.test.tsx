@@ -79,6 +79,16 @@ describe("Workspace with a sidebar (#16)", () => {
     expect(screen.getByText("Outline")).toBeInTheDocument();
   });
 
+  // The panes only get a gap between them in split view, so without one on the workspace itself the
+  // sidebar sat flush against the editor in Write and Read.
+  it.each(["write", "split", "read"] as const)("keeps a gap between the sidebar and the panes in %s view", (viewMode) => {
+    const { container } = render(
+      <Workspace viewMode={viewMode} sidebar={<div>Outline</div>} left={<div>Left</div>} right={<div>Right</div>} />,
+    );
+
+    expect(container.querySelector(".workspace")).toHaveClass("gap-2");
+  });
+
   // On a phone a 16rem column leaves the editor a few characters wide, so below the md breakpoint
   // the sidebar floats over the panes instead of taking space from them.
   it.each(["write", "split", "read"] as const)("floats the sidebar over the panes on narrow screens in %s view", (viewMode) => {

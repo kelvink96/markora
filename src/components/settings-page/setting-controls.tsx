@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Minus, Plus } from "lucide-react";
+import { COLOR_SCHEMES } from "../../features/settings/color-schemes";
 import {
   EDITOR_FONT_SIZES,
   PREVIEW_SCALES,
@@ -167,29 +168,13 @@ export function renderControl(id: string, { settings, previewThemeMode, update }
           testIdPrefix="scheme-swatch"
           value={scheme}
           onValueChange={(colorScheme) => setAppearance({ colorScheme })}
-          options={[
-            {
-              value: "standard",
-              title: "Aurora",
-              description: "Cool indigo with a violet-to-cyan glow",
-              attributes: { "data-color-scheme": "standard", "data-theme-mode": previewThemeMode },
-              preview: <SwatchPreview scheme="standard" mode={previewThemeMode} />,
-            },
-            {
-              value: "sepia",
-              title: "Ember",
-              description: "Warm graphite and amber, cream paper in light",
-              attributes: { "data-color-scheme": "sepia", "data-theme-mode": previewThemeMode },
-              preview: <SwatchPreview scheme="sepia" mode={previewThemeMode} />,
-            },
-            {
-              value: "high-contrast",
-              title: "High Contrast",
-              description: "Maximum contrast, no decoration",
-              attributes: { "data-color-scheme": "high-contrast", "data-theme-mode": previewThemeMode },
-              preview: <SwatchPreview scheme="high-contrast" mode={previewThemeMode} />,
-            },
-          ]}
+          options={COLOR_SCHEMES.map(({ id, name, description }) => ({
+            value: id,
+            title: name,
+            description,
+            attributes: { "data-color-scheme": id, "data-theme-mode": previewThemeMode },
+            preview: <SwatchPreview scheme={id} mode={previewThemeMode} />,
+          }))}
         />
       );
     case "statusBar":

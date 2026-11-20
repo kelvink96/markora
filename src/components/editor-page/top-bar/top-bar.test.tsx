@@ -299,7 +299,7 @@ describe("TopBar", () => {
 
       await openMenu(user, "View");
       await user.click(await screen.findByRole("menuitem", { name: "Color Scheme" }));
-      await choose(user, await screen.findByRole("menuitemradio", { name: "Sepia" }));
+      await choose(user, await screen.findByRole("menuitemradio", { name: "Ember" }));
       expect(handlers.onSetColorScheme).toHaveBeenCalledWith("sepia");
     });
 

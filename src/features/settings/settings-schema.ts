@@ -1,5 +1,7 @@
+import { COLOR_SCHEME_IDS, type ColorScheme } from "./color-schemes";
+
+export type { ColorScheme };
 export type ThemePreference = "system" | "light" | "dark";
-export type ColorScheme = "standard" | "sepia" | "high-contrast";
 
 export interface AppearanceSettings {
   theme: ThemePreference;
@@ -167,11 +169,7 @@ export function normalizeSettings(raw: unknown): MarkoraSettings {
   }
 
   appearance.theme = pick(appearance.theme, ["system", "light", "dark"], defaults.appearance.theme);
-  appearance.colorScheme = pick(
-    appearance.colorScheme,
-    ["standard", "sepia", "high-contrast"],
-    defaults.appearance.colorScheme,
-  );
+  appearance.colorScheme = pick(appearance.colorScheme, COLOR_SCHEME_IDS, defaults.appearance.colorScheme);
   appearance.editorFontSize = Math.round(
     clamp(appearance.editorFontSize, 12, 24, defaults.appearance.editorFontSize),
   );

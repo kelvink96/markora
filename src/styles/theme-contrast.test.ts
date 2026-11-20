@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { COLOR_SCHEMES } from "../features/settings/color-schemes";
 import { contrastRatio, parseOklch } from "../test/color";
 
 // The palettes live in themes.css; this checks them the way a reviewer would, so a colour
@@ -22,14 +23,14 @@ function parseBlocks() {
 
 const blocks = parseBlocks();
 
-const THEMES = [
-  ["Aurora light", ":root"],
-  ["Aurora dark", ":root.theme-dark"],
-  ["Ember light", ':root[data-color-scheme="sepia"]'],
-  ["Ember dark", ':root[data-color-scheme="sepia"].theme-dark'],
-  ["High contrast light", ':root[data-color-scheme="high-contrast"]'],
-  ["High contrast dark", ':root[data-color-scheme="high-contrast"].theme-dark'],
-] as const;
+// One entry per colour scheme and mode, from the same list Settings and the menus use, so a scheme
+// added there without palette blocks here fails instead of rendering with the wrong colours.
+// Aurora is the base palette on :root; the others override it by data-color-scheme.
+const schemeSelector = (id: string) => (id === "standard" ? ":root" : `:root[data-color-scheme="${id}"]`);
+const THEMES: Array<[name: string, selector: string, id: string]> = COLOR_SCHEMES.flatMap(({ id, name }) => [
+  [`${name} light`, schemeSelector(id), id] as [string, string, string],
+  [`${name} dark`, `${schemeSelector(id)}.theme-dark`, id] as [string, string, string],
+]);
 
 const REQUIRED_TOKENS = [
   "background", "foreground", "card", "card-foreground", "popover", "popover-foreground",
@@ -85,7 +86,7 @@ const PAIRS: Array<[string, string, number]> = [
 
 describe("theme palettes", () => {
   it("lets any element preview a scheme through data-swatch attributes (used by the settings swatches)", () => {
-    for (const scheme of ["standard", "sepia", "high-contrast"]) {
+    for (const { id: scheme } of COLOR_SCHEMES) {
       for (const mode of ["light", "dark"]) {
         expect(blocks.has(`[data-swatch-scheme="${scheme}"][data-swatch-mode="${mode}"]`)).toBe(true);
       }
@@ -110,7 +111,7 @@ describe("theme palettes", () => {
     });
   });
 
-  it.each(THEMES.filter(([name]) => name.startsWith("High contrast")))(
+  it.each(THEMES.filter(([, , id]) => id === "high-contrast"))(
     "%s has form-control borders that meet the 3:1 non-text contrast rule",
     (_name, selector) => {
       const tokens = blocks.get(selector)!;

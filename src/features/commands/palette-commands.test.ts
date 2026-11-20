@@ -264,7 +264,7 @@ describe("view, theme, zoom and help commands", () => {
   it("checks the current colour scheme and labels the options for the palette", () => {
     const ctx = context({ appearance: { ...defaultSettings.appearance, colorScheme: "sepia" } });
 
-    expect(byId("view.color-scheme.sepia", ctx)).toMatchObject({ checked: true, label: "Color Scheme: Sepia" });
+    expect(byId("view.color-scheme.sepia", ctx)).toMatchObject({ checked: true, label: "Color Scheme: Ember" });
     expect(byId("view.color-scheme.standard", ctx)?.checked).toBe(false);
     expect(byId("view.theme.light", ctx)?.label).toBe("Theme: Light");
   });

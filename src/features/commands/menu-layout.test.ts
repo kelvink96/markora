@@ -103,7 +103,7 @@ describe("MENU_LAYOUT", () => {
       node?.type === "submenu" ? node.items.map((item) => (item.type === "command" ? item.label : null)) : [];
 
     expect(labels(submenu("Theme"))).toEqual(["System", "Light", "Dark"]);
-    expect(labels(submenu("Color Scheme"))).toEqual(["Standard", "Sepia", "High Contrast"]);
+    expect(labels(submenu("Color Scheme"))).toEqual(["Aurora", "Ember", "High Contrast"]);
   });
 });
 

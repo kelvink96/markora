@@ -1,5 +1,6 @@
 import type { EditorEditAction } from "../editor/editor-command-state";
 import type { MarkdownToolbarAction } from "../editor/markdown-toolbar-actions";
+import { COLOR_SCHEMES } from "../settings/color-schemes";
 import type { AppearanceSettings, ColorScheme, EditorSettings, ThemePreference } from "../settings/settings-schema";
 import { canZoom, type ZoomDirection } from "../settings/zoom";
 import type { WorkspaceViewMode } from "../workspace/workspace-state";
@@ -85,12 +86,6 @@ const THEME_OPTIONS: Array<{ value: ThemePreference; label: string; keywords: st
   { value: "system", label: "System", keywords: ["automatic", "follow system"] },
   { value: "light", label: "Light", keywords: ["light mode", "bright"] },
   { value: "dark", label: "Dark", keywords: ["dark mode"] },
-];
-
-const COLOR_SCHEMES: Array<{ value: ColorScheme; label: string; keywords: string[] }> = [
-  { value: "standard", label: "Standard", keywords: ["default"] },
-  { value: "sepia", label: "Sepia", keywords: ["warm", "paper"] },
-  { value: "high-contrast", label: "High Contrast", keywords: ["accessible", "contrast"] },
 ];
 
 const FORMAT_COMMANDS: Array<{ action: MarkdownToolbarAction; label: string; keywords?: string[] }> = [
@@ -194,9 +189,9 @@ export function buildAppCommands({
       ...always({ id: `view.theme.${value}`, label: `Theme: ${label}`, group: "View" as const, keywords: ["appearance", ...keywords], run: () => handlers.onSetThemePreference(value) }),
       checked: appearance.theme === value,
     })),
-    ...COLOR_SCHEMES.map(({ value, label, keywords }) => ({
-      ...always({ id: `view.color-scheme.${value}`, label: `Color Scheme: ${label}`, group: "View" as const, keywords: ["appearance", "colour", ...keywords], run: () => handlers.onSetColorScheme(value) }),
-      checked: appearance.colorScheme === value,
+    ...COLOR_SCHEMES.map(({ id, name, keywords }) => ({
+      ...always({ id: `view.color-scheme.${id}`, label: `Color Scheme: ${name}`, group: "View" as const, keywords: ["appearance", "colour", ...keywords], run: () => handlers.onSetColorScheme(id) }),
+      checked: appearance.colorScheme === id,
     })),
     { ...withDocument({ id: "view.word-wrap", label: "Word Wrap", group: "View", keywords: ["wrap long lines"], run: handlers.onToggleWordWrap }), checked: editor.wordWrap },
     { ...withDocument({ id: "view.line-numbers", label: "Line Numbers", group: "View", keywords: ["gutter"], run: handlers.onToggleLineNumbers }), checked: editor.lineNumbers },

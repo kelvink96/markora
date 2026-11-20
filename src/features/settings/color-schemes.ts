@@ -42,6 +42,13 @@ export const COLOR_SCHEMES = [
     keywords: ["blue", "nord", "arctic", "cool"],
     themeColor: { light: "#f0f4f9", dark: "#1b222b" },
   },
+  {
+    id: "rose",
+    name: "Rosé",
+    description: "Dusty rose and gold, cream dawn in light",
+    keywords: ["rose", "pink", "pine", "soft", "pastel"],
+    themeColor: { light: "#fcf4eb", dark: "#171322" },
+  },
 ] as const;
 
 export type ColorScheme = (typeof COLOR_SCHEMES)[number]["id"];

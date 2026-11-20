@@ -343,3 +343,71 @@
   --brand-from: oklch(0.78 0.08 215);
   --brand-to: oklch(0.72 0.1 255);
 }
+
+/* Rosé, light: cream dawn with a dusty rose accent (after Rosé Pine, MIT; retuned for AA contrast) */
+:root[data-color-scheme="rose"],
+[data-swatch-scheme="rose"][data-swatch-mode="light"] {
+  --background: oklch(0.97 0.015 70);
+  --foreground: oklch(0.36 0.05 295);
+  --card: oklch(0.985 0.01 70);
+  --card-foreground: oklch(0.36 0.05 295);
+  --popover: oklch(0.99 0.007 70);
+  --popover-foreground: oklch(0.36 0.05 295);
+  --primary: oklch(0.5 0.13 5);
+  --primary-foreground: oklch(0.985 0.01 70);
+  --secondary: oklch(0.94 0.02 70);
+  --secondary-foreground: oklch(0.36 0.05 295);
+  --muted: oklch(0.95 0.018 70);
+  --muted-foreground: oklch(0.47 0.05 295);
+  --accent: oklch(0.92 0.04 40);
+  --accent-foreground: oklch(0.32 0.08 5);
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.985 0.005 25);
+  --border: oklch(0.9 0.025 70);
+  --input: oklch(0.84 0.03 70);
+  --ring: oklch(0.58 0.13 5);
+  --editor: oklch(0.985 0.01 70);
+  --preview: oklch(0.978 0.013 70);
+  --syntax-heading: oklch(0.45 0.13 5);
+  --syntax-emphasis: oklch(0.48 0.1 300);
+  --syntax-link: oklch(0.46 0.09 225);
+  --syntax-code: oklch(0.44 0.09 60);
+  --syntax-quote: oklch(0.5 0.05 295);
+  --syntax-marker: oklch(0.64 0.08 15);
+  --brand-from: oklch(0.5 0.13 5);
+  --brand-to: oklch(0.68 0.12 70);
+}
+
+/* Rosé, dark: deep plum with soft rose and gold (after Rosé Pine, retuned for AA contrast) */
+:root[data-color-scheme="rose"].theme-dark,
+[data-swatch-scheme="rose"][data-swatch-mode="dark"] {
+  --background: oklch(0.2 0.03 295);
+  --foreground: oklch(0.9 0.04 300);
+  --card: oklch(0.235 0.034 295);
+  --card-foreground: oklch(0.9 0.04 300);
+  --popover: oklch(0.265 0.037 295);
+  --popover-foreground: oklch(0.9 0.04 300);
+  --primary: oklch(0.8 0.09 15);
+  --primary-foreground: oklch(0.2 0.03 295);
+  --secondary: oklch(0.3 0.035 295);
+  --secondary-foreground: oklch(0.9 0.04 300);
+  --muted: oklch(0.27 0.032 295);
+  --muted-foreground: oklch(0.75 0.04 300);
+  --accent: oklch(0.34 0.05 300);
+  --accent-foreground: oklch(0.95 0.02 300);
+  --destructive: oklch(0.7 0.19 22);
+  --destructive-foreground: oklch(0.16 0.03 22);
+  --border: oklch(0.35 0.04 295);
+  --input: oklch(0.4 0.045 295);
+  --ring: oklch(0.82 0.09 15);
+  --editor: oklch(0.175 0.028 295);
+  --preview: oklch(0.215 0.032 295);
+  --syntax-heading: oklch(0.82 0.08 15);
+  --syntax-emphasis: oklch(0.8 0.1 305);
+  --syntax-link: oklch(0.8 0.08 205);
+  --syntax-code: oklch(0.84 0.1 75);
+  --syntax-quote: oklch(0.76 0.04 300);
+  --syntax-marker: oklch(0.62 0.06 300);
+  --brand-from: oklch(0.8 0.09 15);
+  --brand-to: oklch(0.84 0.1 75);
+}

@@ -23,6 +23,7 @@ pub enum ColorScheme {
     HighContrast,
     Moss,
     Frost,
+    Rose,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

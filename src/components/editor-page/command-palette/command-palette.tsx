@@ -10,6 +10,7 @@ import {
   CommandShortcut,
 } from "@/components/ui/command";
 import { scorePaletteCommand, type PaletteCommand, type PaletteGroup } from "../../../features/commands/palette-commands";
+import { COMMAND_ICONS } from "../top-bar/command-icons";
 
 interface CommandPaletteProps {
   open: boolean;
@@ -48,12 +49,16 @@ export function CommandPalette({ open, onOpenChange, commands }: CommandPaletteP
           <Fragment key={group}>
             {index > 0 ? <CommandSeparator /> : null}
             <CommandGroup heading={group}>
-              {items.map((command) => (
-                <CommandItem key={command.id} value={command.id} keywords={[command.label, ...(command.keywords ?? [])]} onSelect={() => runCommand(command)}>
-                  <span>{command.label}</span>
-                  {command.shortcut ? <CommandShortcut>{command.shortcut}</CommandShortcut> : null}
-                </CommandItem>
-              ))}
+              {items.map((command) => {
+                const Icon = COMMAND_ICONS[command.id];
+                return (
+                  <CommandItem key={command.id} value={command.id} keywords={[command.label, ...(command.keywords ?? [])]} onSelect={() => runCommand(command)}>
+                    {Icon ? <Icon aria-hidden="true" /> : null}
+                    <span>{command.label}</span>
+                    {command.shortcut ? <CommandShortcut>{command.shortcut}</CommandShortcut> : null}
+                  </CommandItem>
+                );
+              })}
             </CommandGroup>
           </Fragment>
         ))}

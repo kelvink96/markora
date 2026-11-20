@@ -38,6 +38,7 @@ export interface PaletteHandlers {
   onToggleOutline: () => void;
   onViewModeChange: (mode: WorkspaceViewMode) => void;
   onToggleSyntax: () => void;
+  onToggleFocus: () => void;
   onFormat: (action: MarkdownToolbarAction) => void;
   onEditAction: (action: EditorEditAction) => void;
   onOpenShortcuts: () => void;
@@ -63,6 +64,8 @@ export interface PaletteContext {
   viewMode: WorkspaceViewMode;
   /** Whether Write shows raw markdown instead of rendering it inline. */
   showSyntax: boolean;
+  /** Whether Focus (chrome hidden, other paragraphs dimmed) is on. */
+  focusMode: boolean;
   showOutline: boolean;
   /** The stored appearance settings: the theme preference (not the resolved theme), colour scheme, zoom and status bar. */
   appearance: AppearanceSettings;
@@ -115,6 +118,7 @@ export function buildAppCommands({
   hasActiveDocument,
   viewMode,
   showSyntax,
+  focusMode,
   showOutline,
   appearance,
   editor,
@@ -167,6 +171,12 @@ export function buildAppCommands({
       // Show syntax only changes the Write view, so there is nothing to toggle elsewhere.
       enabled: hasActiveDocument && viewMode === "write",
       checked: showSyntax,
+    },
+    {
+      ...withDocument({ id: "view.focus", label: "Focus", group: "View", shortcut: `${modifier}+Shift+F`, keywords: ["distraction", "zen", "hide", "full screen", "dim"], run: handlers.onToggleFocus }),
+      // Focus belongs to Write, so there is nothing to focus in the other views.
+      enabled: hasActiveDocument && viewMode === "write",
+      checked: focusMode,
     },
     {
       ...withDocument({

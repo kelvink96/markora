@@ -133,6 +133,10 @@ vi.mock("../../../features/editor/editor-theme", () => ({ markoraEditorTheme: []
 vi.mock("../../../features/editor/live/live-extension", () => ({
   liveExtension: vi.fn(() => "live-extension"),
 }));
+// The real dimming extension is exercised in features/editor/focus/*.test.ts.
+vi.mock("../../../features/editor/focus/focus-dimming", () => ({
+  focusDimming: vi.fn(() => "focus-dimming"),
+}));
 vi.mock("@codemirror/commands", () => ({
   undo: vi.fn((view: { dispatch: (transaction: unknown) => void }) => {
     view.dispatch({ annotation: "undo" });
@@ -163,10 +167,12 @@ vi.mock("../find-bar", () => ({
 }));
 import { EditorPane } from "./editor-pane";
 import { liveExtension } from "../../../features/editor/live/live-extension";
+import { focusDimming } from "../../../features/editor/focus/focus-dimming";
 
 describe("EditorPane", () => {
   beforeEach(() => {
     vi.mocked(liveExtension).mockClear();
+    vi.mocked(focusDimming).mockClear();
     clipboardReadTextMock.mockReset();
     clipboardWriteTextMock.mockReset();
     const settings = createDefaultSettings();
@@ -234,6 +240,38 @@ describe("EditorPane", () => {
   it("boots with Live rendering when it opens live", () => {
     render(<EditorPane theme="light" live />);
     expect(liveExtension).toHaveBeenCalledTimes(1);
+  });
+
+  it("turns paragraph dimming on and off with the focusDim flag, without rebuilding the editor", () => {
+    vi.mocked(EditorState.create).mockClear();
+    const { rerender } = render(<EditorPane theme="light" focusDim={false} />);
+    expect(focusDimming).not.toHaveBeenCalled();
+    mockState.dispatchSpy.mockClear();
+
+    rerender(<EditorPane theme="light" focusDim />);
+    expect(focusDimming).toHaveBeenCalledTimes(1);
+    expect(mockState.dispatchSpy).toHaveBeenCalledWith({ effects: { reconfigured: "focus-dimming" } });
+
+    mockState.dispatchSpy.mockClear();
+    rerender(<EditorPane theme="light" focusDim={false} />);
+    expect(mockState.dispatchSpy).toHaveBeenCalledWith({ effects: { reconfigured: [] } });
+    expect(EditorState.create).toHaveBeenCalledTimes(1);
+  });
+
+  it("boots dimmed when it opens with focusDim", () => {
+    render(<EditorPane theme="light" focusDim />);
+    expect(focusDimming).toHaveBeenCalledTimes(1);
+  });
+
+  it("is not dimmed when no focusDim flag is given", () => {
+    render(<EditorPane theme="light" />);
+    expect(focusDimming).not.toHaveBeenCalled();
+  });
+
+  it("dims independently of Live rendering", () => {
+    render(<EditorPane theme="light" live focusDim />);
+    expect(liveExtension).toHaveBeenCalledTimes(1);
+    expect(focusDimming).toHaveBeenCalledTimes(1);
   });
 
   it("applies a settings change to the live editor without rebuilding it (#13)", () => {
@@ -540,6 +578,21 @@ describe("EditorPane", () => {
       await user.click(screen.getByRole("button", { name: "close-find" }));
 
       expect(screen.queryByRole("search")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("focus action", () => {
+    it("lets the app put the keyboard focus in the editor, and stops once it is gone", () => {
+      const focus = vi.spyOn(mockState.EditorView.prototype, "focus");
+      const { unmount } = render(<EditorPane theme="light" />);
+
+      act(() => useEditorCommandState.getState().focusEditor());
+      expect(focus).toHaveBeenCalledTimes(1);
+
+      unmount();
+      act(() => useEditorCommandState.getState().focusEditor());
+      expect(focus).toHaveBeenCalledTimes(1);
+      focus.mockRestore();
     });
   });
 

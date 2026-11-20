@@ -103,6 +103,12 @@ export const SETTINGS_CATALOG: SettingDefinition[] = [
     label: "Highlight the current line",
     keywords: ["cursor line", "active line"],
   }),
+  field("editor", "focusDimming", {
+    id: "focusDimming",
+    section: "writing",
+    label: "Dim other paragraphs in Focus",
+    keywords: ["focus", "dim", "fade", "paragraph", "distraction"],
+  }),
   field("appearance", "previewFontScale", {
     id: "previewScale",
     section: "preview",

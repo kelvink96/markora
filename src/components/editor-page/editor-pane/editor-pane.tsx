@@ -12,6 +12,7 @@ import { findExtensions } from "../../../features/editor/find-replace";
 import { markoraEditorTheme } from "../../../features/editor/editor-theme";
 import { createEditorSettingsExtensions } from "../../../features/editor/editor-settings-extensions";
 import { liveExtension } from "../../../features/editor/live/live-extension";
+import { focusDimming } from "../../../features/editor/focus/focus-dimming";
 import { applyMarkdownToolbarAction, type MarkdownToolbarAction } from "../../../features/editor/markdown-toolbar-actions";
 import {
   applySlashCommand,
@@ -31,6 +32,8 @@ interface EditorPaneProps {
   theme: "light" | "dark";
   /** Render markdown inline as you type (Write with Show syntax off); otherwise the raw markdown shows. */
   live?: boolean;
+  /** Fade every paragraph except the one with the cursor (Focus, with dimming on). */
+  focusDim?: boolean;
 }
 
 interface SlashMenuState {
@@ -58,7 +61,7 @@ interface InlineMenuState {
   };
 }
 
-export function EditorPane({ theme, live = false }: EditorPaneProps) {
+export function EditorPane({ theme, live = false, focusDim = false }: EditorPaneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Keep the imperative CodeMirror instance in a ref so React re-renders do not recreate it.
   const viewRef = useRef<EditorView | null>(null);
@@ -71,6 +74,8 @@ export function EditorPane({ theme, live = false }: EditorPaneProps) {
   const settingsCompartment = useMemo(() => new Compartment(), []);
   // Holds the Live-mode decorations, so switching view mode reconfigures the editor in place.
   const liveCompartment = useMemo(() => new Compartment(), []);
+  // Holds the Focus dimming, reconfigured the same way so toggling Focus never rebuilds the editor.
+  const focusCompartment = useMemo(() => new Compartment(), []);
   // Ctrl/Cmd+click on a link in Live mode; the setting is read when the click happens.
   const onOpenLink = useMemo(
     () =>
@@ -80,10 +85,12 @@ export function EditorPane({ theme, live = false }: EditorPaneProps) {
   const liveMode = live;
   // The mode the editor was last configured with; the creation effect reads it once, then the effect below keeps it current.
   const appliedLiveMode = useRef(liveMode);
+  const appliedFocusDim = useRef(focusDim);
   const setCursorPosition = useEditorStatusState((state) => state.setCursorPosition);
   const setRunToolbarAction = useEditorCommandState((state) => state.setRunToolbarAction);
   const setRunEditAction = useEditorCommandState((state) => state.setRunEditAction);
   const setGoToLine = useEditorCommandState((state) => state.setGoToLine);
+  const setFocusEditor = useEditorCommandState((state) => state.setFocusEditor);
   const [slashMenu, setSlashMenu] = useState<SlashMenuState | null>(null);
   const [inlineMenu, setInlineMenu] = useState<InlineMenuState | null>(null);
   const [find, setFind] = useState<FindState | null>(null);
@@ -225,6 +232,7 @@ export function EditorPane({ theme, live = false }: EditorPaneProps) {
         ),
         ...markoraEditorTheme,
         liveCompartment.of(appliedLiveMode.current ? liveExtension({ onOpenLink }) : []),
+        focusCompartment.of(appliedFocusDim.current ? focusDimming() : []),
         // Last, so user settings win over the theme where both style the same thing.
         settingsCompartment.of(
           createEditorSettingsExtensions(settings.editor, settings.appearance, theme === "dark"),
@@ -241,7 +249,7 @@ export function EditorPane({ theme, live = false }: EditorPaneProps) {
     };
     // The theme is read once here and then kept current by the effect below, so switching
     // light/dark doesn't rebuild the editor (which would lose undo history and the cursor).
-  }, [liveCompartment, onOpenLink, setContent, setCursorPosition, settingsCompartment]);
+  }, [focusCompartment, liveCompartment, onOpenLink, setContent, setCursorPosition, settingsCompartment]);
 
   useEffect(() => {
     if (appliedLiveMode.current === liveMode) return;
@@ -250,6 +258,14 @@ export function EditorPane({ theme, live = false }: EditorPaneProps) {
       effects: liveCompartment.reconfigure(liveMode ? liveExtension({ onOpenLink }) : []),
     });
   }, [liveCompartment, liveMode, onOpenLink]);
+
+  useEffect(() => {
+    if (appliedFocusDim.current === focusDim) return;
+    appliedFocusDim.current = focusDim;
+    viewRef.current?.dispatch({
+      effects: focusCompartment.reconfigure(focusDim ? focusDimming() : []),
+    });
+  }, [focusCompartment, focusDim]);
 
   useEffect(() => {
     // Apply setting changes to the live editor (the creation effect only reads them once).
@@ -279,6 +295,11 @@ export function EditorPane({ theme, live = false }: EditorPaneProps) {
     });
     return () => setGoToLine(() => {});
   }, [setGoToLine]);
+
+  useEffect(() => {
+    setFocusEditor(() => viewRef.current?.focus());
+    return () => setFocusEditor(() => {});
+  }, [setFocusEditor]);
 
   useEffect(() => {
     setRunToolbarAction(runMarkdownAction);

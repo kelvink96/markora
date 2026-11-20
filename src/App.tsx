@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import packageJson from "../package.json";
 import { AppShell } from "./app/app-shell";
 import {
@@ -48,6 +48,8 @@ import { stepZoom } from "./features/settings/zoom";
 import { useUpdateStore } from "./features/updates/update-store";
 import { getModifierLabel } from "./features/shortcuts/modifier-label";
 import { Toaster } from "@/components/ui/sonner";
+import { toast } from "sonner";
+import { CONTENT_WIDTH_MEASURE } from "./features/preview/content-width";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { getFileAdapter } from "./platform/files";
 import { getLinkAdapter } from "./platform/links";
@@ -78,6 +80,9 @@ export default function App() {
   const showSyntax = useWorkspaceState((state) => state.showSyntax);
   const setShowSyntax = useWorkspaceState((state) => state.setShowSyntax);
   const toggleSyntax = useWorkspaceState((state) => state.toggleSyntax);
+  const focusMode = useWorkspaceState((state) => state.focusMode);
+  const setFocusMode = useWorkspaceState((state) => state.setFocusMode);
+  const toggleFocus = useWorkspaceState((state) => state.toggleFocus);
   const showOutline = useWorkspaceState((state) => state.showOutline);
   const toggleOutline = useWorkspaceState((state) => state.toggleOutline);
   const goToLine = useEditorCommandState((state) => state.goToLine);
@@ -123,7 +128,17 @@ export default function App() {
     newDocument(useSettingsStore.getState().settings.authoring.newDocumentTemplate);
   }, [newDocument]);
 
+  // Focus belongs to Write in an open document; anywhere else the shortcut and the command do nothing.
+  const handleToggleFocus = useCallback(() => {
+    const { viewMode: mode, focusMode: on } = useWorkspaceState.getState();
+    if (activeScreen !== "workspace" || mode !== "write" || useDocumentStore.getState().openDocuments.length === 0) return;
+
+    toggleFocus();
+    if (!on) toast("Focus on. Esc to exit.");
+  }, [activeScreen, toggleFocus]);
+
   useKeyboardShortcuts({
+    onToggleFocus: handleToggleFocus,
     onNew: handleNew,
     onOpen: handleOpen,
     onSave: handleSave,
@@ -158,12 +173,14 @@ export default function App() {
     // Before hydration the store holds defaults: recording a version now would be overwritten
     // by (or overwrite) the saved settings.
     if (!useSettingsStore.getState().isHydrated) return;
+    // Every Tour stop points at chrome that Focus hides.
+    setFocusMode(false);
     // The first Tour stop points at the editor toolbar, which needs an open document.
     useDocumentStore
       .getState()
       .ensureDocumentOpen(useSettingsStore.getState().settings.authoring.newDocumentTemplate);
     dispatchTour("accept");
-  }, [dispatchTour]);
+  }, [dispatchTour, setFocusMode]);
 
   const handleThemeToggle = useCallback(() => {
     toggleTheme();
@@ -178,6 +195,36 @@ export default function App() {
   }, [selectProject, selectDocument]);
 
   const hasOpenDocuments = openDocuments.length > 0;
+  // Derived rather than trusted from the store: if Focus can't apply (no document, another screen, another
+  // view) the chrome is back, so there is never a state with no way to get out.
+  const focusActive = focusMode && viewMode === "write" && hasOpenDocuments && activeScreen === "workspace";
+
+  // Focus that can't apply (last tab closed, Settings opened) is switched off, not just hidden, so it
+  // can't come back by itself the next time a document or the editor screen returns.
+  useEffect(() => {
+    if (focusMode && !focusActive) setFocusMode(false);
+  }, [focusMode, focusActive, setFocusMode]);
+
+  useEffect(() => {
+    if (!focusActive) return;
+
+    // The menu used to turn Focus on hands focus back to a button that has just been removed, which
+    // would leave it on the page body and typing nowhere. So focus the editor once that has settled.
+    const frame = requestAnimationFrame(() => useEditorCommandState.getState().focusEditor());
+    return () => cancelAnimationFrame(frame);
+  }, [focusActive]);
+
+  useEffect(() => {
+    if (!focusActive) return;
+
+    // Esc belongs to whatever is open first (the find bar, slash menu, menus, dialogs prevent default
+    // on the Esc they use), so only a bare Esc leaves Focus.
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !event.defaultPrevented) setFocusMode(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [focusActive, setFocusMode]);
   const headings = useMemo(() => extractHeadings(content), [content]);
   const activeHeadingIndex = findActiveHeadingIndex(headings, line);
   const wordCount = getWordCount(content);
@@ -193,6 +240,7 @@ export default function App() {
     hasActiveDocument: hasOpenDocuments,
     viewMode,
     showSyntax,
+    focusMode,
     showOutline,
     appearance: settings.appearance,
     editor: settings.editor,
@@ -214,6 +262,7 @@ export default function App() {
       onToggleOutline: toggleOutline,
       onViewModeChange: setViewMode,
       onToggleSyntax: toggleSyntax,
+      onToggleFocus: handleToggleFocus,
       onFormat: runToolbarAction,
       onEditAction: (action) => void runEditAction(action),
       onOpenShortcuts: () => setIsKeyboardShortcutsOpen(true),
@@ -321,11 +370,23 @@ export default function App() {
     ) : (
       hasOpenDocuments ? (
         <Workspace
-          left={<EditorPane theme={theme} live={viewMode === "write" && !showSyntax} />}
+          left={
+            // Always rendered, only its width changes, so turning Focus on or off never remounts the editor.
+            <div
+              className="mx-auto h-full w-full"
+              style={focusActive ? { maxWidth: CONTENT_WIDTH_MEASURE[settings.preview.contentWidth] } : undefined}
+            >
+              <EditorPane
+                theme={theme}
+                live={viewMode === "write" && !showSyntax}
+                focusDim={focusActive && settings.editor.focusDimming}
+              />
+            </div>
+          }
           right={<PreviewPane />}
           viewMode={viewMode}
           sidebar={
-            showOutline ? (
+            showOutline && !focusActive ? (
               <OutlinePanel
                 headings={headings}
                 activeIndex={activeHeadingIndex}
@@ -364,10 +425,10 @@ export default function App() {
       <AppShell
         themeMode={theme}
         colorScheme={settings.appearance.colorScheme}
-        header={activeScreen === "workspace" ? header : null}
-        toolbar={activeScreen === "workspace" && hasOpenDocuments ? <FormattingBar disabled={viewMode === "read"} /> : null}
+        header={activeScreen === "workspace" && !focusActive ? header : null}
+        toolbar={activeScreen === "workspace" && hasOpenDocuments && !focusActive ? <FormattingBar disabled={viewMode === "read"} /> : null}
         workspace={workspace}
-        statusBar={settings.appearance.showStatusBar && activeScreen === "workspace" && hasOpenDocuments ? statusBar : null}
+        statusBar={settings.appearance.showStatusBar && activeScreen === "workspace" && hasOpenDocuments && !focusActive ? statusBar : null}
       />
       <AppDialogs
         version={packageJson.version}

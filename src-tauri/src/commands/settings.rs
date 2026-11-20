@@ -44,6 +44,13 @@ pub struct EditorSettings {
     pub word_wrap: bool,
     pub line_numbers: bool,
     pub highlight_active_line: bool,
+    // Fade every paragraph but the current one in Focus. Files from before Focus lack it: on.
+    #[serde(default = "default_focus_dimming")]
+    pub focus_dimming: bool,
+}
+
+fn default_focus_dimming() -> bool {
+    true
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -138,6 +145,7 @@ pub fn default_settings() -> MarkoraSettings {
             word_wrap: true,
             line_numbers: false,
             highlight_active_line: true,
+            focus_dimming: default_focus_dimming(),
         },
         preview: PreviewSettings {
             sync_scroll: true,
@@ -390,6 +398,42 @@ mod tests {
         let settings = load_settings_from_dir(&temp_dir).unwrap();
 
         assert!(settings.updates.check_automatically);
+
+        fs::remove_dir_all(temp_dir).ok();
+    }
+
+    #[test]
+    fn legacy_settings_file_without_focus_dimming_dims_by_default() {
+        let temp_dir = temp_settings_dir();
+        let legacy = r##"{
+  "appearance": { "theme": "system", "editorFontSize": 16, "previewFontScale": 1.0,
+                  "editorLineHeight": 1.7, "showStatusBar": true },
+  "editor": { "wordWrap": true, "lineNumbers": false, "highlightActiveLine": true },
+  "preview": { "syncScroll": true, "openLinksExternally": true, "contentWidth": "normal" },
+  "files": { "autosave": false, "restorePreviousSession": false, "confirmOnUnsavedClose": true },
+  "authoring": { "newDocumentTemplate": "# Legacy" }
+}"##;
+        fs::write(settings_file_path(&temp_dir), legacy).unwrap();
+
+        let settings = load_settings_from_dir(&temp_dir).unwrap();
+
+        assert!(settings.editor.focus_dimming);
+
+        fs::remove_dir_all(temp_dir).ok();
+    }
+
+    #[test]
+    fn focus_dimming_opt_out_round_trips_and_reset_restores_it() {
+        let temp_dir = temp_settings_dir();
+        let mut settings = default_settings();
+        settings.editor.focus_dimming = false;
+        save_settings_to_dir(&temp_dir, &settings).unwrap();
+
+        let reloaded = load_settings_from_dir(&temp_dir).unwrap();
+        assert!(!reloaded.editor.focus_dimming);
+
+        let reset = reset_settings_in_dir(&temp_dir).unwrap();
+        assert!(reset.editor.focus_dimming);
 
         fs::remove_dir_all(temp_dir).ok();
     }

@@ -4,7 +4,7 @@ import { useWorkspaceState } from "./workspace-state";
 describe("workspace state", () => {
   beforeEach(() => {
     localStorage.clear();
-    useWorkspaceState.setState({ viewMode: "write", showSyntax: false, showOutline: false });
+    useWorkspaceState.setState({ viewMode: "write", showSyntax: false, focusMode: false, showOutline: false });
   });
 
   it("starts in the write view, rendered, with the outline closed", () => {
@@ -39,6 +39,48 @@ describe("workspace state", () => {
     useWorkspaceState.getState().setViewMode("write");
 
     expect(useWorkspaceState.getState().showSyntax).toBe(true);
+  });
+
+  describe("Focus", () => {
+    it("starts off and toggles", () => {
+      expect(useWorkspaceState.getState().focusMode).toBe(false);
+
+      useWorkspaceState.getState().toggleFocus();
+      expect(useWorkspaceState.getState().focusMode).toBe(true);
+
+      useWorkspaceState.getState().toggleFocus();
+      expect(useWorkspaceState.getState().focusMode).toBe(false);
+    });
+
+    it("can be set directly", () => {
+      useWorkspaceState.getState().setFocusMode(true);
+      expect(useWorkspaceState.getState().focusMode).toBe(true);
+
+      useWorkspaceState.getState().setFocusMode(false);
+      expect(useWorkspaceState.getState().focusMode).toBe(false);
+    });
+
+    it("turns off when the view changes to Side-by-side or Read, and stays on for Write", () => {
+      useWorkspaceState.getState().setFocusMode(true);
+      useWorkspaceState.getState().setViewMode("write");
+      expect(useWorkspaceState.getState().focusMode).toBe(true);
+
+      useWorkspaceState.getState().setViewMode("split");
+      expect(useWorkspaceState.getState().focusMode).toBe(false);
+
+      useWorkspaceState.getState().setFocusMode(true);
+      useWorkspaceState.getState().setViewMode("read");
+      expect(useWorkspaceState.getState().focusMode).toBe(false);
+    });
+
+    it("is never stored, so the app always opens normally", async () => {
+      useWorkspaceState.getState().toggleFocus();
+      expect(Object.keys(localStorage).filter((key) => key.toLowerCase().includes("focus"))).toEqual([]);
+
+      vi.resetModules();
+      const fresh = (await import("./workspace-state")).useWorkspaceState;
+      expect(fresh.getState().focusMode).toBe(false);
+    });
   });
 
   describe("at launch", () => {

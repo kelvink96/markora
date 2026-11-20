@@ -232,6 +232,14 @@ export function renderControl(id: string, { settings, previewThemeMode, update }
           onCheckedChange={(highlightActiveLine) => setEditor({ highlightActiveLine })}
         />
       );
+    case "focusDimming":
+      return (
+        <Switch
+          id="setting-focusDimming"
+          checked={editor.focusDimming}
+          onCheckedChange={(focusDimming) => setEditor({ focusDimming })}
+        />
+      );
     case "previewScale":
       return (
         <Select

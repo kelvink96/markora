@@ -28,6 +28,7 @@ function renderBar({ context = {}, ...props }: BarProps & { context?: Partial<Pa
     hasActiveDocument: Boolean(useDocumentStore.getState().activeDocumentId),
     viewMode: "split",
     showSyntax: false,
+    focusMode: false,
     showOutline: false,
     appearance: { ...defaultSettings.appearance },
     editor: { ...defaultSettings.editor },

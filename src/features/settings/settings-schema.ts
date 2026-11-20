@@ -14,6 +14,8 @@ export interface EditorSettings {
   wordWrap: boolean;
   lineNumbers: boolean;
   highlightActiveLine: boolean;
+  /** In Focus, fade every paragraph except the one with the cursor. */
+  focusDimming: boolean;
 }
 
 export interface PreviewSettings {
@@ -86,6 +88,7 @@ export const defaultSettings: MarkoraSettings = {
     wordWrap: true,
     lineNumbers: false,
     highlightActiveLine: true,
+    focusDimming: true,
   },
   preview: {
     syncScroll: true,

@@ -20,7 +20,7 @@ export function SettingsSidebar({ activeSection, showJumpList, onClose, onJump }
       </div>
 
       {showJumpList ? (
-        <nav aria-label="Settings sections" className="flex flex-wrap gap-1 md:block md:space-y-1">
+        <nav aria-label="Settings sections" className="flex flex-wrap gap-1 md:flex-col md:flex-nowrap">
           {SETTING_SECTIONS.map((section) => (
             <SidebarButton
               key={section.id}

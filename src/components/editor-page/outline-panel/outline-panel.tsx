@@ -284,7 +284,7 @@ export function OutlinePanel({ headings, activeIndex, onSelect, onClose, wordCou
               accessibility={{ announcements, restoreFocus: false }}
             >
               <SortableContext items={headings.map((heading) => String(heading.index))} strategy={noDisplacement}>
-                <ul className="space-y-0.5">{headings.map(rowFor)}</ul>
+                <ul className="flex flex-col gap-0.5">{headings.map(rowFor)}</ul>
               </SortableContext>
               {/* In the page body: the panel's backdrop blur would make a fixed-position overlay sit relative to the panel. */}
               {createPortal(
@@ -304,7 +304,7 @@ export function OutlinePanel({ headings, activeIndex, onSelect, onClose, wordCou
               )}
             </DndContext>
           ) : (
-            <ul className="space-y-0.5">{headings.map(rowFor)}</ul>
+            <ul className="flex flex-col gap-0.5">{headings.map(rowFor)}</ul>
           )}
         </nav>
       )}

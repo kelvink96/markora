@@ -183,7 +183,7 @@ export function FindBar({ view, initialMode, initialSearch = "", version, onClos
         <TooltipContent>{showReplace ? "Hide replace" : "Show replace"}</TooltipContent>
       </Tooltip>
 
-      <div className="min-w-0 flex-1 space-y-1.5">
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         <div className="flex items-center gap-1">
           <Input
             ref={searchInput}

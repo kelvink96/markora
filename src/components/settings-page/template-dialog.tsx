@@ -41,7 +41,7 @@ export function TemplateDialog({ template, onSave }: TemplateDialogProps) {
           <DialogTitle>New document template</DialogTitle>
           <DialogDescription>This content is used only for newly created documents.</DialogDescription>
         </DialogHeader>
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           <Label htmlFor="template-content">Template content</Label>
           <Textarea
             id="template-content"

@@ -136,7 +136,7 @@ export function AppDialogs({
             <DialogTitle>About Markora</DialogTitle>
             <DialogDescription>A desktop-first markdown editor built with Tauri, React, and CodeMirror.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-2 text-sm">
+          <div className="flex flex-col items-start gap-2 text-sm">
             <p>Version {version}</p>
             <p className="text-muted-foreground">
               Markora keeps writing and reading in dedicated modes for a focused markdown workflow.
@@ -157,7 +157,7 @@ export function AppDialogs({
             <DialogTitle>Release Notes</DialogTitle>
             <DialogDescription>{`Version ${version}`}</DialogDescription>
           </DialogHeader>
-          <div className="space-y-2 text-sm">
+          <div className="flex flex-col items-start gap-2 text-sm">
             <p>Release notes are available on the releases page.</p>
             <ExternalLink href="https://kelvink96.github.io/markora/versions">View all releases</ExternalLink>
           </div>

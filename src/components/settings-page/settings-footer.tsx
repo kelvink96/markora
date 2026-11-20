@@ -23,7 +23,7 @@ interface SettingsFooterProps {
 export function SettingsFooter({ version, privacyPolicyUrl, onResetAll }: SettingsFooterProps) {
   return (
     <footer className="mt-10 flex flex-wrap items-center justify-between gap-4 border-t pt-6 text-sm text-muted-foreground">
-      <div className="space-y-1">
+      <div className="flex flex-col items-start gap-1">
         <p>Markora, a desktop-first markdown editor.</p>
         <p>{`Version ${version}`}</p>
         <ExternalLink href={privacyPolicyUrl}>Privacy policy</ExternalLink>

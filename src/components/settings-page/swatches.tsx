@@ -18,14 +18,14 @@ export function SwatchPreview({ scheme, mode }: { scheme: ColorScheme; mode: "li
         <span className="ml-1 h-1 w-6 rounded-full bg-primary" />
       </div>
       <div className="grid grid-cols-2 gap-px bg-border">
-        <div className="space-y-1 bg-editor p-2">
+        <div className="flex flex-col gap-1 bg-editor p-2">
           <span className="block h-1 w-2/3 rounded-full bg-syntax-heading" />
           <span className="block h-1 w-full rounded-full bg-muted-foreground/50" />
           <span className="block h-1 w-5/6 rounded-full bg-muted-foreground/50" />
           <span className="block h-1 w-1/2 rounded-full bg-syntax-link" />
           <span className="block h-1 w-3/5 rounded-full bg-syntax-code" />
         </div>
-        <div className="space-y-1 bg-preview p-2">
+        <div className="flex flex-col gap-1 bg-preview p-2">
           <span className="block h-1.5 w-3/4 rounded-full bg-foreground" />
           <span className="block h-1 w-full rounded-full bg-muted-foreground/40" />
           <span className="block h-1 w-5/6 rounded-full bg-muted-foreground/40" />

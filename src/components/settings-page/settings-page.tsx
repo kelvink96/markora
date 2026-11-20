@@ -196,7 +196,7 @@ export function SettingsPage({
                 {resultsSummary}
               </p>
             ) : (
-              <div className="space-y-8">
+              <div className="flex flex-col gap-8">
                 {SETTING_SECTIONS.map((section) => {
                   const rows = visible.filter((definition) => definition.section === section.id);
                   if (rows.length === 0) return null;

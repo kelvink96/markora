@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Eye, FolderOpen, Palette, PenSquare } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import type { SettingsNavigationIcon } from "./settings-navigation";
@@ -35,20 +36,22 @@ export function SidebarButton({
   const Icon = NAVIGATION_ICONS[icon];
 
   return (
-    <button
+    <Button
       type="button"
+      variant="ghost"
       onClick={onClick}
-      aria-current={isActive ? "page" : undefined}
+      // The jump list scrolls within this one page, so the entry in view is a location, not a page.
+      aria-current={isActive ? "location" : undefined}
       className={cn(
-        "relative flex cursor-pointer md:w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50 pointer-coarse:py-3",
+        "relative justify-start gap-3 rounded-lg px-3 font-normal md:w-full has-[>svg]:px-3",
         isActive
           ? "bg-accent font-medium text-accent-foreground before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-linear-to-b before:from-brand-from before:to-brand-to"
           : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
       )}
     >
-      <Icon data-testid={iconTestId} aria-hidden="true" className="size-4 shrink-0" />
+      <Icon data-testid={iconTestId} aria-hidden="true" />
       <span className="min-w-0 truncate">{label}</span>
-    </button>
+    </Button>
   );
 }
 

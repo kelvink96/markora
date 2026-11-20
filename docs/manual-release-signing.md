@@ -5,7 +5,7 @@ Releases are automated. Pushing a `v*` tag runs `.github/workflows/release.yml`.
 ## Cut a release
 
 ```powershell
-npx release-it 1.5.0 --ci
+pnpm exec release-it 1.5.0 --ci
 ```
 
 This bumps `package.json`, `src-tauri/tauri.conf.json` and `src-tauri/Cargo.toml`, commits, tags `v1.5.0` and pushes.
@@ -26,4 +26,4 @@ The landing page reads the latest GitHub release for the version, download link 
 
 ## Manual fallback
 
-`npm run publish:signed -- -Version <v> -SignedMsiPath <msi>` (`scripts/publish-signed-release.ps1`) does the same publishing steps from a local machine. It needs the tag and release to exist and the Tauri signing env vars set.
+`pnpm publish:signed -Version <v> -SignedMsiPath <msi>` (`scripts/publish-signed-release.ps1`) does the same publishing steps from a local machine. It needs the tag and release to exist and the Tauri signing env vars set.

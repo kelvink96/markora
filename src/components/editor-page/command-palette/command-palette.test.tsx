@@ -29,6 +29,15 @@ describe("CommandPalette", () => {
     expect(screen.getByText("Format")).toBeInTheDocument();
   });
 
+  // The palette shows the same icon as the menus, so a command looks the same wherever you find it.
+  it("shows a command's menu icon, and none for commands the menus show without one", () => {
+    render(<CommandPalette open onOpenChange={() => {}} commands={commands()} />);
+
+    expect(screen.getByRole("option", { name: /New document/ }).querySelector("svg")).toHaveAttribute("aria-hidden", "true");
+    expect(screen.getByRole("option", { name: /Bold/ }).querySelector("svg")).not.toBeNull();
+    expect(screen.getByRole("option", { name: /Toggle light\/dark theme/ }).querySelector("svg")).toBeNull();
+  });
+
   it("filters by label and by keyword", async () => {
     const user = userEvent.setup();
     render(<CommandPalette open onOpenChange={() => {}} commands={commands()} />);

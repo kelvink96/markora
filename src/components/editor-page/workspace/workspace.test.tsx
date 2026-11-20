@@ -79,6 +79,16 @@ describe("Workspace with a sidebar (#16)", () => {
     expect(screen.getByText("Outline")).toBeInTheDocument();
   });
 
+  // The panes only get a gap between them in split view, so without one on the workspace itself the
+  // sidebar sat flush against the editor in Write and Read.
+  it.each(["write", "split", "read"] as const)("keeps a gap between the sidebar and the panes in %s view", (viewMode) => {
+    const { container } = render(
+      <Workspace viewMode={viewMode} sidebar={<div>Outline</div>} left={<div>Left</div>} right={<div>Right</div>} />,
+    );
+
+    expect(container.querySelector(".workspace")).toHaveClass("gap-2");
+  });
+
   // On a phone a 16rem column leaves the editor a few characters wide, so below the md breakpoint
   // the sidebar floats over the panes instead of taking space from them.
   it.each(["write", "split", "read"] as const)("floats the sidebar over the panes on narrow screens in %s view", (viewMode) => {
@@ -165,6 +175,37 @@ describe("Workspace", () => {
     fireEvent.keyDown(divider, { key: "ArrowRight" });
 
     expect(screen.getByText("Left").parentElement).toHaveStyle({ width: "55%" });
+  });
+
+  it("tells assistive technology where the divider is", () => {
+    render(<Workspace left={<div>Left</div>} right={<div>Right</div>} viewMode="split" />);
+    const divider = screen.getByRole("separator", { name: "Resize editor and preview panes" });
+
+    expect(divider).toHaveAttribute("aria-valuenow", "50");
+    expect(divider).toHaveAttribute("aria-valuemin", "20");
+    expect(divider).toHaveAttribute("aria-valuemax", "80");
+
+    fireEvent.keyDown(divider, { key: "ArrowRight" });
+    expect(divider).toHaveAttribute("aria-valuenow", "55");
+  });
+
+  // Mouse events alone left touch screens with a divider that could not be dragged.
+  it("drags the split with a pointer of any kind, including touch", () => {
+    render(<Workspace left={<div>Left</div>} right={<div>Right</div>} viewMode="split" />);
+    const paneBox = screen.getByText("Left").parentElement!.parentElement!;
+    paneBox.getBoundingClientRect = () => ({ left: 0, width: 1000, top: 0, height: 500, right: 1000, bottom: 500, x: 0, y: 0, toJSON: () => ({}) });
+    const divider = screen.getByRole("separator", { name: "Resize editor and preview panes" });
+
+    fireEvent.pointerDown(divider, { pointerId: 1, pointerType: "touch", clientX: 500 });
+    fireEvent.pointerMove(divider, { pointerId: 1, pointerType: "touch", clientX: 300 });
+    fireEvent.pointerUp(divider, { pointerId: 1, pointerType: "touch", clientX: 300 });
+
+    expect(screen.getByText("Left").parentElement).toHaveStyle({ width: "30%" });
+    expect(divider).toHaveClass("touch-none");
+
+    // After the pointer is released, moving it no longer resizes.
+    fireEvent.pointerMove(divider, { pointerId: 1, pointerType: "touch", clientX: 700 });
+    expect(screen.getByText("Left").parentElement).toHaveStyle({ width: "30%" });
   });
 
   it("renders only the editor in write mode", () => {

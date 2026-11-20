@@ -2,6 +2,10 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AppDialogs } from "./app-dialogs";
+import { readShortcuts } from "../../shortcut-keys";
+
+const { openExternal } = vi.hoisted(() => ({ openExternal: vi.fn(() => Promise.resolve()) }));
+vi.mock("../../../platform/links", () => ({ getLinkAdapter: () => ({ openExternal }) }));
 
 function renderDialogs(overrides: Partial<Parameters<typeof AppDialogs>[0]> = {}) {
   const handlers = {
@@ -96,9 +100,17 @@ describe("AppDialogs", () => {
       renderDialogs({ shortcutsOpen: true });
 
       const dialog = screen.getByRole("dialog", { name: "Keyboard Shortcuts" });
-      expect(within(dialog).getByText("Ctrl+N")).toBeInTheDocument();
-      expect(within(dialog).getByText("Ctrl+Shift+S")).toBeInTheDocument();
+      expect(readShortcuts(dialog)).toEqual(expect.arrayContaining(["Ctrl+N", "Ctrl+Shift+S"]));
       expect(within(dialog).getByText("Next tab")).toBeInTheDocument();
+    });
+
+    // Two shortcuts for one action would otherwise read as a single five-key combination.
+    it("separates alternative shortcuts for the same action with \"or\"", () => {
+      renderDialogs({ shortcutsOpen: true });
+
+      const row = screen.getByText("Open the command palette").closest("div")!;
+      expect(readShortcuts(row)).toEqual(["Ctrl+K", "Ctrl+Shift+P"]);
+      expect(row).toHaveTextContent(/Ctrl\s*K\s*or\s*Ctrl/);
     });
 
     it("closes from its Close button and from Escape", async () => {
@@ -112,14 +124,13 @@ describe("AppDialogs", () => {
     });
   });
 
-  it("shows the version and a safe privacy link in About", () => {
+  it("shows the version and a privacy link in About that opens outside the app", async () => {
     renderDialogs({ aboutOpen: true });
 
     const dialog = screen.getByRole("dialog", { name: "About Markora" });
     expect(within(dialog).getByText("Version 9.9.9")).toBeInTheDocument();
-    const link = within(dialog).getByRole("link", { name: "Privacy Policy" });
-    expect(link).toHaveAttribute("target", "_blank");
-    expect(link).toHaveAttribute("rel", "noopener noreferrer");
+    await userEvent.click(within(dialog).getByRole("link", { name: "Privacy Policy" }));
+    expect(openExternal).toHaveBeenCalledWith("https://kelvink96.github.io/markora/privacy");
   });
 
   it("points release notes at the releases page", () => {

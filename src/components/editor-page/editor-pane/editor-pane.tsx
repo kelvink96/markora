@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { redo, selectAll, undo } from "@codemirror/commands";
 import { EditorView, basicSetup } from "codemirror";
 import { Compartment, EditorState, Prec } from "@codemirror/state";
@@ -27,7 +27,7 @@ import { getLinkAdapter } from "../../../platform/links";
 import { createLinkOpener } from "../../../features/editor/live/link-opener";
 import { FindBar } from "../find-bar";
 import { InlineFormattingMenu } from "../inline-formatting-menu";
-import { SlashCommandMenu } from "../slash-command-menu/slash-command-menu";
+import { SlashCommandMenu, slashOptionId } from "../slash-command-menu/slash-command-menu";
 
 interface EditorPaneProps {
   theme: "light" | "dark";
@@ -77,6 +77,9 @@ export function EditorPane({ theme, live = false, focusDim = false }: EditorPane
   const liveCompartment = useMemo(() => new Compartment(), []);
   // Holds the Focus dimming, reconfigured the same way so toggling Focus never rebuilds the editor.
   const focusCompartment = useMemo(() => new Compartment(), []);
+  // Holds the ARIA that ties the editor to the open slash menu (see the effect that reconfigures it).
+  const slashAriaCompartment = useMemo(() => new Compartment(), []);
+  const slashListboxId = useId();
   // Ctrl/Cmd+click on a link in Live mode; the setting is read when the click happens.
   const onOpenLink = useMemo(
     () =>
@@ -235,6 +238,7 @@ export function EditorPane({ theme, live = false, focusDim = false }: EditorPane
         ...markoraEditorTheme,
         liveCompartment.of(appliedLiveMode.current ? liveExtension({ onOpenLink }) : []),
         focusCompartment.of(appliedFocusDim.current ? focusDimming() : []),
+        slashAriaCompartment.of([]),
         // Last, so user settings win over the theme where both style the same thing.
         settingsCompartment.of(
           createEditorSettingsExtensions(settings.editor, settings.appearance, theme === "dark"),
@@ -251,7 +255,26 @@ export function EditorPane({ theme, live = false, focusDim = false }: EditorPane
     };
     // The theme is read once here and then kept current by the effect below, so switching
     // light/dark doesn't rebuild the editor (which would lose undo history and the cursor).
-  }, [focusCompartment, liveCompartment, onOpenLink, setContent, setCursorPosition, settingsCompartment]);
+  }, [focusCompartment, liveCompartment, onOpenLink, setContent, setCursorPosition, settingsCompartment, slashAriaCompartment]);
+
+  // Focus stays in the editor while the slash menu is open, so the editor is the menu's combobox: it
+  // says the menu is open and which option is highlighted, the way CodeMirror's own autocomplete does.
+  const slashSelectedIndex = slashMenu?.selectedIndex ?? null;
+  useEffect(() => {
+    viewRef.current?.dispatch({
+      effects: slashAriaCompartment.reconfigure(
+        slashSelectedIndex === null
+          ? []
+          : CMView.contentAttributes.of({
+              "aria-autocomplete": "list",
+              "aria-haspopup": "listbox",
+              "aria-expanded": "true",
+              "aria-controls": slashListboxId,
+              "aria-activedescendant": slashOptionId(slashListboxId, slashSelectedIndex),
+            }),
+      ),
+    });
+  }, [slashAriaCompartment, slashListboxId, slashSelectedIndex]);
 
   useEffect(() => {
     if (appliedLiveMode.current === liveMode) return;
@@ -458,6 +481,7 @@ export function EditorPane({ theme, live = false, focusDim = false }: EditorPane
           ) : null}
           {slashMenu ? (
             <SlashCommandMenu
+              id={slashListboxId}
               commands={slashMenu.commands}
               selectedIndex={slashMenu.selectedIndex}
               position={slashMenu.position}

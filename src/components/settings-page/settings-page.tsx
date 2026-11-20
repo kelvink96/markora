@@ -7,7 +7,7 @@ import type {
   MarkoraSettings,
   PreviewSettings,
 } from "../../features/settings/settings-schema";
-import { Input } from "@/components/ui/input";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Kbd } from "@/components/ui/kbd";
 import { renderControl } from "./setting-controls";
 import {
@@ -164,17 +164,12 @@ export function SettingsPage({
         <div className="min-h-0 overflow-auto">
           <div className="mx-auto w-full max-w-3xl pb-6">
             <div className="sticky top-0 z-10 -mx-1 bg-background/90 px-1 pt-1 pb-3 backdrop-blur-sm">
-              <div className="relative">
-                <Search
-                  aria-hidden="true"
-                  className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
-                />
-                <Input
+              <InputGroup>
+                <InputGroupInput
                   ref={searchRef}
                   type="search"
                   aria-label="Search settings"
                   placeholder="Search settings…"
-                  className="pr-10 pl-9"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   onKeyDown={(event) => {
@@ -184,8 +179,13 @@ export function SettingsPage({
                     }
                   }}
                 />
-                <Kbd className="absolute top-1/2 right-3 -translate-y-1/2">/</Kbd>
-              </div>
+                <InputGroupAddon>
+                  <Search aria-hidden="true" />
+                </InputGroupAddon>
+                <InputGroupAddon align="inline-end">
+                  <Kbd>/</Kbd>
+                </InputGroupAddon>
+              </InputGroup>
             </div>
 
             <p role="status" className="sr-only">
@@ -196,7 +196,7 @@ export function SettingsPage({
                 {resultsSummary}
               </p>
             ) : (
-              <div className="space-y-8">
+              <div className="flex flex-col gap-8">
                 {SETTING_SECTIONS.map((section) => {
                   const rows = visible.filter((definition) => definition.section === section.id);
                   if (rows.length === 0) return null;

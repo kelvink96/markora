@@ -59,16 +59,16 @@ describe("OutlinePanel", () => {
     renderPanel();
 
     const padding = (name: string) => screen.getByRole("button", { name }).style.paddingLeft;
-    expect(padding("Title")).toBe("0.5rem");
-    expect(padding("Setup")).toBe("1.35rem");
-    expect(padding("Install")).toBe("2.2rem");
+    expect(padding("Title")).toBe("0.25rem");
+    expect(padding("Setup")).toBe("1.1rem");
+    expect(padding("Install")).toBe("1.95rem");
   });
 
   it("doesn't indent a document that starts at a deeper level", () => {
     renderPanel({ headings: extractHeadings("## First\n\n### Second") });
 
-    expect(screen.getByRole("button", { name: "First" }).style.paddingLeft).toBe("0.5rem");
-    expect(screen.getByRole("button", { name: "Second" }).style.paddingLeft).toBe("1.35rem");
+    expect(screen.getByRole("button", { name: "First" }).style.paddingLeft).toBe("0.25rem");
+    expect(screen.getByRole("button", { name: "Second" }).style.paddingLeft).toBe("1.1rem");
   });
 
   it("marks the section the cursor is in as the current location", () => {
@@ -76,6 +76,16 @@ describe("OutlinePanel", () => {
 
     expect(screen.getByRole("button", { name: "Install" })).toHaveAttribute("aria-current", "location");
     expect(screen.getByRole("button", { name: "Title" })).not.toHaveAttribute("aria-current");
+  });
+
+  it("highlights the whole row of the current section, not just its button", () => {
+    renderPanel({ activeIndex: 2, wordCounts: [4, 2, 1, 1] });
+
+    const row = screen.getByRole("button", { name: "Install" }).closest("li")!;
+    expect(row).toHaveClass("bg-accent");
+    // The word count sits inside the highlighted row.
+    expect(row).toHaveTextContent("1 word");
+    expect(screen.getByRole("button", { name: "Title" }).closest("li")).not.toHaveClass("bg-accent");
   });
 
   it("marks nothing before the first heading", () => {
@@ -116,7 +126,9 @@ describe("OutlinePanel", () => {
   it("explains what to do when there are no headings", () => {
     renderPanel({ headings: [] });
 
-    expect(screen.getByText(/No headings yet/)).toBeInTheDocument();
+    const empty = screen.getByText("No headings yet").closest("[data-slot=empty]");
+    expect(empty).not.toBeNull();
+    expect(empty).toHaveTextContent("Start a line with # to add one.");
     expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
   });
 });

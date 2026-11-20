@@ -9,15 +9,15 @@ This file provides guidance to AI coding agents (Claude Code, Codex, etc.) when 
 ## Commands
 
 ```bash
-npm install              # Install dependencies
-npm run tauri dev        # Run desktop app (Vite + Rust)
-npm run dev              # Frontend dev server only
-npm run build            # TypeScript check + Vite build
-npx vitest run           # Run frontend tests
-npx vitest run src/path/to/file.test.tsx  # Run a single test file
-npx tsc --noEmit         # TypeScript type check
+pnpm install             # Install dependencies (pnpm is the package manager; pnpm-lock.yaml is the only lockfile)
+pnpm tauri dev           # Run desktop app (Vite + Rust); alias: pnpm dev:desktop
+pnpm dev                 # Frontend dev server only
+pnpm build               # TypeScript check + Vite build
+pnpm exec vitest run     # Run frontend tests
+pnpm exec vitest run src/path/to/file.test.tsx  # Run a single test file
+pnpm exec tsc --noEmit # TypeScript type check
 cd src-tauri && cargo test  # Run Rust tests
-npm run tauri build      # Build release desktop app
+pnpm tauri build         # Build release desktop app
 ```
 
 ## Architecture
@@ -76,10 +76,10 @@ Business logic that is independent of UI components lives here:
 ```
 App.tsx (file ops, keyboard shortcuts: Ctrl+N/O/S/Shift+S/Shift+F/K/Tab, web lifecycle)
 └── AppShell
-    ├── TopBar (toolbar actions, web install button)
-    ├── TabStrip (document tabs)
+    ├── TopBar (menus, view controls, web install button)
+    │   └── TabStrip (document tabs, on their own row)
     ├── Workspace
-    │   ├── WorkspaceSidebar (projects, files, recents)
+    │   ├── sidebar slot: OutlinePanel (when Outline is on)
     │   ├── EditorPane (CodeMirror 6 wrapper)
     │   └── PreviewPane (HTML from platform markdown adapter)
     └── FooterStatusBar

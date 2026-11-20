@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Eye, FolderOpen, Palette, PenSquare } from "lucide-react";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel, FieldTitle } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
 import type { SettingsNavigationIcon } from "./settings-navigation";
 
@@ -35,20 +36,22 @@ export function SidebarButton({
   const Icon = NAVIGATION_ICONS[icon];
 
   return (
-    <button
+    <Button
       type="button"
+      variant="ghost"
       onClick={onClick}
-      aria-current={isActive ? "page" : undefined}
+      // The jump list scrolls within this one page, so the entry in view is a location, not a page.
+      aria-current={isActive ? "location" : undefined}
       className={cn(
-        "relative flex cursor-pointer md:w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50 pointer-coarse:py-3",
+        "relative justify-start gap-3 rounded-lg px-3 font-normal md:w-full has-[>svg]:px-3",
         isActive
           ? "bg-accent font-medium text-accent-foreground before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-linear-to-b before:from-brand-from before:to-brand-to"
           : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
       )}
     >
-      <Icon data-testid={iconTestId} aria-hidden="true" className="size-4 shrink-0" />
+      <Icon data-testid={iconTestId} aria-hidden="true" />
       <span className="min-w-0 truncate">{label}</span>
-    </button>
+    </Button>
   );
 }
 
@@ -59,14 +62,14 @@ export function SettingsGroup({ id, title, children }: { id: string; title: stri
       <h3 id={`${id}-heading`} className="mb-1 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
         {title}
       </h3>
-      <div className="divide-y">{children}</div>
+      <FieldGroup className="gap-0 divide-y">{children}</FieldGroup>
     </section>
   );
 }
 
 /**
- * A label with optional help text on the left and its control on the right (a switch, a select).
- * `controlId` ties the label and the help text to the control for assistive technology.
+ * One setting as a Field: its label and optional help text on the left, the control on the right (a
+ * switch, a select). `controlId` ties the label and the help text to the control for assistive technology.
  * When `changed`, a dot appears that resets just this setting through `onReset`.
  */
 export function SettingRow({
@@ -86,43 +89,51 @@ export function SettingRow({
   onReset?: () => void;
   /** Put the control under the label instead of beside it (for wide controls like swatches). */
   stacked?: boolean;
-  /** False when no element has the id `controlId` (groups, steppers); the label is then plain text. */
+  /**
+   * False when no element has the id `controlId` (groups, steppers). The title then names the row's
+   * group instead of labelling one control.
+   */
   labelable?: boolean;
   children: ReactNode;
 }) {
+  const titleId = `${controlId}-title`;
+
   return (
-    <div
-      className={cn(
-        "gap-3 py-4 first:pt-2 last:pb-2",
-        stacked ? "flex flex-col" : "flex items-start justify-between gap-6",
-      )}
+    <Field
+      orientation={stacked ? "vertical" : "horizontal"}
+      aria-labelledby={labelable ? undefined : titleId}
+      className={cn("py-4 first:pt-2 last:pb-2", stacked ? "gap-3" : "gap-6")}
     >
-      <div className="min-w-0 space-y-1">
+      <FieldContent className="min-w-0">
         <div className="flex items-center gap-2">
           {labelable ? (
-            <Label htmlFor={controlId} className="text-sm leading-5">
+            <FieldLabel htmlFor={controlId} className="leading-5">
               {label}
-            </Label>
+            </FieldLabel>
           ) : (
-            <span className="text-sm leading-5 font-medium">{label}</span>
+            <FieldTitle id={titleId} className="leading-5">
+              {label}
+            </FieldTitle>
           )}
           {changed ? (
-            <button
+            // A full-size button around the small dot, pulled into the label's line height so showing it
+            // never shifts the row.
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-xs"
               onClick={onReset}
               aria-label={`Reset ${label} to default`}
               title="Changed from default. Click to reset."
-              className="size-2 shrink-0 cursor-pointer rounded-full bg-primary outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
-            />
+              className="-my-1 -ml-1.5 pointer-coarse:-my-3"
+            >
+              <span aria-hidden="true" className="size-2 rounded-full bg-primary" />
+            </Button>
           ) : null}
         </div>
-        {description ? (
-          <p id={`${controlId}-description`} className="text-sm text-muted-foreground">
-            {description}
-          </p>
-        ) : null}
-      </div>
+        {description ? <FieldDescription id={`${controlId}-description`}>{description}</FieldDescription> : null}
+      </FieldContent>
       <div className={stacked ? undefined : "shrink-0"}>{children}</div>
-    </div>
+    </Field>
   );
 }

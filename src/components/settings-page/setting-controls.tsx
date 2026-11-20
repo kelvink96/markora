@@ -9,6 +9,7 @@ import {
   type ThemePreference,
 } from "../../features/settings/settings-schema";
 import { Button } from "@/components/ui/button";
+import { ButtonGroup, ButtonGroupText } from "@/components/ui/button-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -59,17 +60,20 @@ export function SegmentedControl<T extends string | number>({
   );
 }
 
-/** Steps the editor font size through the allowed sizes, with a sample at the chosen size. */
+/**
+ * Steps the editor font size through the allowed sizes, with a sample at the chosen size. Its settings
+ * row is the group named "Editor font size", so the stepper doesn't name itself again.
+ */
 export function FontSizeStepper({ value, onChange }: { value: number; onChange: (value: number) => void }) {
   const smaller = [...EDITOR_FONT_SIZES].reverse().find((size) => size < value);
   const larger = EDITOR_FONT_SIZES.find((size) => size > value);
 
   return (
-    <div role="group" aria-label="Editor font size" className="flex items-center gap-3">
+    <div className="flex items-center gap-3">
       <span aria-hidden="true" className="w-8 text-center" style={{ fontSize: value }}>
         Aa
       </span>
-      <div className="flex items-center gap-1">
+      <ButtonGroup>
         <Button
           type="button"
           variant="outline"
@@ -80,9 +84,9 @@ export function FontSizeStepper({ value, onChange }: { value: number; onChange: 
         >
           <Minus aria-hidden="true" />
         </Button>
-        <span aria-live="polite" className="w-14 text-center text-sm tabular-nums">
+        <ButtonGroupText aria-live="polite" className="min-w-16 justify-center font-normal tabular-nums">
           {value} px
-        </span>
+        </ButtonGroupText>
         <Button
           type="button"
           variant="outline"
@@ -93,7 +97,7 @@ export function FontSizeStepper({ value, onChange }: { value: number; onChange: 
         >
           <Plus aria-hidden="true" />
         </Button>
-      </div>
+      </ButtonGroup>
     </div>
   );
 }

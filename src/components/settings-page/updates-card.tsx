@@ -1,8 +1,13 @@
 import { useState } from "react";
+import { CircleAlert } from "lucide-react";
 import { useSettingsStore } from "../../features/settings/settings-store";
 import { SAVE_BEFORE_RESTART, useUpdateStore } from "../../features/updates/update-store";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Progress } from "@/components/ui/progress";
+import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 
 interface UpdatesCardProps {
@@ -47,17 +52,24 @@ export function UpdatesCard({ version, hasUnsavedChanges, onChangeUpdates }: Upd
   const errorMessage = restartError ?? (status === "error" ? storeError : readyError);
   // A failed download leaves the found update in place, so retrying downloads instead of re-checking.
   const retry = update ? download : check;
+  const hasBody =
+    (status === "available" && update !== null) || status === "downloading" || status === "ready" || Boolean(errorMessage);
 
   return (
-    <section aria-label="Updates" className="mt-10 space-y-4 rounded-xl border p-4 text-sm">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="space-y-1">
-          <h3 className="font-medium">Updates</h3>
-          <p className="text-muted-foreground">{`Version ${version}`}</p>
-        </div>
-        <div className="flex items-center gap-3">
+    <Card role="region" aria-label="Updates" className="mt-10 gap-4 py-4 text-sm">
+      <CardHeader className="px-4">
+        <CardTitle role="heading" aria-level={3}>
+          Updates
+        </CardTitle>
+        <CardDescription>{`Version ${version}`}</CardDescription>
+        <CardAction className="flex items-center gap-3">
           {status === "idle" ? <Button onClick={() => void check()}>Check for updates</Button> : null}
-          {status === "checking" ? <Button disabled>Checking…</Button> : null}
+          {status === "checking" ? (
+            <Button disabled>
+              <Spinner aria-hidden="true" data-icon="inline-start" />
+              Checking…
+            </Button>
+          ) : null}
           {status === "up-to-date" ? (
             <>
               <span className="text-muted-foreground">You're up to date</span>
@@ -73,57 +85,57 @@ export function UpdatesCard({ version, hasUnsavedChanges, onChangeUpdates }: Upd
             </Button>
           ) : null}
           {status === "error" ? <Button onClick={() => void retry()}>Try again</Button> : null}
-        </div>
-      </div>
+        </CardAction>
+      </CardHeader>
 
-      {status === "available" && update ? (
-        <div className="space-y-1">
-          <p>{`Version ${update.version} is available.`}</p>
-          {update.notes ? <p className="whitespace-pre-wrap text-muted-foreground">{update.notes}</p> : null}
-        </div>
+      {hasBody ? (
+        <CardContent className="flex flex-col gap-4 px-4">
+          {status === "available" && update ? (
+            <div className="flex flex-col gap-1">
+              <p>{`Version ${update.version} is available.`}</p>
+              {update.notes ? <p className="whitespace-pre-wrap text-muted-foreground">{update.notes}</p> : null}
+            </div>
+          ) : null}
+
+          {status === "downloading" ? (
+            <div className="flex flex-col gap-1">
+              <p>{update ? `Downloading ${update.version}…` : "Downloading…"}</p>
+              {/* With no known total the bar is indeterminate rather than stuck at zero. */}
+              <Progress aria-label="Download progress" value={percent} />
+            </div>
+          ) : null}
+
+          {status === "ready" ? (
+            <div className="flex flex-col gap-1">
+              <p>Update downloaded</p>
+              <p className="text-muted-foreground">Markora will close and reopen. Windows may ask for permission.</p>
+              {showSaveHint ? <p className="text-muted-foreground">{SAVE_BEFORE_RESTART}</p> : null}
+            </div>
+          ) : null}
+
+          {errorMessage ? (
+            <Alert variant="destructive">
+              <CircleAlert aria-hidden="true" />
+              <AlertTitle>Couldn't update</AlertTitle>
+              <AlertDescription>{errorMessage}</AlertDescription>
+            </Alert>
+          ) : null}
+        </CardContent>
       ) : null}
 
-      {status === "downloading" ? (
-        <div className="space-y-1">
-          <p>{update ? `Downloading ${update.version}…` : "Downloading…"}</p>
-          <div
-            role="progressbar"
-            aria-label="Download progress"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={percent ?? undefined}
-            className="h-2 overflow-hidden rounded-full bg-muted"
-          >
-            <div className="h-full bg-primary transition-[width]" style={{ width: `${percent ?? 0}%` }} />
-          </div>
-        </div>
-      ) : null}
-
-      {status === "ready" ? (
-        <div className="space-y-1">
-          <p>Update downloaded</p>
-          <p className="text-muted-foreground">Markora will close and reopen. Windows may ask for permission.</p>
-          {showSaveHint ? <p className="text-muted-foreground">{SAVE_BEFORE_RESTART}</p> : null}
-        </div>
-      ) : null}
-
-      {errorMessage ? (
-        <p role="alert" className="text-destructive">
-          {errorMessage}
-        </p>
-      ) : null}
-
-      <div className="flex items-center justify-between gap-3 border-t pt-4">
-        <Label htmlFor="setting-updates-check-automatically">Check automatically</Label>
-        <Switch
-          id="setting-updates-check-automatically"
-          checked={checkAutomatically}
-          onCheckedChange={(checked) => {
-            updateUpdates({ checkAutomatically: checked });
-            onChangeUpdates?.();
-          }}
-        />
-      </div>
-    </section>
+      <CardFooter className="border-t px-4 [.border-t]:pt-4">
+        <Field orientation="horizontal" className="justify-between">
+          <FieldLabel htmlFor="setting-updates-check-automatically">Check automatically</FieldLabel>
+          <Switch
+            id="setting-updates-check-automatically"
+            checked={checkAutomatically}
+            onCheckedChange={(checked) => {
+              updateUpdates({ checkAutomatically: checked });
+              onChangeUpdates?.();
+            }}
+          />
+        </Field>
+      </CardFooter>
+    </Card>
   );
 }

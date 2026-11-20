@@ -11,6 +11,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { ExternalLink } from "../external-link";
 
 interface SettingsFooterProps {
   version: string;
@@ -22,17 +23,10 @@ interface SettingsFooterProps {
 export function SettingsFooter({ version, privacyPolicyUrl, onResetAll }: SettingsFooterProps) {
   return (
     <footer className="mt-10 flex flex-wrap items-center justify-between gap-4 border-t pt-6 text-sm text-muted-foreground">
-      <div className="space-y-1">
+      <div className="flex flex-col items-start gap-1">
         <p>Markora, a desktop-first markdown editor.</p>
         <p>{`Version ${version}`}</p>
-        <a
-          href={privacyPolicyUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block text-primary underline underline-offset-4"
-        >
-          Privacy policy
-        </a>
+        <ExternalLink href={privacyPolicyUrl}>Privacy policy</ExternalLink>
       </div>
       <AlertDialog>
         <AlertDialogTrigger asChild>

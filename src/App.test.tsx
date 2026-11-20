@@ -12,6 +12,7 @@ import { useEditorCommandState } from "./features/editor/editor-command-state";
 import { useThemeStore } from "./features/theme/theme-store";
 import { useUpdateStore } from "./features/updates/update-store";
 import { scrollPreviewToHeading } from "./features/outline/scroll-to-heading";
+import { readShortcuts } from "./components/shortcut-keys";
 
 /** Settings for a user who has already dealt with the Tour prompt, so it stays out of the way. */
 function createSeenSettings() {
@@ -585,8 +586,8 @@ describe("App", () => {
     render(<App />);
     await user.click(screen.getByRole("button", { name: "open-shortcuts" }));
 
-    expect(screen.getByRole("dialog", { name: "Keyboard Shortcuts" })).toBeInTheDocument();
-    expect(screen.getByText("Ctrl+N")).toBeInTheDocument();
+    const dialog = screen.getByRole("dialog", { name: "Keyboard Shortcuts" });
+    expect(readShortcuts(dialog)).toContain("Ctrl+N");
   });
 
   it("opens the about dialog from the help menu action", async () => {

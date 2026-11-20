@@ -14,10 +14,11 @@ import {
 } from "@dnd-kit/core";
 import { type SortingStrategy, SortableContext, sortableKeyboardCoordinates, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, ListTree, X } from "lucide-react";
+import { GripVertical, Heading as HeadingIcon, ListTree, X } from "lucide-react";
 import { type Ref, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { cn } from "@/lib/utils";
 import type { Heading } from "../../../features/outline/extract-headings";
 import { movedSectionIndex, slotForDrop } from "../../../features/outline/sections";
@@ -59,28 +60,45 @@ interface RowProps {
   onSelect: (heading: Heading) => void;
 }
 
+/**
+ * The row's highlight lives on the `li`, not the button, so hover and the current-section state cover the drag
+ * handle and the word count too: the whole row reads as one item rather than a pill with things hanging off it.
+ */
+const rowClass = (isActive: boolean) =>
+  cn(
+    "relative flex items-center gap-1 rounded-md pl-1 pr-2 transition-colors",
+    isActive ? "bg-accent text-accent-foreground" : "hover:bg-accent/50",
+  );
+
 /** What every row shows, whether or not it can be dragged: the jump-to button and the section's size. */
 function RowContent({ heading, topLevel, isActive, buttonRef, wordCount, onSelect }: RowProps) {
   return (
     <>
+      {isActive ? (
+        <span
+          aria-hidden="true"
+          className="absolute inset-y-1.5 left-0 w-0.5 rounded-full bg-linear-to-b from-brand-from to-brand-to"
+        />
+      ) : null}
       <button
         ref={buttonRef}
         type="button"
         aria-current={isActive ? "location" : undefined}
         onClick={() => onSelect(heading)}
-        style={{ paddingLeft: `${0.5 + (heading.level - topLevel) * 0.85}rem` }}
+        style={{ paddingLeft: `${0.25 + (heading.level - topLevel) * 0.85}rem` }}
         className={cn(
-          "relative flex min-w-0 flex-1 cursor-pointer items-center rounded-md py-1.5 pr-2 text-left text-sm outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50 pointer-coarse:py-3",
+          "flex min-w-0 flex-1 cursor-pointer items-center rounded-md py-1.5 pr-1 text-left text-sm outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50 pointer-coarse:py-3",
           isActive
-            ? "bg-accent font-medium text-accent-foreground before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full before:bg-linear-to-b before:from-brand-from before:to-brand-to"
-            : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
-          heading.level === topLevel && !isActive && "text-foreground",
+            ? "font-medium"
+            : heading.level === topLevel
+              ? "text-foreground"
+              : "text-muted-foreground hover:text-foreground",
         )}
       >
         <span className="truncate">{heading.text}</span>
       </button>
       {wordCount === undefined ? null : (
-        <span className="shrink-0 pr-2 text-xs tabular-nums text-muted-foreground">{wordsLabel(wordCount)}</span>
+        <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{wordsLabel(wordCount)}</span>
       )}
     </>
   );
@@ -88,7 +106,7 @@ function RowContent({ heading, topLevel, isActive, buttonRef, wordCount, onSelec
 
 function PlainRow(props: RowProps) {
   return (
-    <li className="flex items-center" style={props.concealed ? { visibility: "hidden" } : undefined} aria-hidden={props.concealed || undefined}>
+    <li className={rowClass(props.isActive)} style={props.concealed ? { visibility: "hidden" } : undefined} aria-hidden={props.concealed || undefined}>
       <RowContent {...props} />
     </li>
   );
@@ -110,7 +128,8 @@ function SortableRow(props: RowProps) {
       aria-hidden={props.concealed || undefined}
       data-drop={props.drop}
       className={cn(
-        "group relative flex items-center gap-0.5",
+        "group",
+        rowClass(props.isActive),
         isDragging && "opacity-40",
         props.drop === "before" &&
           "before:pointer-events-none before:absolute before:inset-x-1 before:-top-px before:h-0.5 before:rounded-full before:bg-primary before:content-['']",
@@ -125,9 +144,9 @@ function SortableRow(props: RowProps) {
         {...attributes}
         {...listeners}
         aria-label={`Move section: ${props.heading.text}`}
-        className="flex size-6 shrink-0 cursor-grab touch-none items-center justify-center rounded text-muted-foreground opacity-0 outline-none transition-opacity hover:text-foreground focus-visible:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/50 group-hover:opacity-100 pointer-coarse:size-8 pointer-coarse:opacity-100"
+        className="flex size-5 shrink-0 cursor-grab touch-none items-center justify-center rounded text-muted-foreground opacity-0 outline-none transition-opacity hover:text-foreground focus-visible:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/50 group-hover:opacity-100 pointer-coarse:size-8 pointer-coarse:opacity-100"
       >
-        <GripVertical aria-hidden="true" className="size-4" />
+        <GripVertical aria-hidden="true" className="size-3.5" />
       </button>
       <RowContent {...props} />
     </li>
@@ -250,9 +269,17 @@ export function OutlinePanel({ headings, activeIndex, onSelect, onClose, wordCou
       </div>
 
       {headings.length === 0 ? (
-        <p className="p-4 text-sm text-muted-foreground">
-          No headings yet. Start a line with <code className="rounded bg-muted px-1 font-mono text-xs">#</code> to add one.
-        </p>
+        <Empty className="flex-none gap-3 p-4 md:p-6">
+          <EmptyHeader>
+            <EmptyMedia variant="icon" className="mb-1 size-9 [&_svg:not([class*='size-'])]:size-5">
+              <HeadingIcon aria-hidden="true" />
+            </EmptyMedia>
+            <EmptyTitle className="text-sm">No headings yet</EmptyTitle>
+            <EmptyDescription className="text-xs/relaxed">
+              Start a line with <code className="rounded bg-muted px-1 font-mono">#</code> to add one.
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       ) : (
         <nav ref={navRef} aria-label="Document headings" className="min-h-0 flex-1 overflow-auto p-1.5">
           {onMoveSection ? (
@@ -266,7 +293,7 @@ export function OutlinePanel({ headings, activeIndex, onSelect, onClose, wordCou
               accessibility={{ announcements, restoreFocus: false }}
             >
               <SortableContext items={headings.map((heading) => String(heading.index))} strategy={noDisplacement}>
-                <ul className="space-y-0.5">{headings.map(rowFor)}</ul>
+                <ul className="flex flex-col gap-0.5">{headings.map(rowFor)}</ul>
               </SortableContext>
               {/* In the page body: the panel's backdrop blur would make a fixed-position overlay sit relative to the panel. */}
               {createPortal(
@@ -286,7 +313,7 @@ export function OutlinePanel({ headings, activeIndex, onSelect, onClose, wordCou
               )}
             </DndContext>
           ) : (
-            <ul className="space-y-0.5">{headings.map(rowFor)}</ul>
+            <ul className="flex flex-col gap-0.5">{headings.map(rowFor)}</ul>
           )}
         </nav>
       )}

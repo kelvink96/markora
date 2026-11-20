@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +20,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Kbd } from "@/components/ui/kbd";
+import { ExternalLink } from "../../external-link";
+import { ShortcutKeys } from "../../shortcut-keys";
 import { getModifierLabel } from "../../../features/shortcuts/modifier-label";
 import type { PendingCloseRequest } from "../../../app/hooks";
 
@@ -113,9 +115,12 @@ export function AppDialogs({
             {shortcuts.map(([action, keys]) => (
               <div key={action} className="flex items-center justify-between py-2">
                 <dt>{action}</dt>
-                <dd className="flex gap-1">
-                  {keys.map((key) => (
-                    <Kbd key={key}>{key}</Kbd>
+                <dd className="flex items-center gap-2">
+                  {keys.map((key, index) => (
+                    <Fragment key={key}>
+                      {index > 0 ? <span className="text-xs text-muted-foreground">or</span> : null}
+                      <ShortcutKeys shortcut={key} />
+                    </Fragment>
                   ))}
                 </dd>
               </div>
@@ -135,19 +140,12 @@ export function AppDialogs({
             <DialogTitle>About Markora</DialogTitle>
             <DialogDescription>A desktop-first markdown editor built with Tauri, React, and CodeMirror.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-2 text-sm">
+          <div className="flex flex-col items-start gap-2 text-sm">
             <p>Version {version}</p>
             <p className="text-muted-foreground">
               Markora keeps writing and reading in dedicated modes for a focused markdown workflow.
             </p>
-            <a
-              href="https://kelvink96.github.io/markora/privacy"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block text-primary underline underline-offset-4"
-            >
-              Privacy Policy
-            </a>
+            <ExternalLink href="https://kelvink96.github.io/markora/privacy">Privacy Policy</ExternalLink>
           </div>
           <DialogFooter>
             <DialogClose asChild>
@@ -163,16 +161,9 @@ export function AppDialogs({
             <DialogTitle>Release Notes</DialogTitle>
             <DialogDescription>{`Version ${version}`}</DialogDescription>
           </DialogHeader>
-          <div className="space-y-2 text-sm">
+          <div className="flex flex-col items-start gap-2 text-sm">
             <p>Release notes are available on the releases page.</p>
-            <a
-              href="https://kelvink96.github.io/markora/versions"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block text-primary underline underline-offset-4"
-            >
-              View all releases
-            </a>
+            <ExternalLink href="https://kelvink96.github.io/markora/versions">View all releases</ExternalLink>
           </div>
           <DialogFooter>
             <DialogClose asChild>

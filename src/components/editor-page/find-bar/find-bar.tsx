@@ -2,7 +2,7 @@ import { ArrowDown, ArrowUp, CaseSensitive, ChevronRight, Regex, WholeWord, X } 
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import type { EditorView } from "@codemirror/view";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from "@/components/ui/input-group";
 import { Toggle } from "@/components/ui/toggle";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -34,7 +34,7 @@ interface FindBarProps {
 
 function describe(summary: MatchSummary, hasSearch: boolean) {
   if (!hasSearch) return "";
-  if (!summary.valid) return "Invalid regular expression";
+  if (!summary.valid) return "Invalid regex";
   if (summary.total === 0) return "No results";
   const total = summary.capped ? `${summary.total}+` : String(summary.total);
   return summary.current > 0 ? `${summary.current} of ${total}` : `${total} ${summary.total === 1 ? "match" : "matches"}`;
@@ -150,7 +150,7 @@ export function FindBar({ view, initialMode, initialSearch = "", version, onClos
   ) => (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Toggle size="sm" aria-label={label} pressed={pressed} onPressedChange={onPressedChange} className="size-7 min-w-7 px-0">
+        <Toggle size="sm" aria-label={label} pressed={pressed} onPressedChange={onPressedChange} className="size-6 min-w-6 px-0">
           {icon}
         </Toggle>
       </TooltipTrigger>
@@ -183,61 +183,63 @@ export function FindBar({ view, initialMode, initialSearch = "", version, onClos
         <TooltipContent>{showReplace ? "Hide replace" : "Show replace"}</TooltipContent>
       </Tooltip>
 
-      <div className="min-w-0 flex-1 space-y-1.5">
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         <div className="flex items-center gap-1">
-          <Input
-            ref={searchInput}
-            value={options.search}
-            onChange={(event) => update({ search: event.target.value })}
-            onKeyDown={onSearchKeyDown}
-            placeholder="Find"
-            aria-label="Find"
-            aria-invalid={!summary.valid}
-            aria-describedby="find-status"
-            spellCheck={false}
-            className="h-8 min-w-0 flex-1"
-          />
-          {optionToggle("Match case", options.caseSensitive, (caseSensitive) => update({ caseSensitive }), <CaseSensitive aria-hidden="true" />)}
-          {optionToggle("Match whole word", options.wholeWord, (wholeWord) => update({ wholeWord }), <WholeWord aria-hidden="true" />)}
-          {optionToggle("Use regular expression", options.regexp, (regexp) => update({ regexp }), <Regex aria-hidden="true" />)}
-        </div>
-
-        <div className="flex items-center justify-between gap-2">
-          <span
-            id="find-status"
-            role="status"
-            aria-live="polite"
-            className={cn("min-w-0 truncate pl-1 text-xs", summary.valid ? "text-muted-foreground" : "text-destructive")}
-          >
-            {status}
-          </span>
-          <div className="flex items-center gap-0.5">
-            <Button type="button" variant="ghost" size="icon-xs" aria-label="Previous match" disabled={summary.total === 0} onClick={() => run(goToPreviousMatch)}>
-              <ArrowUp aria-hidden="true" />
-            </Button>
-            <Button type="button" variant="ghost" size="icon-xs" aria-label="Next match" disabled={summary.total === 0} onClick={() => run(goToNextMatch)}>
-              <ArrowDown aria-hidden="true" />
-            </Button>
-          </div>
+          {/* One field: what to find, how many matches, and the case / word / regex options. */}
+          <InputGroup className="h-8 min-w-0 flex-1">
+            <InputGroupInput
+              ref={searchInput}
+              value={options.search}
+              onChange={(event) => update({ search: event.target.value })}
+              onKeyDown={onSearchKeyDown}
+              placeholder="Find"
+              aria-label="Find"
+              aria-invalid={!summary.valid}
+              aria-describedby="find-status"
+              spellCheck={false}
+              className="h-full"
+            />
+            <InputGroupAddon align="inline-end" className="gap-0.5">
+              <InputGroupText
+                id="find-status"
+                role="status"
+                aria-live="polite"
+                className={cn("pr-1 text-xs tabular-nums whitespace-nowrap", summary.valid ? "text-muted-foreground" : "text-destructive")}
+              >
+                {status}
+              </InputGroupText>
+              {optionToggle("Match case", options.caseSensitive, (caseSensitive) => update({ caseSensitive }), <CaseSensitive aria-hidden="true" />)}
+              {optionToggle("Match whole word", options.wholeWord, (wholeWord) => update({ wholeWord }), <WholeWord aria-hidden="true" />)}
+              {optionToggle("Use regular expression", options.regexp, (regexp) => update({ regexp }), <Regex aria-hidden="true" />)}
+            </InputGroupAddon>
+          </InputGroup>
+          <Button type="button" variant="ghost" size="icon-xs" aria-label="Previous match" disabled={summary.total === 0} onClick={() => run(goToPreviousMatch)}>
+            <ArrowUp aria-hidden="true" />
+          </Button>
+          <Button type="button" variant="ghost" size="icon-xs" aria-label="Next match" disabled={summary.total === 0} onClick={() => run(goToNextMatch)}>
+            <ArrowDown aria-hidden="true" />
+          </Button>
         </div>
 
         {showReplace ? (
           <div className="flex items-center gap-1">
-            <Input
-              ref={replaceInput}
-              value={options.replace}
-              onChange={(event) => update({ replace: event.target.value })}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  run(replaceCurrentMatch);
-                }
-              }}
-              placeholder="Replace"
-              aria-label="Replace"
-              spellCheck={false}
-              className="h-8 min-w-0 flex-1"
-            />
+            <InputGroup className="h-8 min-w-0 flex-1">
+              <InputGroupInput
+                ref={replaceInput}
+                value={options.replace}
+                onChange={(event) => update({ replace: event.target.value })}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    run(replaceCurrentMatch);
+                  }
+                }}
+                placeholder="Replace"
+                aria-label="Replace"
+                spellCheck={false}
+                className="h-full"
+              />
+            </InputGroup>
             <Button type="button" variant="outline" size="sm" disabled={summary.total === 0} onClick={() => run(replaceCurrentMatch)}>
               Replace
             </Button>

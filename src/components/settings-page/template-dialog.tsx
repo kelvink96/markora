@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Textarea } from "@/components/ui/textarea";
 
 interface TemplateDialogProps {
@@ -41,15 +41,15 @@ export function TemplateDialog({ template, onSave }: TemplateDialogProps) {
           <DialogTitle>New document template</DialogTitle>
           <DialogDescription>This content is used only for newly created documents.</DialogDescription>
         </DialogHeader>
-        <div className="space-y-2">
-          <Label htmlFor="template-content">Template content</Label>
+        <Field>
+          <FieldLabel htmlFor="template-content">Template content</FieldLabel>
           <Textarea
             id="template-content"
             className="min-h-64 font-mono"
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
           />
-        </div>
+        </Field>
         <DialogFooter>
           <Button variant="ghost" onClick={() => setDraft(defaultNewDocumentTemplate)}>
             <RotateCcw aria-hidden="true" />

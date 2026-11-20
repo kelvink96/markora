@@ -59,6 +59,17 @@ describe("SettingsPage", () => {
     expect(Element.prototype.scrollIntoView).toHaveBeenCalled();
   });
 
+  it("builds the search box from InputGroup, with the icon and shortcut as addons", () => {
+    renderPage();
+
+    const group = search().closest("[data-slot=input-group]");
+    expect(group).not.toBeNull();
+    expect(search()).toHaveAttribute("data-slot", "input-group-control");
+    const addons = group!.querySelectorAll("[data-slot=input-group-addon]");
+    expect(addons).toHaveLength(2);
+    expect(addons[1]).toHaveTextContent("/");
+  });
+
   it("filters settings as you type and hides the jump list", async () => {
     renderPage();
 

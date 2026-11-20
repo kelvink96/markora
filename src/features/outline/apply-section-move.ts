@@ -24,17 +24,16 @@ export function applySectionMove(view: EditorView, fromIndex: number, slot: numb
   const movedUp = move.from < blockFrom;
   const spanLength = movedUp ? blockFrom - move.from : move.to - blockTo;
 
+  // Moving the unterminated last line of a document puts a newline between the two parts (and takes the
+  // block's own away), so whatever ends up after that newline sits one position further on. In that case the
+  // end of the document is part of the moved span too, since the text that ends it changes.
+  const unterminated = move.to === doc.length && !text.endsWith("\n");
+
   const follow = (position: number) => {
-    if (position < move.from || position >= move.to) return position;
-    const moved = movedUp
-      ? position < blockFrom
-        ? position + blockLength
-        : position - spanLength
-      : position < blockTo
-        ? position + spanLength
-        : position - blockLength;
-    // Moving the unterminated end of a document trades one newline for another, so stay inside the text.
-    return Math.min(moved, doc.length);
+    if (position < move.from || position > move.to || (position === move.to && !unterminated)) return position;
+    const extra = unterminated ? 1 : 0;
+    if (movedUp) return position < blockFrom ? position + blockLength + extra : position - spanLength;
+    return position < blockTo ? position + spanLength + extra : position - blockLength;
   };
 
   const { ranges, mainIndex } = view.state.selection;

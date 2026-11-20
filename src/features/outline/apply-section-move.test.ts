@@ -129,6 +129,57 @@ describe("applySectionMove", () => {
     expect(view.state.doc.toString()).toBe("intro\n\n# Y\ny\n# X\nx\n");
   });
 
+  it("leaves a cursor at the very end of a terminated document at the end", () => {
+    const view = mount(D1, D1.length);
+
+    applySectionMove(view, 1, 4);
+
+    expect(view.state.selection.main.head).toBe(view.state.doc.length);
+  });
+
+  describe("in a document without a trailing newline", () => {
+    // Moving the unterminated last line trades one newline for another, so positions after it shift by one more.
+    const N = "# A\nx\n# B\ny";
+    const SWAPPED = "# B\ny\n# A\nx";
+
+    it("keeps a cursor on the same text when the first section moves to the end", () => {
+      const onStart = mount(N, 0);
+      applySectionMove(onStart, 0, 2);
+      expect(onStart.state.doc.toString()).toBe(SWAPPED);
+      expect(onStart.state.selection.main.head).toBe(SWAPPED.indexOf("# A"));
+
+      const onText = mount(N, N.indexOf("x"));
+      applySectionMove(onText, 0, 2);
+      expect(around(onText)).toEqual({ line: "x", above: "# A" });
+      expect(onText.state.selection.main.head).toBe(SWAPPED.indexOf("x"));
+    });
+
+    it("keeps a cursor at the end of the document at the end of the same last line when it jumps", () => {
+      const view = mount(N, N.length);
+
+      applySectionMove(view, 0, 2);
+
+      // The cursor was at the end of "y", which is now in the middle of the document.
+      expect(view.state.selection.main.head).toBe(SWAPPED.indexOf("y") + 1);
+      expect(around(view)).toEqual({ line: "y", above: "# B" });
+    });
+
+    it("keeps a cursor with the last section when that section moves up", () => {
+      const atEnd = mount(N, N.length);
+      applySectionMove(atEnd, 1, 0);
+      expect(atEnd.state.doc.toString()).toBe(SWAPPED);
+      expect(atEnd.state.selection.main.head).toBe(SWAPPED.indexOf("y") + 1);
+
+      const onText = mount(N, N.indexOf("x"));
+      applySectionMove(onText, 1, 0);
+      expect(around(onText)).toEqual({ line: "x", above: "# A" });
+
+      const onHeading = mount(N, 0);
+      applySectionMove(onHeading, 1, 0);
+      expect(onHeading.state.selection.main.head).toBe(SWAPPED.indexOf("# A"));
+    });
+  });
+
   it("moves every selection range, keeping the main one", () => {
     const view = mount(D1);
     view.dispatch({

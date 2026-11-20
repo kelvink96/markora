@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { extractHeadings } from "./extract-headings";
-import { moveSection, sectionLineRanges, sectionWordCounts, slotForDrop } from "./sections";
+import { movedSectionIndex, moveSection, sectionLineRanges, sectionWordCounts, slotForDrop } from "./sections";
 
 const D1 = "# Title\n\n## One\na\n\n## Two\nb\n\n## Three\nc\n";
 const D2 = "# A\n## A1\n### A1x\n## A2\n# B\n";
@@ -112,6 +112,26 @@ describe("moveSection", () => {
         }
       }
     }
+  });
+});
+
+describe("movedSectionIndex", () => {
+  const headings = extractHeadings(D2);
+
+  it("is the heading index the moved section has after the move", () => {
+    expect(movedSectionIndex(headings, 3, 1)).toBe(1); // up: lands at the slot
+    expect(movedSectionIndex(headings, 1, 4)).toBe(2); // down past A2: A, A2, then A1 (with A1x after it)
+    expect(movedSectionIndex(headings, 0, 5)).toBe(1); // the whole of A to the end: B, then A
+    // The heading at that index is the one that moved.
+    const result = moved(D2, 1, 4) as string;
+    expect(extractHeadings(result)[movedSectionIndex(headings, 1, 4)].text).toBe("A1");
+  });
+
+  it("is where the section already is when the move does nothing", () => {
+    expect(movedSectionIndex(headings, 1, 1)).toBe(1);
+    expect(movedSectionIndex(headings, 1, 3)).toBe(1);
+    expect(movedSectionIndex(headings, 1, 2)).toBe(1);
+    expect(movedSectionIndex(headings, 9, 0)).toBe(9);
   });
 });
 

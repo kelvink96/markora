@@ -85,6 +85,18 @@ export function moveSection(markdown: string, headings: Heading[], fromIndex: nu
 }
 
 /**
+ * The heading index the moved section has once `moveSection(fromIndex, slot)` is applied (so the outline can
+ * put keyboard focus back on it); where it already is when the move does nothing.
+ */
+export function movedSectionIndex(headings: Heading[], fromIndex: number, slot: number): number {
+  if (fromIndex < 0 || fromIndex >= headings.length) return fromIndex;
+
+  const end = sectionEndIndex(headings, fromIndex);
+  if (slot < 0 || slot > headings.length || (slot >= fromIndex && slot <= end)) return fromIndex;
+  return slot < fromIndex ? slot : slot - (end - fromIndex);
+}
+
+/**
  * Where dropping row `overIndex` onto a dragged row should land the dragged section: before the row when
  * dragging up, after the whole section of the row when dragging down. `null` when the drop does nothing
  * (on itself or inside its own section) or an index doesn't exist.

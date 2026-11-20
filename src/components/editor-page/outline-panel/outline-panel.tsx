@@ -3,6 +3,7 @@ import {
   closestCenter,
   DndContext,
   type DragEndEvent,
+  type DragOverEvent,
   DragOverlay,
   type DragStartEvent,
   KeyboardSensor,
@@ -11,7 +12,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { type SortingStrategy, SortableContext, sortableKeyboardCoordinates, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, ListTree, X } from "lucide-react";
 import { type Ref, useEffect, useMemo, useRef, useState } from "react";
@@ -19,7 +20,7 @@ import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Heading } from "../../../features/outline/extract-headings";
-import { slotForDrop } from "../../../features/outline/sections";
+import { movedSectionIndex, slotForDrop } from "../../../features/outline/sections";
 
 interface OutlinePanelProps {
   headings: Heading[];
@@ -36,6 +37,12 @@ interface OutlinePanelProps {
   onMoveSection?: (fromIndex: number, slot: number) => void;
 }
 
+/**
+ * Rows stay where they are during a drag. The landing line shows where a drop really goes, which can be after
+ * a row's whole section, so the default preview (rows shuffling aside by one place) would show somewhere else.
+ */
+const noDisplacement: SortingStrategy = () => null;
+
 const wordsLabel = (count: number) => `${count} ${count === 1 ? "word" : "words"}`;
 
 interface RowProps {
@@ -45,6 +52,8 @@ interface RowProps {
   isActive: boolean;
   /** A sub-section of the section being dragged: invisible, but it keeps its space so nothing shifts mid-drag. */
   concealed?: boolean;
+  /** Where a drop would land relative to this row: a line along its top or bottom edge. */
+  drop?: "before" | "after";
   buttonRef?: Ref<HTMLButtonElement>;
   wordCount?: number;
   onSelect: (heading: Heading) => void;
@@ -89,6 +98,9 @@ function PlainRow(props: RowProps) {
 function SortableRow(props: RowProps) {
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
     id: String(props.heading.index),
+    // A concealed row can't be dropped on, so the keyboard sensor steps over it rather than announcing it.
+    // (the object form: a plain `true` would only stop it being dragged)
+    disabled: props.concealed ? { draggable: true, droppable: true } : undefined,
   });
 
   return (
@@ -96,11 +108,20 @@ function SortableRow(props: RowProps) {
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition, visibility: props.concealed ? "hidden" : undefined }}
       aria-hidden={props.concealed || undefined}
-      className={cn("group flex items-center gap-0.5", isDragging && "opacity-40")}
+      data-drop={props.drop}
+      className={cn(
+        "group relative flex items-center gap-0.5",
+        isDragging && "opacity-40",
+        props.drop === "before" &&
+          "before:pointer-events-none before:absolute before:inset-x-1 before:-top-px before:h-0.5 before:rounded-full before:bg-primary before:content-['']",
+        props.drop === "after" &&
+          "after:pointer-events-none after:absolute after:inset-x-1 after:-bottom-px after:h-0.5 after:rounded-full after:bg-primary after:content-['']",
+      )}
     >
       <button
         ref={setActivatorNodeRef}
         type="button"
+        data-handle-index={props.heading.index}
         {...attributes}
         {...listeners}
         aria-label={`Move section: ${props.heading.text}`}
@@ -117,11 +138,25 @@ export function OutlinePanel({ headings, activeIndex, onSelect, onClose, wordCou
   const activeItem = useRef<HTMLButtonElement>(null);
   // The heading being dragged: its sub-sections travel with it, so their rows are hidden meanwhile.
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+  // Where a drop would land right now (a heading index, or the heading count for the very end), for the landing line.
+  const [landingSlot, setLandingSlot] = useState<number | null>(null);
+  const navRef = useRef<HTMLElement>(null);
+  // After a drop the rows are keyed by index, so the handle that had focus now belongs to another section:
+  // once the outline shows the move, focus goes to the moved section's own handle instead.
+  const pendingFocus = useRef<number | null>(null);
 
   // Keep the current section visible in a long outline as the cursor moves.
   useEffect(() => {
     activeItem.current?.scrollIntoView({ block: "nearest" });
   }, [activeIndex]);
+
+  useEffect(() => {
+    const index = pendingFocus.current;
+    if (index === null) return;
+
+    pendingFocus.current = null;
+    navRef.current?.querySelector<HTMLElement>(`[data-handle-index="${index}"]`)?.focus();
+  }, [headings]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
@@ -160,12 +195,26 @@ export function OutlinePanel({ headings, activeIndex, onSelect, onClose, wordCou
     onDragCancel: () => "Move cancelled",
   };
 
-  const handleDragStart = ({ active }: DragStartEvent) => setDraggingIndex(Number(active.id));
-  const handleDragEnd = ({ active, over }: DragEndEvent) => {
-    setDraggingIndex(null);
-    const slot = dropSlot(active, over);
-    if (slot !== null) onMoveSection?.(Number(active.id), slot);
+  const handleDragStart = ({ active }: DragStartEvent) => {
+    pendingFocus.current = null;
+    setDraggingIndex(Number(active.id));
   };
+  const handleDragOver = ({ active, over }: DragOverEvent) => setLandingSlot(dropSlot(active, over));
+  const clearDrag = () => {
+    setDraggingIndex(null);
+    setLandingSlot(null);
+  };
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    clearDrag();
+    const slot = dropSlot(active, over);
+    if (slot === null) return;
+
+    const from = Number(active.id);
+    const hadHandleFocus = document.activeElement instanceof HTMLElement && document.activeElement.hasAttribute("data-handle-index");
+    if (hadHandleFocus) pendingFocus.current = movedSectionIndex(headings, from, slot);
+    onMoveSection?.(from, slot);
+  };
+
 
   const rowFor = (heading: Heading) => {
     const props: RowProps = {
@@ -173,6 +222,12 @@ export function OutlinePanel({ headings, activeIndex, onSelect, onClose, wordCou
       topLevel,
       isActive: heading.index === activeIndex,
       concealed: concealedIndices.has(heading.index),
+      drop:
+        landingSlot === heading.index
+          ? "before"
+          : landingSlot === headings.length && heading.index === headings.length - 1
+            ? "after"
+            : undefined,
       buttonRef: heading.index === activeIndex ? activeItem : undefined,
       wordCount: wordCounts?.[heading.index],
       onSelect,
@@ -199,17 +254,18 @@ export function OutlinePanel({ headings, activeIndex, onSelect, onClose, wordCou
           No headings yet. Start a line with <code className="rounded bg-muted px-1 font-mono text-xs">#</code> to add one.
         </p>
       ) : (
-        <nav aria-label="Document headings" className="min-h-0 flex-1 overflow-auto p-1.5">
+        <nav ref={navRef} aria-label="Document headings" className="min-h-0 flex-1 overflow-auto p-1.5">
           {onMoveSection ? (
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
               onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
               onDragEnd={handleDragEnd}
-              onDragCancel={() => setDraggingIndex(null)}
-              accessibility={{ announcements }}
+              onDragCancel={clearDrag}
+              accessibility={{ announcements, restoreFocus: false }}
             >
-              <SortableContext items={headings.map((heading) => String(heading.index))} strategy={verticalListSortingStrategy}>
+              <SortableContext items={headings.map((heading) => String(heading.index))} strategy={noDisplacement}>
                 <ul className="space-y-0.5">{headings.map(rowFor)}</ul>
               </SortableContext>
               {/* In the page body: the panel's backdrop blur would make a fixed-position overlay sit relative to the panel. */}

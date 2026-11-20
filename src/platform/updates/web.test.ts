@@ -6,6 +6,10 @@ describe("webUpdateAdapter", () => {
     await expect(webUpdateAdapter.checkForUpdate()).resolves.toBeNull();
   });
 
+  it("has no known app version", async () => {
+    await expect(webUpdateAdapter.getCurrentVersion()).resolves.toBeNull();
+  });
+
   it("rejects download", async () => {
     await expect(webUpdateAdapter.download(vi.fn())).rejects.toThrow();
   });

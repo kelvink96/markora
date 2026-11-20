@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { desktopUpdateAdapter } from "./desktop";
 
-const { checkMock, relaunchMock } = vi.hoisted(() => ({
+const { checkMock, relaunchMock, getVersionMock } = vi.hoisted(() => ({
   checkMock: vi.fn(),
   relaunchMock: vi.fn(),
+  getVersionMock: vi.fn(),
 }));
 
+vi.mock("@tauri-apps/api/app", () => ({ getVersion: getVersionMock }));
 vi.mock("@tauri-apps/plugin-updater", () => ({ check: checkMock }));
 vi.mock("@tauri-apps/plugin-process", () => ({ relaunch: relaunchMock }));
 
@@ -27,6 +29,18 @@ describe("desktopUpdateAdapter", () => {
     checkMock.mockResolvedValue(null);
     await desktopUpdateAdapter.checkForUpdate();
     checkMock.mockReset();
+  });
+
+  it("returns the running app version", async () => {
+    getVersionMock.mockResolvedValue("1.6.0");
+
+    await expect(desktopUpdateAdapter.getCurrentVersion()).resolves.toBe("1.6.0");
+  });
+
+  it("returns null when the app version cannot be read", async () => {
+    getVersionMock.mockRejectedValue(new Error("no tauri"));
+
+    await expect(desktopUpdateAdapter.getCurrentVersion()).resolves.toBeNull();
   });
 
   it("returns null when no update is available", async () => {

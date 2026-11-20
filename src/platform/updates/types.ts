@@ -10,6 +10,8 @@ export interface DownloadProgress {
 }
 
 export interface UpdateAdapter {
+  /** The version of the running app, or null when it is unknown (web, or the version cannot be read). */
+  getCurrentVersion(): Promise<string | null>;
   checkForUpdate(): Promise<AvailableUpdate | null>;
   /** Downloads the update returned by the last checkForUpdate() without installing it; rejects if there is none. */
   download(onProgress: (progress: DownloadProgress) => void): Promise<void>;

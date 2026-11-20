@@ -1,6 +1,10 @@
 import type { UpdateAdapter } from "./types";
 
 export const webUpdateAdapter: UpdateAdapter = {
+  async getCurrentVersion() {
+    return null;
+  },
+
   async checkForUpdate() {
     return null;
   },

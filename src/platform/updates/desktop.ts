@@ -1,3 +1,4 @@
+import { getVersion } from "@tauri-apps/api/app";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check, type Update } from "@tauri-apps/plugin-updater";
 import type { UpdateAdapter } from "./types";
@@ -10,6 +11,14 @@ export const CHECK_TIMEOUT_MS = 30_000;
 export const DOWNLOAD_TIMEOUT_MS = 10 * 60_000;
 
 export const desktopUpdateAdapter: UpdateAdapter = {
+  async getCurrentVersion() {
+    try {
+      return await getVersion();
+    } catch {
+      return null;
+    }
+  },
+
   async checkForUpdate() {
     // Release the backend resource (and any downloaded bytes) held by the previous check.
     await pendingUpdate?.close().catch(() => {});

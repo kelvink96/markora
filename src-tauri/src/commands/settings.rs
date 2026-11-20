@@ -491,6 +491,27 @@ mod tests {
     }
 
     #[test]
+    fn every_saved_color_scheme_id_reads_back_to_its_variant() {
+        // These ids are written by the frontend (features/settings/color-schemes.ts), so serde's
+        // kebab-case names must match them exactly; an id it didn't know would reject the whole file.
+        let expected = [
+            ("standard", ColorScheme::Standard),
+            ("sepia", ColorScheme::Sepia),
+            ("high-contrast", ColorScheme::HighContrast),
+            ("moss", ColorScheme::Moss),
+            ("frost", ColorScheme::Frost),
+            ("rose", ColorScheme::Rose),
+            ("ink", ColorScheme::Ink),
+        ];
+
+        for (id, variant) in expected {
+            let read: ColorScheme = serde_json::from_str(&format!("\"{id}\"")).unwrap();
+            assert_eq!(read, variant, "{id}");
+            assert_eq!(serde_json::to_string(&variant).unwrap(), format!("\"{id}\""));
+        }
+    }
+
+    #[test]
     fn load_settings_defaults_missing_color_scheme_for_existing_files() {
         let temp_dir = temp_settings_dir();
         let path = settings_file_path(&temp_dir);

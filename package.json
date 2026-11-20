@@ -2,7 +2,7 @@
   "name": "markora",
   "private": true,
   "packageManager": "pnpm@12.21.0",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "type": "module",
   "scripts": {
     "dev": "vite",

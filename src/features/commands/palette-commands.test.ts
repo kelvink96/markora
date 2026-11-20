@@ -8,6 +8,7 @@ function context(overrides: Partial<PaletteContext> = {}): PaletteContext {
     hasActiveDocument: true,
     viewMode: "split",
     showSyntax: false,
+    focusMode: false,
     showOutline: false,
     appearance: { ...defaultSettings.appearance },
     editor: { ...defaultSettings.editor },
@@ -25,6 +26,7 @@ function context(overrides: Partial<PaletteContext> = {}): PaletteContext {
       onToggleOutline: vi.fn(),
       onViewModeChange: vi.fn(),
       onToggleSyntax: vi.fn(),
+      onToggleFocus: vi.fn(),
       onFormat: vi.fn(),
       onEditAction: vi.fn(),
       onOpenShortcuts: vi.fn(),
@@ -157,6 +159,20 @@ describe("buildAppCommands", () => {
 
     byId("view.syntax", writing)?.run();
     expect(writing.handlers.onToggleSyntax).toHaveBeenCalledTimes(1);
+  });
+
+  it("offers Focus as a checked toggle with its shortcut, only while writing in an open document", () => {
+    const focused = context({ viewMode: "write", focusMode: true });
+    expect(byId("view.focus", focused)).toMatchObject({ label: "Focus", group: "View", enabled: true, checked: true, shortcut: "Ctrl+Shift+F" });
+    expect(byId("view.focus", context({ viewMode: "write", focusMode: false }))?.checked).toBe(false);
+    expect(byId("view.focus", context({ viewMode: "write", modifier: "Cmd" }))?.shortcut).toBe("Cmd+Shift+F");
+
+    expect(byId("view.focus", context({ viewMode: "split" }))?.enabled).toBe(false);
+    expect(byId("view.focus", context({ viewMode: "read" }))?.enabled).toBe(false);
+    expect(byId("view.focus", context({ viewMode: "write", hasActiveDocument: false }))?.enabled).toBe(false);
+
+    byId("view.focus", focused)?.run();
+    expect(focused.handlers.onToggleFocus).toHaveBeenCalledTimes(1);
   });
 
   it("disables the editing and formatting commands in Read, where the editor is hidden", () => {

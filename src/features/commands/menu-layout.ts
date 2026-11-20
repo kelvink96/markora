@@ -81,6 +81,7 @@ export const MENU_LAYOUT: MenuDefinition[] = [
         command("view.mode.read"),
       ]),
       command("view.syntax"),
+      command("view.focus"),
       separator,
       command("view.outline"),
       command("view.status-bar"),

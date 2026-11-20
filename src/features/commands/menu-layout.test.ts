@@ -10,6 +10,7 @@ function allCommandIds() {
     hasActiveDocument: true,
     viewMode: "write",
     showSyntax: false,
+    focusMode: false,
     showOutline: false,
     appearance: { ...defaultSettings.appearance },
     editor: { ...defaultSettings.editor },
@@ -83,6 +84,16 @@ describe("MENU_LAYOUT", () => {
       "view.mode.read",
     ]);
     expect(collectCommandIds(view?.items.slice(modeIndex + 1, modeIndex + 2) ?? [])).toEqual(["view.syntax"]);
+  });
+
+  it("lists Focus once in the View menu, directly after Show Syntax", () => {
+    const view = MENU_LAYOUT.find((menu) => menu.id === "view");
+    const topLevel = (view?.items ?? []).map((node) => (node.type === "command" ? node.id : null));
+    const ids = MENU_LAYOUT.flatMap((menu) => collectCommandIds(menu.items));
+
+    expect(topLevel.indexOf("view.focus")).toBe(topLevel.indexOf("view.syntax") + 1);
+    expect(topLevel.indexOf("view.syntax")).toBeGreaterThan(-1);
+    expect(ids.filter((id) => id === "view.focus")).toHaveLength(1);
   });
 
   it("shortens option labels inside the Theme and Color Scheme submenus", () => {

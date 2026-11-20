@@ -13,7 +13,7 @@ import { useDocumentStore } from "../../../store/document";
 import { AppMenus, type RecentFile } from "./menu-renderer";
 
 interface TopBarProps {
-  /** The document tabs, shown between the menus and the view controls. */
+  /** The document tabs, shown on their own row below the menus and view controls. */
   tabs?: ReactNode;
   /** Every app command; the menus lay them out and run them. */
   commands: AppCommand[];
@@ -51,8 +51,8 @@ export function TopBar({
   const updateAvailable = updatesSupported && (updateStatus === "available" || updateStatus === "downloading" || updateStatus === "ready");
 
   return (
-    // On narrow screens the tabs wrap onto their own row (order-last + full width) instead of being squeezed out.
-    <header className="top-bar flex min-h-12 flex-wrap items-center gap-x-2 gap-y-1 border-b bg-card/70 px-2 py-1.5 backdrop-blur-md md:flex-nowrap md:py-0">
+    // The tabs sit on their own row (order-last + full width) so they never compete with the menus and view controls.
+    <header className="top-bar flex min-h-12 flex-wrap items-center gap-x-2 gap-y-1 border-b bg-card/70 px-2 py-1.5 backdrop-blur-md">
       <div className="flex shrink-0 items-center gap-1.5" data-testid="top-bar-menu" data-tour="command-palette">
         <Logo size={24} showLabel={!hasActiveDocument} className="mx-1" />
         <Menubar className="h-auto gap-0.5 border-0 bg-transparent p-0 shadow-none">
@@ -60,9 +60,9 @@ export function TopBar({
         </Menubar>
       </div>
 
-      <div className="order-last flex w-full min-w-0 items-center md:order-none md:w-auto md:flex-1">{tabs}</div>
+      {tabs ? <div className="order-last flex w-full min-w-0 items-center">{tabs}</div> : null}
 
-      <div className="ml-auto flex shrink-0 items-center gap-1.5 md:ml-0" data-testid="top-bar-utilities">
+      <div className="ml-auto flex shrink-0 items-center gap-1.5" data-testid="top-bar-utilities">
         {canInstallApp ? (
           <Button size="sm" variant="outline" onClick={onInstallApp}>
             <Download aria-hidden="true" /> Install app

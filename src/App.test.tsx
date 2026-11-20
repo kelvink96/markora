@@ -1360,10 +1360,13 @@ describe("App", () => {
     });
 
     it("announces the update once and opens the notes from the toast", async () => {
-      // On desktop the notes are rendered by the Rust command.
-      invokeMock.mockImplementation(async (command: string) =>
-        command === "parse_markdown" ? "<h2>What's Changed</h2><ul><li>feat: colour schemes</li></ul>" : undefined,
-      );
+      // On desktop the notes are rendered by the Rust command; settings must load for the toast to be allowed.
+      invokeMock.mockImplementation(async (command: string) => {
+        if (command === "load_settings") return createSeenSettings();
+        return command === "parse_markdown"
+          ? "<h2>What's Changed</h2><ul><li>feat: colour schemes</li></ul>"
+          : undefined;
+      });
       savePendingWhatsNew(pending);
 
       render(<App />);
@@ -1383,6 +1386,24 @@ describe("App", () => {
       await waitFor(() => expect(getCurrentVersionMock).toHaveBeenCalled());
 
       expect(screen.queryByText(/^Updated to/)).not.toBeInTheDocument();
+    });
+
+    it("waits while the Tour prompt is open, then announces once it is dealt with", async () => {
+      const user = userEvent.setup();
+      const stored = createSeenSettings();
+      stored.onboarding.tourVersion = 0;
+      invokeMock.mockImplementation(async (command: string) => (command === "load_settings" ? stored : undefined));
+      savePendingWhatsNew(pending);
+
+      render(<App />);
+      const prompt = await screen.findByRole("dialog", { name: "Take a quick tour?" });
+      await act(async () => {});
+      expect(screen.queryByText("Updated to 1.6.0")).not.toBeInTheDocument();
+      expect(loadPendingWhatsNew()).toEqual(pending);
+
+      await user.click(within(prompt).getByRole("button", { name: "Skip" }));
+
+      expect((await screen.findAllByText("Updated to 1.6.0")).length).toBeGreaterThan(0);
     });
 
     it("waits while Focus is on, then announces", async () => {

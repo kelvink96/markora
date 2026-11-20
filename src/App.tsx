@@ -204,9 +204,10 @@ export default function App() {
   // view) the chrome is back, so there is never a state with no way to get out.
   const focusActive = focusMode && viewMode === "write" && hasOpenDocuments && activeScreen === "workspace";
 
-  // The post-update toast waits for the Tour and Focus so it never competes with them.
+  // The post-update toast waits for the Tour and Focus so it never competes with them. Before settings load
+  // we can't tell whether the Tour prompt is about to open, so it waits for that too.
   const { dialogRecord: whatsNewRecord, closeDialog: closeWhatsNew } = useWhatsNewOnLaunch({
-    deferred: tourState.running || focusActive,
+    deferred: !isSettingsHydrated || shouldOfferTour(settings, tourState) || tourState.running || focusActive,
   });
 
   // Focus that can't apply (last tab closed, Settings opened) is switched off, not just hidden, so it

@@ -3,7 +3,7 @@ import { useEditorCommandState } from "./editor-command-state";
 
 describe("editor-command-state", () => {
   beforeEach(() => {
-    useEditorCommandState.setState({ runToolbarAction: () => {}, runEditAction: async () => {} });
+    useEditorCommandState.setState({ runToolbarAction: () => {}, runEditAction: async () => {}, focusEditor: () => {} });
   });
 
   it("runs the registered toolbar action handler", () => {
@@ -11,6 +11,16 @@ describe("editor-command-state", () => {
     useEditorCommandState.getState().setRunToolbarAction(handler);
     useEditorCommandState.getState().runToolbarAction("bold");
     expect(handler).toHaveBeenCalledWith("bold");
+  });
+
+  it("runs the registered focus handler, and does nothing before one is registered", () => {
+    expect(() => useEditorCommandState.getState().focusEditor()).not.toThrow();
+
+    const handler = vi.fn();
+    useEditorCommandState.getState().setFocusEditor(handler);
+    useEditorCommandState.getState().focusEditor();
+
+    expect(handler).toHaveBeenCalledTimes(1);
   });
 
   it("runs the registered edit action handler", async () => {

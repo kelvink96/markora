@@ -90,6 +90,7 @@ export function EditorPane({ theme, live = false, focusDim = false }: EditorPane
   const setRunToolbarAction = useEditorCommandState((state) => state.setRunToolbarAction);
   const setRunEditAction = useEditorCommandState((state) => state.setRunEditAction);
   const setGoToLine = useEditorCommandState((state) => state.setGoToLine);
+  const setFocusEditor = useEditorCommandState((state) => state.setFocusEditor);
   const [slashMenu, setSlashMenu] = useState<SlashMenuState | null>(null);
   const [inlineMenu, setInlineMenu] = useState<InlineMenuState | null>(null);
   const [find, setFind] = useState<FindState | null>(null);
@@ -294,6 +295,11 @@ export function EditorPane({ theme, live = false, focusDim = false }: EditorPane
     });
     return () => setGoToLine(() => {});
   }, [setGoToLine]);
+
+  useEffect(() => {
+    setFocusEditor(() => viewRef.current?.focus());
+    return () => setFocusEditor(() => {});
+  }, [setFocusEditor]);
 
   useEffect(() => {
     setRunToolbarAction(runMarkdownAction);

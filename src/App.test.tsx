@@ -926,6 +926,31 @@ describe("App", () => {
       expect(useWorkspaceState.getState().focusMode).toBe(false);
     });
 
+    it("puts the keyboard focus in the editor when it turns on, since the menu that was used leaves none", async () => {
+      const focusEditor = vi.fn();
+      useEditorCommandState.setState({ focusEditor });
+      render(<App />);
+
+      toggleWithShortcut();
+      await waitFor(() => expect(focusEditor).toHaveBeenCalledTimes(1));
+
+      toggleWithShortcut();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(focusEditor).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not touch the editor focus when Focus can't turn on", async () => {
+      const focusEditor = vi.fn();
+      useEditorCommandState.setState({ focusEditor });
+      useWorkspaceState.setState({ viewMode: "read" });
+      render(<App />);
+
+      toggleWithShortcut();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      expect(focusEditor).not.toHaveBeenCalled();
+    });
+
     it("toggles from the command palette", async () => {
       const user = userEvent.setup();
       render(<App />);
@@ -1027,6 +1052,44 @@ describe("App", () => {
 
       act(() => useDocumentStore.setState({ openDocuments: [], activeDocumentId: "" }));
 
+      expect(screen.getByText("Top Bar")).toBeInTheDocument();
+    });
+
+    it("does not switch itself back on after it stopped applying (no document, then a new one)", () => {
+      render(<App />);
+      act(() => useWorkspaceState.getState().setFocusMode(true));
+
+      act(() => useDocumentStore.setState({ openDocuments: [], activeDocumentId: "" }));
+      expect(useWorkspaceState.getState().focusMode).toBe(false);
+
+      act(() => useDocumentStore.getState().newDocument("# Fresh"));
+      expect(screen.getByText("Top Bar")).toBeInTheDocument();
+    });
+
+    it("is off, with the chrome showing, when Settings is closed again", async () => {
+      const user = userEvent.setup();
+      render(<App />);
+      act(() => useWorkspaceState.getState().setFocusMode(true));
+
+      await runFromPalette(user, "settings");
+      expect(await screen.findByRole("heading", { name: "Settings", level: 2 })).toBeInTheDocument();
+      expect(useWorkspaceState.getState().focusMode).toBe(false);
+
+      await user.click(screen.getByRole("button", { name: "Back to editor" }));
+
+      expect(screen.getByText("Top Bar")).toBeInTheDocument();
+    });
+
+    it("turns off when the Tour starts, since the Tour points at the chrome Focus hides", async () => {
+      const user = userEvent.setup();
+      render(<App />);
+      await hydrated();
+      act(() => useWorkspaceState.getState().setFocusMode(true));
+      expect(screen.queryByText("Top Bar")).not.toBeInTheDocument();
+
+      await runFromPalette(user, "take the tour");
+
+      await waitFor(() => expect(useWorkspaceState.getState().focusMode).toBe(false));
       expect(screen.getByText("Top Bar")).toBeInTheDocument();
     });
 

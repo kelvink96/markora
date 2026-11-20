@@ -173,12 +173,14 @@ export default function App() {
     // Before hydration the store holds defaults: recording a version now would be overwritten
     // by (or overwrite) the saved settings.
     if (!useSettingsStore.getState().isHydrated) return;
+    // Every Tour stop points at chrome that Focus hides.
+    setFocusMode(false);
     // The first Tour stop points at the editor toolbar, which needs an open document.
     useDocumentStore
       .getState()
       .ensureDocumentOpen(useSettingsStore.getState().settings.authoring.newDocumentTemplate);
     dispatchTour("accept");
-  }, [dispatchTour]);
+  }, [dispatchTour, setFocusMode]);
 
   const handleThemeToggle = useCallback(() => {
     toggleTheme();
@@ -196,6 +198,21 @@ export default function App() {
   // Derived rather than trusted from the store: if Focus can't apply (no document, another screen, another
   // view) the chrome is back, so there is never a state with no way to get out.
   const focusActive = focusMode && viewMode === "write" && hasOpenDocuments && activeScreen === "workspace";
+
+  // Focus that can't apply (last tab closed, Settings opened) is switched off, not just hidden, so it
+  // can't come back by itself the next time a document or the editor screen returns.
+  useEffect(() => {
+    if (focusMode && !focusActive) setFocusMode(false);
+  }, [focusMode, focusActive, setFocusMode]);
+
+  useEffect(() => {
+    if (!focusActive) return;
+
+    // The menu used to turn Focus on hands focus back to a button that has just been removed, which
+    // would leave it on the page body and typing nowhere. So focus the editor once that has settled.
+    const frame = requestAnimationFrame(() => useEditorCommandState.getState().focusEditor());
+    return () => cancelAnimationFrame(frame);
+  }, [focusActive]);
 
   useEffect(() => {
     if (!focusActive) return;

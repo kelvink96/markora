@@ -581,6 +581,21 @@ describe("EditorPane", () => {
     });
   });
 
+  describe("focus action", () => {
+    it("lets the app put the keyboard focus in the editor, and stops once it is gone", () => {
+      const focus = vi.spyOn(mockState.EditorView.prototype, "focus");
+      const { unmount } = render(<EditorPane theme="light" />);
+
+      act(() => useEditorCommandState.getState().focusEditor());
+      expect(focus).toHaveBeenCalledTimes(1);
+
+      unmount();
+      act(() => useEditorCommandState.getState().focusEditor());
+      expect(focus).toHaveBeenCalledTimes(1);
+      focus.mockRestore();
+    });
+  });
+
   describe("go to line (#16)", () => {
     const goTo = (line: number) => {
       mockState.dispatchSpy.mockClear();

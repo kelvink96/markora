@@ -2,10 +2,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AvailableUpdate, DownloadProgress, UpdateAdapter } from "../../platform/updates";
 import { useDocumentStore } from "../../store/document";
 import { useUpdateStore } from "./update-store";
+import { loadPendingWhatsNew } from "./whats-new-storage";
 
 const adapter: {
   [K in keyof UpdateAdapter]: ReturnType<typeof vi.fn<UpdateAdapter[K]>>;
 } = {
+  getCurrentVersion: vi.fn<UpdateAdapter["getCurrentVersion"]>(),
   checkForUpdate: vi.fn<UpdateAdapter["checkForUpdate"]>(),
   download: vi.fn<UpdateAdapter["download"]>(),
   install: vi.fn<UpdateAdapter["install"]>(),
@@ -34,6 +36,7 @@ describe("update store", () => {
     adapter.download.mockReset();
     adapter.install.mockReset();
     adapter.relaunch.mockReset();
+    localStorage.clear();
     useDocumentStore.setState(useDocumentStore.getInitialState(), true);
     resetStore();
   });
@@ -209,6 +212,74 @@ describe("update store", () => {
 
       expect(useUpdateStore.getState().status).toBe("ready");
       expect(useUpdateStore.getState().error).toBe("relaunch failed");
+    });
+
+    describe("what's new record", () => {
+      const withNotes: AvailableUpdate = {
+        version: "1.6.0",
+        notes: "## What's Changed",
+        publishedAt: "2026-11-20T10:00:00Z",
+      };
+
+      it("saves the version, notes and date before installing", async () => {
+        let savedWhenInstalling: unknown = "not called";
+        adapter.install.mockImplementation(async () => {
+          savedWhenInstalling = loadPendingWhatsNew();
+        });
+        adapter.relaunch.mockResolvedValue();
+        resetStore({ status: "ready", update: withNotes });
+
+        await useUpdateStore.getState().restart();
+
+        expect(savedWhenInstalling).toEqual({
+          version: "1.6.0",
+          notes: "## What's Changed",
+          publishedAt: "2026-11-20T10:00:00Z",
+        });
+      });
+
+      it("does not save when unsaved changes block the restart", async () => {
+        useDocumentStore.getState().openDocument({ content: "# Edited", filePath: "/edited.md", isDirty: true });
+        resetStore({ status: "ready", update: withNotes });
+
+        await useUpdateStore.getState().restart();
+
+        expect(loadPendingWhatsNew()).toBeNull();
+      });
+
+      it("clears the record when install rejects, so a failed attempt cannot show a toast later", async () => {
+        adapter.install.mockRejectedValueOnce(new Error("installer cancelled"));
+        resetStore({ status: "ready", update: withNotes });
+
+        await useUpdateStore.getState().restart();
+
+        expect(loadPendingWhatsNew()).toBeNull();
+      });
+
+      it("keeps the record when install succeeds but relaunch rejects", async () => {
+        adapter.install.mockResolvedValue();
+        adapter.relaunch.mockRejectedValue(new Error("relaunch failed"));
+        resetStore({ status: "ready", update: withNotes });
+
+        await useUpdateStore.getState().restart();
+
+        expect(loadPendingWhatsNew()?.version).toBe("1.6.0");
+      });
+
+      it("still restarts when storage throws", async () => {
+        vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+          throw new Error("storage blocked");
+        });
+        adapter.install.mockResolvedValue();
+        adapter.relaunch.mockResolvedValue();
+        resetStore({ status: "ready", update: withNotes });
+
+        await useUpdateStore.getState().restart();
+
+        expect(adapter.install).toHaveBeenCalledTimes(1);
+        expect(adapter.relaunch).toHaveBeenCalledTimes(1);
+        vi.restoreAllMocks();
+      });
     });
   });
 });

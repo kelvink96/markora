@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { getUpdateAdapter, type AvailableUpdate, type DownloadProgress } from "../../platform/updates";
 import { selectHasUnsavedChanges, useDocumentStore } from "../../store/document";
+import { clearPendingWhatsNew, savePendingWhatsNew } from "./whats-new-storage";
 
 export const SAVE_BEFORE_RESTART = "Save your changes before restarting.";
 
@@ -69,7 +70,18 @@ export const useUpdateStore = create<UpdateState>()((set, get) => ({
     set({ error: null });
     try {
       const adapter = getUpdateAdapter();
-      await adapter.install();
+      const { update } = get();
+      // Windows exits during install, so the next launch's "What's new" can only come from what is saved now.
+      if (update) {
+        savePendingWhatsNew({ version: update.version, notes: update.notes, publishedAt: update.publishedAt });
+      }
+      try {
+        await adapter.install();
+      } catch (error) {
+        // Nothing was installed, so a later launch must not announce this version.
+        clearPendingWhatsNew();
+        throw error;
+      }
       // Only reached where install returns (macOS/Linux); Windows has already exited.
       await adapter.relaunch();
     } catch (error) {

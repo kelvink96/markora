@@ -110,13 +110,19 @@ export function SettingRow({
             <span className="text-sm leading-5 font-medium">{label}</span>
           )}
           {changed ? (
-            <button
+            // A full-size button around the small dot, pulled into the label's line height so showing it
+            // never shifts the row.
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-xs"
               onClick={onReset}
               aria-label={`Reset ${label} to default`}
               title="Changed from default. Click to reset."
-              className="size-2 shrink-0 cursor-pointer rounded-full bg-primary outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
-            />
+              className="-my-1 -ml-1.5 pointer-coarse:-my-3"
+            >
+              <span aria-hidden="true" className="size-2 rounded-full bg-primary" />
+            </Button>
           ) : null}
         </div>
         {description ? (

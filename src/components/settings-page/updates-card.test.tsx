@@ -47,7 +47,17 @@ describe("UpdatesCard", () => {
     seed({ status: "checking" });
     renderCard();
 
-    expect(screen.getByRole("button", { name: "Checking…" })).toBeDisabled();
+    const button = screen.getByRole("button", { name: "Checking…" });
+    expect(button).toBeDisabled();
+    // A spinner shows the work in progress without changing what the button is called.
+    expect(button.querySelector("svg.animate-spin")).toHaveAttribute("aria-hidden", "true");
+  });
+
+  it("is laid out as a card, still named Updates", () => {
+    renderCard();
+
+    const card = screen.getByRole("region", { name: "Updates" });
+    expect(card).toHaveAttribute("data-slot", "card");
   });
 
   it("up-to-date: says the app is current", () => {
@@ -76,7 +86,16 @@ describe("UpdatesCard", () => {
     });
     renderCard();
 
-    expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "40");
+    expect(screen.getByRole("progressbar", { name: "Download progress" })).toHaveAttribute("aria-valuenow", "40");
+  });
+
+  it("downloading with an unknown size: shows an indeterminate progress bar", () => {
+    seed({ status: "downloading", update: null, progress: { downloaded: 40, total: null } });
+    renderCard();
+
+    const bar = screen.getByRole("progressbar", { name: "Download progress" });
+    expect(bar).toHaveAttribute("data-slot", "progress");
+    expect(bar).not.toHaveAttribute("aria-valuenow");
   });
 
   it("ready: says the update is downloaded, warns about the restart, and restarts on demand", async () => {

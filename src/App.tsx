@@ -90,6 +90,8 @@ export default function App() {
   const runToolbarAction = useEditorCommandState((state) => state.runToolbarAction);
   const runEditAction = useEditorCommandState((state) => state.runEditAction);
   const settings = useSettingsStore((state) => state.settings);
+  const updateStatus = useUpdateStore((state) => state.status);
+  const updateVersion = useUpdateStore((state) => state.update?.version ?? null);
   const hydrateSettings = useSettingsStore((state) => state.hydrate);
   const updateAppearance = useSettingsStore((state) => state.updateAppearance);
   const updateEditor = useSettingsStore((state) => state.updateEditor);
@@ -247,6 +249,7 @@ export default function App() {
     appearance: settings.appearance,
     editor: settings.editor,
     updatesSupported: !isWeb,
+    update: { status: updateStatus, version: updateVersion },
     handlers: {
       onNew: handleNew,
       onOpen: () => void handleOpen(),
@@ -258,7 +261,13 @@ export default function App() {
       onOpenSettings: () => setActiveScreen("settings"),
       onCheckForUpdates: () => {
         setActiveScreen("settings");
-        void useUpdateStore.getState().check();
+        const { status, check } = useUpdateStore.getState();
+        // A release that is already found (or downloaded) is shown as it is; only otherwise look again.
+        if (status === "available" || status === "downloading" || status === "ready") {
+          requestAnimationFrame(() => document.getElementById("settings-updates")?.scrollIntoView?.({ block: "center" }));
+        } else {
+          void check();
+        }
       },
       onToggleTheme: handleThemeToggle,
       onToggleOutline: toggleOutline,

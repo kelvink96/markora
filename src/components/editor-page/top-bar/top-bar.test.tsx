@@ -400,6 +400,48 @@ describe("TopBar", () => {
     });
   });
 
+  describe("Help menu update entry", () => {
+    it("shows a refresh icon on the plain Check for updates", async () => {
+      const user = userEvent.setup();
+      renderBar();
+
+      await openMenu(user, "Help");
+      const item = await screen.findByRole("menuitem", { name: "Check for updates" });
+
+      expect(item.querySelector("svg")).not.toBeNull();
+    });
+
+    it("names the waiting release and tags it New", async () => {
+      const user = userEvent.setup();
+      renderBar({ context: { update: { status: "available", version: "1.6.0" } } });
+
+      await openMenu(user, "Help");
+      const item = await screen.findByRole("menuitem", { name: /Update available: 1\.6\.0/ });
+
+      expect(item).toHaveTextContent("New");
+    });
+
+    it("greys the entry out and spins its icon while downloading", async () => {
+      const user = userEvent.setup();
+      renderBar({ context: { update: { status: "downloading", version: "1.6.0" } } });
+
+      await openMenu(user, "Help");
+      const item = await screen.findByRole("menuitem", { name: /Downloading 1\.6\.0…/ });
+
+      expect(item).toHaveAttribute("aria-disabled", "true");
+      expect(item.querySelector("svg.animate-spin")).not.toBeNull();
+    });
+
+    it("offers the restart once downloaded", async () => {
+      const user = userEvent.setup();
+      renderBar({ context: { update: { status: "ready", version: "1.6.0" } } });
+
+      await openMenu(user, "Help");
+
+      expect(await screen.findByRole("menuitem", { name: "Restart to update to 1.6.0" })).toBeInTheDocument();
+    });
+  });
+
   it("moves between the menus with the arrow keys", async () => {
     const user = userEvent.setup();
     renderBar();

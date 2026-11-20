@@ -388,6 +388,41 @@ describe("Check for updates", () => {
     expect(ctx.handlers.onCheckForUpdates).toHaveBeenCalledTimes(1);
   });
 
+  it.each([
+    ["idle", null],
+    ["checking", null],
+    ["up-to-date", null],
+    ["error", null],
+  ] as const)("%s: keeps the plain wording and checks on click", (status, version) => {
+    const command = find(buildPaletteCommands(context({ update: { status, version } })), "help.check-for-updates");
+
+    expect(command).toMatchObject({ label: "Check for updates", icon: "help.check-for-updates", enabled: true });
+    expect(command?.badge).toBeUndefined();
+    expect(command?.busy).toBeUndefined();
+  });
+
+  it("available: names the release, tags it New and runs the same handler", () => {
+    const ctx = context({ update: { status: "available", version: "1.6.0" } });
+    const command = find(buildPaletteCommands(ctx), "help.check-for-updates");
+
+    expect(command).toMatchObject({ label: "Update available: 1.6.0", icon: "help.update-available", badge: "New", enabled: true });
+    command?.run();
+    expect(ctx.handlers.onCheckForUpdates).toHaveBeenCalledTimes(1);
+  });
+
+  it("downloading: is disabled and busy", () => {
+    // The palette hides disabled commands; the menu shows this one greyed out.
+    const command = buildAppCommands(context({ update: { status: "downloading", version: "1.6.0" } })).find(({ id }) => id === "help.check-for-updates");
+
+    expect(command).toMatchObject({ label: "Downloading 1.6.0…", busy: true, enabled: false });
+  });
+
+  it("ready: offers the restart", () => {
+    const command = find(buildPaletteCommands(context({ update: { status: "ready", version: "1.6.0" } })), "help.check-for-updates");
+
+    expect(command).toMatchObject({ label: "Restart to update to 1.6.0", icon: "help.update-restart", enabled: true });
+  });
+
   it("is hidden from the palette when updates are not supported", () => {
     expect(find(buildPaletteCommands(context({ updatesSupported: false })), "help.check-for-updates")).toBeUndefined();
   });

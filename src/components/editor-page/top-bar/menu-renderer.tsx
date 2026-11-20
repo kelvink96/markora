@@ -19,6 +19,7 @@ import { collectCommandIds, MENU_LAYOUT, type MenuNode } from "../../../features
 import { COLOR_SCHEMES } from "../../../features/settings/color-schemes";
 import { useThemeStore } from "../../../features/theme/theme-store";
 import { SchemePreview } from "../../scheme-preview";
+import { Badge } from "@/components/ui/badge";
 import { COMMAND_ICONS, SUBMENU_ICONS } from "./command-icons";
 
 const ICON_CLASS = "size-4";
@@ -47,13 +48,14 @@ export function AppMenus({ commands, recentFiles, onOpenRecent, updateAvailable 
     const command = byId.get(node.id);
     if (!command) return null;
 
-    const Icon = COMMAND_ICONS[command.id];
+    const Icon = COMMAND_ICONS[command.icon ?? command.id];
     const scheme = COLOR_SCHEMES.find(({ id }) => command.id === `view.color-scheme.${id}`);
     const content = (
       <>
-        {Icon ? <Icon className={ICON_CLASS} /> : null}
+        {Icon ? <Icon className={command.busy ? `${ICON_CLASS} animate-spin` : ICON_CLASS} /> : null}
         {scheme ? <SchemePreview scheme={scheme.id} mode={mode} size="mini" /> : null}
         {node.label ?? command.label}
+        {command.badge ? <Badge className="ml-auto">{command.badge}</Badge> : null}
         {command.shortcut ? (
           <>
             {/* The space keeps the accessible name readable: "New Ctrl+N", not "NewCtrl+N". */}{" "}

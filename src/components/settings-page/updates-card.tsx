@@ -59,7 +59,7 @@ export function UpdatesCard({ version, hasUnsavedChanges, onChangeUpdates }: Upd
     (status === "available" && update !== null) || status === "downloading" || status === "ready" || Boolean(errorMessage);
 
   return (
-    <Card role="region" aria-label="Updates" className="mt-10 gap-4 py-4 text-sm">
+    <Card id="settings-updates" role="region" aria-label="Updates" className="mt-10 gap-4 py-4 text-sm">
       <CardHeader className="px-4">
         <CardTitle role="heading" aria-level={3}>
           Updates

@@ -3,6 +3,7 @@ import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useSettingsStore } from "../../features/settings/settings-store";
 import { useUpdateStore } from "../../features/updates/update-store";
+import * as linkAdapters from "../../platform/links";
 import { UpdatesCard } from "./updates-card";
 
 const check = vi.fn();
@@ -67,15 +68,65 @@ describe("UpdatesCard", () => {
     expect(screen.getByText("You're up to date")).toBeInTheDocument();
   });
 
-  it("available: shows the version and notes and downloads on demand", async () => {
+  it("available: announces the release and downloads on demand", async () => {
     seed({ status: "available", update: { version: "1.5.0", notes: "Fixes", publishedAt: null } });
     renderCard();
 
-    expect(screen.getByText(/1\.5\.0/)).toBeInTheDocument();
-    expect(screen.getByText("Fixes")).toBeInTheDocument();
+    expect(screen.getByText("New release 1.5.0")).toBeInTheDocument();
+    expect(screen.getByText("New")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Download update" }));
     expect(download).toHaveBeenCalledTimes(1);
     expect(restart).not.toHaveBeenCalled();
+  });
+
+  it("available: keeps the notes behind a collapsed What's new disclosure", async () => {
+    seed({ status: "available", update: { version: "1.5.0", notes: "Fixes", publishedAt: null } });
+    renderCard();
+
+    const toggle = screen.getByRole("button", { name: "What's new" });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByText("Fixes")).not.toBeInTheDocument();
+
+    await userEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(await screen.findByText("Fixes")).toBeInTheDocument();
+  });
+
+  it("available: offers no disclosure when the release has no notes", () => {
+    seed({ status: "available", update: { version: "1.5.0", notes: "  ", publishedAt: null } });
+    renderCard();
+
+    expect(screen.queryByRole("button", { name: "What's new" })).not.toBeInTheDocument();
+  });
+
+  it("available: renders the notes as markdown, not as raw text", async () => {
+    const notes = [
+      "## What's Changed",
+      "* feat: color schemes by @kelvink96 in https://github.com/kelvink96/markora/pull/69",
+      "",
+      "**Full Changelog**: https://github.com/kelvink96/markora/compare/v1.5.1...v1.6.0",
+    ].join("\n");
+    seed({ status: "available", update: { version: "1.6.0", notes, publishedAt: null } });
+    renderCard();
+    await userEvent.click(screen.getByRole("button", { name: "What's new" }));
+
+    expect(await screen.findByRole("heading", { name: "What's Changed" })).toBeInTheDocument();
+    expect(screen.getByRole("listitem")).toHaveTextContent("feat: color schemes by @kelvink96");
+    expect(screen.getByText("Full Changelog").tagName).toBe("STRONG");
+    expect(screen.queryByText(/^## /)).not.toBeInTheDocument();
+  });
+
+  it("available: opens note links in the browser and strips scripts", async () => {
+    const openExternal = vi.fn().mockResolvedValue(undefined);
+    vi.spyOn(linkAdapters, "getLinkAdapter").mockReturnValue({ openExternal });
+    const notes = "[PR 69](https://github.com/kelvink96/markora/pull/69)\n\n<img src=x onerror='window.__pwned = 1'>";
+    seed({ status: "available", update: { version: "1.6.0", notes, publishedAt: null } });
+    renderCard();
+    await userEvent.click(screen.getByRole("button", { name: "What's new" }));
+
+    await userEvent.click(await screen.findByRole("link", { name: "PR 69" }));
+    expect(openExternal).toHaveBeenCalledWith("https://github.com/kelvink96/markora/pull/69");
+    expect(document.querySelector("img[onerror]")).toBeNull();
   });
 
   it("downloading: shows a progress bar", () => {

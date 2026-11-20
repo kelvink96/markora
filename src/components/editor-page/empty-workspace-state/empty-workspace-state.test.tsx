@@ -9,7 +9,9 @@ describe("EmptyWorkspaceState", () => {
     render(<EmptyWorkspaceState onNewDocument={vi.fn()} onOpenFile={vi.fn()} />);
 
     expect(screen.getByRole("region", { name: "Empty workspace" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "No document open" })).toBeInTheDocument();
+    const heading = screen.getByRole("heading", { name: "No document open" });
+    expect(heading).toHaveAttribute("data-slot", "empty-title");
+    expect(heading.closest("[data-slot=empty]")).not.toBeNull();
     expect(screen.getByRole("button", { name: "New document" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Open file" })).toBeInTheDocument();
   });

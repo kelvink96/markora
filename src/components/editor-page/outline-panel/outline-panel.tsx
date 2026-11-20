@@ -14,10 +14,11 @@ import {
 } from "@dnd-kit/core";
 import { type SortingStrategy, SortableContext, sortableKeyboardCoordinates, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, ListTree, X } from "lucide-react";
+import { GripVertical, Heading as HeadingIcon, ListTree, X } from "lucide-react";
 import { type Ref, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { cn } from "@/lib/utils";
 import type { Heading } from "../../../features/outline/extract-headings";
 import { movedSectionIndex, slotForDrop } from "../../../features/outline/sections";
@@ -268,9 +269,17 @@ export function OutlinePanel({ headings, activeIndex, onSelect, onClose, wordCou
       </div>
 
       {headings.length === 0 ? (
-        <p className="p-4 text-sm text-muted-foreground">
-          No headings yet. Start a line with <code className="rounded bg-muted px-1 font-mono text-xs">#</code> to add one.
-        </p>
+        <Empty className="flex-none gap-3 p-4 md:p-6">
+          <EmptyHeader>
+            <EmptyMedia variant="icon" className="mb-1 size-9 [&_svg:not([class*='size-'])]:size-5">
+              <HeadingIcon aria-hidden="true" />
+            </EmptyMedia>
+            <EmptyTitle className="text-sm">No headings yet</EmptyTitle>
+            <EmptyDescription className="text-xs/relaxed">
+              Start a line with <code className="rounded bg-muted px-1 font-mono">#</code> to add one.
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       ) : (
         <nav ref={navRef} aria-label="Document headings" className="min-h-0 flex-1 overflow-auto p-1.5">
           {onMoveSection ? (

@@ -126,7 +126,9 @@ describe("OutlinePanel", () => {
   it("explains what to do when there are no headings", () => {
     renderPanel({ headings: [] });
 
-    expect(screen.getByText(/No headings yet/)).toBeInTheDocument();
+    const empty = screen.getByText("No headings yet").closest("[data-slot=empty]");
+    expect(empty).not.toBeNull();
+    expect(empty).toHaveTextContent("Start a line with # to add one.");
     expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
   });
 });

@@ -16,6 +16,19 @@ describe("settings-schema", () => {
     expect(defaultSettings.appearance.colorScheme).toBe("standard");
   });
 
+  it("dims other paragraphs in Focus by default", () => {
+    expect(defaultSettings.editor.focusDimming).toBe(true);
+    expect(normalizeSettings({}).editor.focusDimming).toBe(true);
+  });
+
+  it("keeps a saved opt-out of Focus dimming", () => {
+    expect(normalizeSettings({ editor: { focusDimming: false } }).editor.focusDimming).toBe(false);
+  });
+
+  it("ignores a Focus dimming value that is not a boolean", () => {
+    expect(normalizeSettings({ editor: { focusDimming: "no" } }).editor.focusDimming).toBe(true);
+  });
+
   it("includes a non-empty new document template", () => {
     expect(defaultSettings.authoring.newDocumentTemplate.trim().length).toBeGreaterThan(0);
   });

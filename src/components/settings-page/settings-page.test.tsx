@@ -160,6 +160,26 @@ describe("SettingsPage", () => {
     expect(screen.queryByRole("button", { name: "Save changes" })).toBeNull();
   });
 
+  it("offers Focus dimming as a switch that reflects and changes the setting", async () => {
+    const { onChangeEditor } = renderPage();
+
+    const dimming = screen.getByLabelText("Dim other paragraphs in Focus");
+    expect(dimming).toBeChecked();
+
+    await userEvent.click(dimming);
+
+    expect(onChangeEditor).toHaveBeenCalledWith(expect.objectContaining({ focusDimming: false }));
+  });
+
+  it("finds Focus dimming by searching for focus", async () => {
+    renderPage();
+
+    await userEvent.type(search(), "focus");
+
+    expect(screen.getByLabelText("Dim other paragraphs in Focus")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Show line numbers")).toBeNull();
+  });
+
   it("applies the color scheme as soon as it is picked", async () => {
     const { onChangeAppearance } = renderPage();
 

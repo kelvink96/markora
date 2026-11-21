@@ -1,11 +1,11 @@
 {
-  "version": "1.6.0",
-  "notes": "## What's Changed * feat(views): Write, Side-by-side and Read replace the four views by @kelvink96 in https://github.com/kelvink96/markora/pull/65 * feat(focus): hide everything and write, with paragraph dimming by @kelvink96 in https://github.com/kelvink96/markora/pull/66 * feat(outline): reorder sections by dragging headings in the outline by @kelvink96 in https://github.com/kelvink96/markora/pull/67 * refactor: audit shadcn component usage, fix a11y gaps and switch to pnpm by @kelvink96 in https://github.com/kelvink96/markora/pull/68 * feat: add Moss, Frost, Rosé and Ink colour schemes, with menu previews by @kelvink96 in https://github.com/kelvink96/markora/pull/69   **Full Changelog**: https://github.com/kelvink96/markora/compare/v1.5.1...v1.6.0",
-  "pub_date": "2026-11-20T21:41:21.705Z",
+  "version": "1.6.1",
+  "notes": "## What's Changed * feat: update flow with markdown release notes and a state-aware Help entry by @kelvink96 in https://github.com/kelvink96/markora/pull/70   **Full Changelog**: https://github.com/kelvink96/markora/compare/v1.6.0...v1.6.1",
+  "pub_date": "2026-11-21T00:18:14.129Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSRUE2Uml6azdpVCtNSEp4UWtWbFhXd1VURVEzL2QwQ3JTWVV3SnRPVEEzVkNZSlUxc2xSUVZqSW82TTY0WWtrWlhOUmpDYm5SdWlaOGZjRXJPOHEyNGcvaHd3MEVHVHd3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1MjEwODgxCWZpbGU6TWFya29yYS1NRF8xLjYuMC5tc2kKN1ZsNGYwc1FobnNBSmF1aE1KWEcyaWdlVlhwMXJwVVhaVURYc3VwbFM0ZnJSN1djdVVWZEhOWjBHYUZJUkt0cmxVcEI5N3U5QkoyUkhQUjdGeTI2QWc9PQo=",
-      "url": "https://github.com/kelvink96/markora/releases/download/v1.6.0/Markora-MD_1.6.0.msi"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSRUE2Uml6azdpVDVERDN4NmVNd3RMM2hFYUhkVW5DVjlrZEFVUTlzTkkzN2Z0OXgwT0ZDS1FhWTNHWEpKanZkK2o4M0M1cXJYK3JHdGtJOHVGQXNXaW43L0RFTTJSVndJPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1MjIwMjkzCWZpbGU6TWFya29yYS1NRF8xLjYuMS5tc2kKT0JpNzIxSXY3ajdNOVMvRkJ0TjQ5UEpMNkVHaGhacTVKTVJHRiszcHRwYXlqOVFCaFBCeFl4WnBScTFqYnc2MUE3QmY3SlFJNUU3MERleXo2TDZDQnc9PQo=",
+      "url": "https://github.com/kelvink96/markora/releases/download/v1.6.1/Markora-MD_1.6.1.msi"
     }
   }
 }

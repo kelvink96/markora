@@ -26,6 +26,14 @@ export const desktopWindowAdapter: WindowAdapter = {
     return (await currentWindow()).isMaximized();
   },
 
+  async showSnapLayouts() {
+    // tauri-plugin-decorum opens the flyout by pressing Win+Z, which acts on the focused window,
+    // so focus this one first. On macOS and Linux the command does nothing.
+    await (await currentWindow()).setFocus();
+    const { invoke } = await import("@tauri-apps/api/core");
+    await invoke("plugin:decorum|show_snap_overlay");
+  },
+
   async onResized(listener) {
     return (await currentWindow()).onResized(() => listener());
   },

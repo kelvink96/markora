@@ -1,7 +1,7 @@
-import { describe, expect, it, vi } from "vitest";
-import { act, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { WindowControls, WindowDragStrip } from "./window-controls";
+import { SNAP_LAYOUTS_DELAY_MS, WindowControls, WindowDragStrip } from "./window-controls";
 import type { WindowAdapter } from "../../../platform/window";
 
 function fakeAdapter(overrides: Partial<WindowAdapter> = {}) {
@@ -12,6 +12,7 @@ function fakeAdapter(overrides: Partial<WindowAdapter> = {}) {
     toggleMaximize: vi.fn(async () => {}),
     close: vi.fn(async () => {}),
     isMaximized: vi.fn(async () => false),
+    showSnapLayouts: vi.fn(async () => {}),
     onResized: vi.fn(async (listener: () => void) => {
       resized = listener;
       return () => {};
@@ -52,6 +53,39 @@ describe("WindowControls", () => {
     await act(async () => resize());
 
     expect(await screen.findByRole("button", { name: "Restore" })).toBeInTheDocument();
+  });
+});
+
+describe("WindowControls Snap Layouts", () => {
+  afterEach(() => vi.useRealTimers());
+
+  it("opens Snap Layouts when the pointer rests on maximise, like the native button", async () => {
+    vi.useFakeTimers();
+    const { adapter } = fakeAdapter();
+    render(<WindowControls adapter={adapter} />);
+    const maximize = screen.getByRole("button", { name: "Maximize" });
+
+    fireEvent.mouseEnter(maximize);
+    act(() => vi.advanceTimersByTime(SNAP_LAYOUTS_DELAY_MS - 1));
+    expect(adapter.showSnapLayouts).not.toHaveBeenCalled();
+
+    act(() => vi.advanceTimersByTime(1));
+    expect(adapter.showSnapLayouts).toHaveBeenCalledOnce();
+  });
+
+  it("does not open Snap Layouts when the pointer passes over or clicks first", () => {
+    vi.useFakeTimers();
+    const { adapter } = fakeAdapter();
+    render(<WindowControls adapter={adapter} />);
+    const maximize = screen.getByRole("button", { name: "Maximize" });
+
+    fireEvent.mouseEnter(maximize);
+    fireEvent.mouseLeave(maximize);
+    fireEvent.mouseEnter(maximize);
+    fireEvent.click(maximize);
+    act(() => vi.advanceTimersByTime(SNAP_LAYOUTS_DELAY_MS * 2));
+
+    expect(adapter.showSnapLayouts).not.toHaveBeenCalled();
   });
 });
 

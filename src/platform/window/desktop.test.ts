@@ -2,8 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { desktopWindowAdapter } from "./desktop";
 import { webWindowAdapter } from "./web";
 
-const { windowMock } = vi.hoisted(() => ({
+const { windowMock, invokeMock } = vi.hoisted(() => ({
+  invokeMock: vi.fn(async () => {}),
   windowMock: {
+    setFocus: vi.fn(async () => {}),
     minimize: vi.fn(async () => {}),
     toggleMaximize: vi.fn(async () => {}),
     close: vi.fn(async () => {}),
@@ -13,6 +15,7 @@ const { windowMock } = vi.hoisted(() => ({
 }));
 
 vi.mock("@tauri-apps/api/window", () => ({ getCurrentWindow: () => windowMock }));
+vi.mock("@tauri-apps/api/core", () => ({ invoke: invokeMock }));
 
 describe("desktopWindowAdapter", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -33,6 +36,15 @@ describe("desktopWindowAdapter", () => {
 
   it("reports the maximised state", async () => {
     await expect(desktopWindowAdapter.isMaximized()).resolves.toBe(true);
+  });
+
+  it("opens the Snap Layouts flyout on the focused window", async () => {
+    await desktopWindowAdapter.showSnapLayouts();
+
+    expect(windowMock.setFocus).toHaveBeenCalledOnce();
+    expect(invokeMock).toHaveBeenCalledWith("plugin:decorum|show_snap_overlay");
+    // The flyout opens for whichever window has focus, so focus has to come first.
+    expect(windowMock.setFocus.mock.invocationCallOrder[0]).toBeLessThan(invokeMock.mock.invocationCallOrder[0]);
   });
 
   it("calls the listener on every resize", async () => {

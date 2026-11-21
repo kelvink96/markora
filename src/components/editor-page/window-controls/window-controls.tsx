@@ -1,7 +1,10 @@
 import { Copy, Minus, Square, X } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { getWindowAdapter, type WindowAdapter } from "../../../platform/window";
+
+/** How long the pointer rests on maximise before Snap Layouts opens; the delay tauri-plugin-decorum uses. */
+export const SNAP_LAYOUTS_DELAY_MS = 620;
 
 interface WindowControlsProps {
   /** Injected in tests; the app uses the platform's adapter. */
@@ -15,6 +18,9 @@ interface WindowControlsProps {
  */
 export function WindowControls({ adapter = getWindowAdapter(), className }: WindowControlsProps) {
   const [maximized, setMaximized] = useState(false);
+  const snapTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const cancelSnapLayouts = () => clearTimeout(snapTimer.current);
+  useEffect(() => cancelSnapLayouts, []);
 
   useEffect(() => {
     if (!adapter.hasCustomTitleBar) return;
@@ -50,7 +56,19 @@ export function WindowControls({ adapter = getWindowAdapter(), className }: Wind
       <CaptionButton label="Minimize" onClick={run(() => adapter.minimize(), "minimize")}>
         <Minus />
       </CaptionButton>
-      <CaptionButton label={maximized ? "Restore" : "Maximize"} onClick={run(() => adapter.toggleMaximize(), "toggleMaximize")}>
+      <CaptionButton
+        label={maximized ? "Restore" : "Maximize"}
+        onClick={() => {
+          cancelSnapLayouts();
+          run(() => adapter.toggleMaximize(), "toggleMaximize")();
+        }}
+        // Windows 11 shows Snap Layouts when the pointer rests on the OS maximise button; ours has to ask for it.
+        onMouseEnter={() => {
+          cancelSnapLayouts();
+          snapTimer.current = setTimeout(run(() => adapter.showSnapLayouts(), "showSnapLayouts"), SNAP_LAYOUTS_DELAY_MS);
+        }}
+        onMouseLeave={cancelSnapLayouts}
+      >
         {maximized ? <Copy className="-scale-x-100" /> : <Square className="size-3!" />}
       </CaptionButton>
       <CaptionButton label="Close" danger onClick={run(() => adapter.close(), "close")}>
@@ -60,7 +78,16 @@ export function WindowControls({ adapter = getWindowAdapter(), className }: Wind
   );
 }
 
-function CaptionButton({ label, danger = false, onClick, children }: { label: string; danger?: boolean; onClick: () => void; children: ReactNode }) {
+interface CaptionButtonProps {
+  label: string;
+  danger?: boolean;
+  onClick: () => void;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
+  children: ReactNode;
+}
+
+function CaptionButton({ label, danger = false, onClick, onMouseEnter, onMouseLeave, children }: CaptionButtonProps) {
   return (
     <button
       type="button"
@@ -69,6 +96,8 @@ function CaptionButton({ label, danger = false, onClick, children }: { label: st
       // Like the OS caption buttons, these stay out of the Tab order; the keyboard has Alt+F4 and Win+arrows.
       tabIndex={-1}
       onClick={onClick}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       className={cn(
         "inline-flex w-11 items-center justify-center text-muted-foreground transition-colors [&_svg]:size-3.5 [&_svg]:stroke-[1.5]",
         danger ? "hover:bg-[#c42b1c] hover:text-white active:bg-[#c42b1c]/80" : "hover:bg-foreground/10 hover:text-foreground active:bg-foreground/15",

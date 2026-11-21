@@ -94,6 +94,7 @@ describe("TopBar", () => {
       toggleMaximize: vi.fn(async () => {}),
       close: vi.fn(async () => {}),
       isMaximized: vi.fn(async () => false),
+      showSnapLayouts: vi.fn(async () => {}),
       onResized: vi.fn(async () => () => {}),
     };
 

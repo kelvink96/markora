@@ -9,6 +9,7 @@ export const webWindowAdapter: WindowAdapter = {
   async isMaximized() {
     return false;
   },
+  async showSnapLayouts() {},
   async onResized() {
     return () => {};
   },

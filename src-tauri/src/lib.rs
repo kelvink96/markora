@@ -27,6 +27,9 @@ pub fn run() {
         // In-app updates: the updater checks and installs signed releases; process relaunches afterwards.
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
+        // Only its show_snap_overlay command is used, from the title bar's own maximise button. Its
+        // create_overlay_titlebar() is deliberately not called: it injects a second set of window controls.
+        .plugin(tauri_plugin_decorum::init())
         // Shared state: the files the user has picked (read/write allowlist), remembered
         // across restarts so "restore previous session" can reopen them.
         .setup(|app| {

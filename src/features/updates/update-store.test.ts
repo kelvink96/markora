@@ -6,6 +6,10 @@ import { useUpdateStore } from "./update-store";
 const adapter: {
   [K in keyof UpdateAdapter]: ReturnType<typeof vi.fn<UpdateAdapter[K]>>;
 } = {
+  getCurrentVersion: vi.fn<UpdateAdapter["getCurrentVersion"]>(),
+  savePendingWhatsNew: vi.fn<UpdateAdapter["savePendingWhatsNew"]>(),
+  loadPendingWhatsNew: vi.fn<UpdateAdapter["loadPendingWhatsNew"]>(),
+  clearPendingWhatsNew: vi.fn<UpdateAdapter["clearPendingWhatsNew"]>(),
   checkForUpdate: vi.fn<UpdateAdapter["checkForUpdate"]>(),
   download: vi.fn<UpdateAdapter["download"]>(),
   install: vi.fn<UpdateAdapter["install"]>(),
@@ -34,6 +38,8 @@ describe("update store", () => {
     adapter.download.mockReset();
     adapter.install.mockReset();
     adapter.relaunch.mockReset();
+    adapter.savePendingWhatsNew.mockReset().mockResolvedValue();
+    adapter.clearPendingWhatsNew.mockReset().mockResolvedValue();
     useDocumentStore.setState(useDocumentStore.getInitialState(), true);
     resetStore();
   });
@@ -209,6 +215,88 @@ describe("update store", () => {
 
       expect(useUpdateStore.getState().status).toBe("ready");
       expect(useUpdateStore.getState().error).toBe("relaunch failed");
+    });
+
+    describe("what's new record", () => {
+      const withNotes: AvailableUpdate = {
+        version: "1.6.0",
+        notes: "## What's Changed",
+        publishedAt: "2026-11-20T10:00:00Z",
+      };
+
+      it("saves the version, notes and date, and finishes saving before install starts", async () => {
+        const calls: string[] = [];
+        adapter.savePendingWhatsNew.mockImplementation(async () => {
+          await Promise.resolve();
+          calls.push("save done");
+        });
+        adapter.install.mockImplementation(async () => {
+          calls.push("install");
+        });
+        adapter.relaunch.mockResolvedValue();
+        resetStore({ status: "ready", update: withNotes });
+
+        await useUpdateStore.getState().restart();
+
+        expect(adapter.savePendingWhatsNew).toHaveBeenCalledWith({
+          version: "1.6.0",
+          notes: "## What's Changed",
+          publishedAt: "2026-11-20T10:00:00Z",
+        });
+        expect(calls).toEqual(["save done", "install"]);
+      });
+
+      it("does not save when unsaved changes block the restart", async () => {
+        useDocumentStore.getState().openDocument({ content: "# Edited", filePath: "/edited.md", isDirty: true });
+        resetStore({ status: "ready", update: withNotes });
+
+        await useUpdateStore.getState().restart();
+
+        expect(adapter.savePendingWhatsNew).not.toHaveBeenCalled();
+      });
+
+      it("clears the record when install rejects, so a failed attempt cannot show a toast later", async () => {
+        adapter.install.mockRejectedValueOnce(new Error("installer cancelled"));
+        resetStore({ status: "ready", update: withNotes });
+
+        await useUpdateStore.getState().restart();
+
+        expect(adapter.clearPendingWhatsNew).toHaveBeenCalledTimes(1);
+        expect(useUpdateStore.getState().error).toBe("installer cancelled");
+      });
+
+      it("keeps the record when install succeeds but relaunch rejects", async () => {
+        adapter.install.mockResolvedValue();
+        adapter.relaunch.mockRejectedValue(new Error("relaunch failed"));
+        resetStore({ status: "ready", update: withNotes });
+
+        await useUpdateStore.getState().restart();
+
+        expect(adapter.clearPendingWhatsNew).not.toHaveBeenCalled();
+      });
+
+      it("still installs and relaunches when the save fails", async () => {
+        adapter.savePendingWhatsNew.mockRejectedValue(new Error("disk full"));
+        adapter.install.mockResolvedValue();
+        adapter.relaunch.mockResolvedValue();
+        resetStore({ status: "ready", update: withNotes });
+
+        await useUpdateStore.getState().restart();
+
+        expect(adapter.install).toHaveBeenCalledTimes(1);
+        expect(adapter.relaunch).toHaveBeenCalledTimes(1);
+        expect(useUpdateStore.getState().error).toBeNull();
+      });
+
+      it("still reports the install failure when clearing the record also fails", async () => {
+        adapter.install.mockRejectedValueOnce(new Error("installer cancelled"));
+        adapter.clearPendingWhatsNew.mockRejectedValue(new Error("cannot delete"));
+        resetStore({ status: "ready", update: withNotes });
+
+        await useUpdateStore.getState().restart();
+
+        expect(useUpdateStore.getState().error).toBe("installer cancelled");
+      });
     });
   });
 });

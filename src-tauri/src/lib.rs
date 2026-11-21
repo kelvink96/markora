@@ -58,6 +58,9 @@ pub fn run() {
             commands::settings::load_settings,
             commands::settings::save_settings,
             commands::settings::reset_settings,
+            commands::whats_new::save_pending_whats_new,
+            commands::whats_new::load_pending_whats_new,
+            commands::whats_new::clear_pending_whats_new,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

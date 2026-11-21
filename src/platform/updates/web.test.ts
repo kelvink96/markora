@@ -6,6 +6,16 @@ describe("webUpdateAdapter", () => {
     await expect(webUpdateAdapter.checkForUpdate()).resolves.toBeNull();
   });
 
+  it("has no known app version", async () => {
+    await expect(webUpdateAdapter.getCurrentVersion()).resolves.toBeNull();
+  });
+
+  it("keeps no pending what's new record", async () => {
+    await expect(webUpdateAdapter.savePendingWhatsNew({ version: "1.6.0", notes: "", publishedAt: null })).resolves.toBeUndefined();
+    await expect(webUpdateAdapter.loadPendingWhatsNew()).resolves.toBeNull();
+    await expect(webUpdateAdapter.clearPendingWhatsNew()).resolves.toBeUndefined();
+  });
+
   it("rejects download", async () => {
     await expect(webUpdateAdapter.download(vi.fn())).rejects.toThrow();
   });

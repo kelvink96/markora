@@ -87,6 +87,34 @@ describe("TopBar", () => {
     }
   });
 
+  describe("title bar (desktop window has no OS decorations)", () => {
+    const desktopWindow = {
+      hasCustomTitleBar: true,
+      minimize: vi.fn(async () => {}),
+      toggleMaximize: vi.fn(async () => {}),
+      close: vi.fn(async () => {}),
+      isMaximized: vi.fn(async () => false),
+      onResized: vi.fn(async () => () => {}),
+    };
+
+    it("makes the empty space a drag area showing the open document, with window controls", () => {
+      useDocumentStore.setState({ activeDocumentId: "doc-1", filePath: "C:\\notes\\plan.md" });
+      renderBar({ windowAdapter: desktopWindow });
+
+      const dragArea = screen.getByTestId("top-bar-drag-region");
+      expect(dragArea).toHaveAttribute("data-tauri-drag-region");
+      expect(dragArea).toHaveTextContent("plan.md");
+      expect(within(screen.getByRole("banner")).getByRole("button", { name: "Close" })).toBeInTheDocument();
+    });
+
+    it("draws no drag area or window controls on the web", () => {
+      renderBar();
+
+      expect(screen.queryByTestId("top-bar-drag-region")).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Close" })).not.toBeInTheDocument();
+    });
+  });
+
   it("hides the menus with nothing to offer when nothing is open", () => {
     useDocumentStore.setState({ activeDocumentId: "" });
     renderBar();

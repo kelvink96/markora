@@ -19,6 +19,7 @@ import { EditorPane } from "./components/editor-page/editor-pane";
 import { TabStrip } from "./components/editor-page/tab-strip";
 import { FormattingBar } from "./components/editor-page/formatting-toolbar";
 import { TopBar } from "./components/editor-page/top-bar";
+import { WindowDragStrip } from "./components/editor-page/window-controls";
 import { PreviewPane } from "./components/editor-page/preview-pane";
 import { SettingsPage } from "./components/settings-page/settings-page";
 import { Workspace } from "./components/editor-page/workspace";
@@ -447,7 +448,9 @@ export default function App() {
       <AppShell
         themeMode={theme}
         colorScheme={settings.appearance.colorScheme}
-        header={activeScreen === "workspace" && !focusActive ? header : null}
+        // Settings and Focus hide the header, which is also the desktop title bar, so keep a slim one to move,
+        // maximise and close the window by.
+        header={activeScreen === "workspace" && !focusActive ? header : <WindowDragStrip />}
         toolbar={activeScreen === "workspace" && hasOpenDocuments && !focusActive ? <FormattingBar disabled={viewMode === "read"} /> : null}
         workspace={workspace}
         statusBar={settings.appearance.showStatusBar && activeScreen === "workspace" && hasOpenDocuments && !focusActive ? statusBar : null}

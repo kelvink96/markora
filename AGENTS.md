@@ -47,6 +47,7 @@ Markora is a two-platform markdown editor:
 - `links/` — `LinkAdapter.openExternal` (desktop opener plugin / browser)
 - `updates/` — `UpdateAdapter` (check, download, install, relaunch; real on desktop only)
 - `persistence/web.ts` — IndexedDB workspace snapshot (web-only)
+- `window/` — `WindowAdapter` (minimise, maximise, close). The desktop window has no OS decorations (`decorations: false`), so `TopBar` is the title bar: its padding and spacer carry `data-tauri-drag-region` and `WindowControls` draws the caption buttons. Where the header is hidden (Settings, Focus) `WindowDragStrip` stands in. Web draws none of this
 
 **IPC commands (Rust → Frontend):**
 - `parse_markdown(markdown, documentPath)` → returns HTML string; relative image links resolve against the document folder via the asset protocol

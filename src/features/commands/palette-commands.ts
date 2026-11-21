@@ -61,6 +61,8 @@ export interface PaletteHandlers {
   onOpenCommandPalette: () => void;
   onOpenDocs: () => void;
   onReportIssue: () => void;
+  onStarOnGitHub: () => void;
+  onOpenReleases: () => void;
   onTakeTour: () => void;
   onCheckForUpdates: () => void;
 }
@@ -230,6 +232,8 @@ export function buildAppCommands({
     always({ id: "help.release-notes", label: "Release Notes", group: "Help", keywords: ["changelog", "what's new"], run: handlers.onOpenReleaseNotes }),
     always({ id: "help.docs", label: "Documentation", group: "Help", keywords: ["docs", "guide", "readme"], run: handlers.onOpenDocs }),
     always({ id: "help.report-issue", label: "Report an Issue", group: "Help", keywords: ["bug", "feedback", "github"], run: handlers.onReportIssue }),
+    always({ id: "help.star", label: "Star on GitHub", group: "Help", keywords: ["github", "repo", "repository", "support", "like"], run: handlers.onStarOnGitHub }),
+    always({ id: "help.releases", label: "View Releases", group: "Help", keywords: ["github", "download", "changelog", "versions"], run: handlers.onOpenReleases }),
     always({ id: "help.about", label: "About Markora", group: "Help", keywords: ["version"], run: handlers.onOpenAbout }),
   ];
 }

@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import { Star } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,7 +21,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ExternalLink } from "../../external-link";
+import { ExternalLink, ExternalLinkButton } from "../../external-link";
+import { GITHUB_FEEDBACK_URL, GITHUB_REPO_URL } from "../../../features/community/github-urls";
 import { ShortcutKeys } from "../../shortcut-keys";
 import { getModifierLabel } from "../../../features/shortcuts/modifier-label";
 import type { PendingCloseRequest } from "../../../app/hooks";
@@ -146,6 +148,13 @@ export function AppDialogs({
             <p className="text-muted-foreground">
               Markora keeps writing and reading in dedicated modes for a focused markdown workflow.
             </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <ExternalLinkButton href={GITHUB_REPO_URL} variant="default">
+                <Star aria-hidden="true" />
+                Star on GitHub
+              </ExternalLinkButton>
+              <ExternalLinkButton href={GITHUB_FEEDBACK_URL}>Send feedback</ExternalLinkButton>
+            </div>
             <div className="flex gap-4">
               <ExternalLink href={PRIVACY_POLICY_URL}>Privacy Policy</ExternalLink>
               <ExternalLink href={TERMS_URL}>Terms of Use</ExternalLink>

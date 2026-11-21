@@ -417,6 +417,8 @@ describe("TopBar", () => {
       ["Release Notes", "onOpenReleaseNotes"],
       ["Documentation", "onOpenDocs"],
       ["Report an Issue", "onReportIssue"],
+      ["Star on GitHub", "onStarOnGitHub"],
+      ["View Releases", "onOpenReleases"],
       ["About Markora", "onOpenAbout"],
     ] as const)("%s calls %s", async (label, handler) => {
       const user = userEvent.setup();

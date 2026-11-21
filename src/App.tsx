@@ -58,9 +58,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { getFileAdapter } from "./platform/files";
 import { getLinkAdapter } from "./platform/links";
 import { detectPlatform } from "./platform/runtime";
-
-const DOCS_URL = "https://github.com/kelvink96/markora#readme";
-const REPORT_ISSUE_URL = "https://github.com/kelvink96/markora/issues/new";
+import {
+  GITHUB_DOCS_URL,
+  GITHUB_RELEASES_URL,
+  GITHUB_REPO_URL,
+  GITHUB_REPORT_ISSUE_URL,
+} from "./features/community/github-urls";
 
 export default function App() {
   const fileAdapter = useMemo(() => getFileAdapter(), []);
@@ -314,8 +317,10 @@ export default function App() {
         void persistCurrentSettings();
       },
       onOpenCommandPalette: () => setIsCommandPaletteOpen(true),
-      onOpenDocs: () => openExternal(DOCS_URL),
-      onReportIssue: () => openExternal(REPORT_ISSUE_URL),
+      onOpenDocs: () => openExternal(GITHUB_DOCS_URL),
+      onReportIssue: () => openExternal(GITHUB_REPORT_ISSUE_URL),
+      onStarOnGitHub: () => openExternal(GITHUB_REPO_URL),
+      onOpenReleases: () => openExternal(GITHUB_RELEASES_URL),
       onTakeTour: startTour,
     },
   };

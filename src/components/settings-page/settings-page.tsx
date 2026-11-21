@@ -21,6 +21,7 @@ import { SettingRow, SettingsGroup } from "./settings-page-shared";
 import { detectPlatform } from "../../platform/runtime";
 import { selectHasUnsavedChanges, useDocumentStore } from "../../store/document";
 import { SettingsFooter } from "./settings-footer";
+import { GithubCard } from "./github-card";
 import { UpdatesCard } from "./updates-card";
 import { SettingsSidebar } from "./settings-sidebar";
 import { TemplateDialog } from "./template-dialog";
@@ -218,6 +219,7 @@ export function SettingsPage({
                     onChangeUpdates={onChangeUpdates}
                   />
                 ) : null}
+                <GithubCard />
                 <SettingsFooter version={version} privacyPolicyUrl={PRIVACY_POLICY_URL} termsUrl={TERMS_URL} onResetAll={onResetAll} />
               </>
             )}

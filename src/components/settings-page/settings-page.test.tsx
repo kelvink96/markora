@@ -52,6 +52,15 @@ describe("SettingsPage", () => {
     expect(screen.getByTestId("theme-swatch-system")).toHaveAttribute("data-resolved-theme-mode", "light");
   });
 
+  it("shows the GitHub card below the settings, and hides it while searching", async () => {
+    renderPage();
+
+    expect(screen.getByRole("region", { name: "Markora on GitHub" })).toBeInTheDocument();
+    await userEvent.type(search(), "night");
+
+    expect(screen.queryByRole("region", { name: "Markora on GitHub" })).not.toBeInTheDocument();
+  });
+
   // Seven or more cards in three columns would leave a long, ragged last row.
   it("lays the colour schemes out four to a row", () => {
     renderPage();

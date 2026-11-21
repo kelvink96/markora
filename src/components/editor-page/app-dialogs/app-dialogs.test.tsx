@@ -141,6 +141,16 @@ describe("AppDialogs", () => {
     expect(openExternal).toHaveBeenCalledWith("https://kelvink96.github.io/markora/terms");
   });
 
+  it("links to the repository and feedback in About", async () => {
+    renderDialogs({ aboutOpen: true });
+
+    const dialog = screen.getByRole("dialog", { name: "About Markora" });
+    await userEvent.click(within(dialog).getByRole("link", { name: "Star on GitHub" }));
+    expect(openExternal).toHaveBeenLastCalledWith("https://github.com/kelvink96/markora");
+    await userEvent.click(within(dialog).getByRole("link", { name: "Send feedback" }));
+    expect(openExternal).toHaveBeenLastCalledWith("https://github.com/kelvink96/markora/issues/new/choose");
+  });
+
   it("points release notes at the releases page", () => {
     renderDialogs({ releaseNotesOpen: true });
 

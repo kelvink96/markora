@@ -2,6 +2,8 @@
 
 Markora is a markdown editor available as both a native desktop app and a browser-based local-first web app.
 
+If you like it, a [star on GitHub](https://github.com/kelvink96/markora) helps other writers find it. Downloads are on the [releases page](https://github.com/kelvink96/markora/releases), and feedback is welcome as an [issue](https://github.com/kelvink96/markora/issues/new/choose).
+
 **Desktop** — built with Tauri v2, React, TypeScript, CodeMirror 6, Zustand, and Rust. Markdown rendering and file I/O happen in Rust.
 
 **Web** — runs in the browser with no account or server required. Uses the File System Access API where available, and falls back to IndexedDB-backed browser workspaces. Markdown rendering uses a browser-side renderer.

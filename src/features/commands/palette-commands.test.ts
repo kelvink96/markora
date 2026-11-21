@@ -41,6 +41,8 @@ function context(overrides: Partial<PaletteContext> = {}): PaletteContext {
       onOpenCommandPalette: vi.fn(),
       onOpenDocs: vi.fn(),
       onReportIssue: vi.fn(),
+      onStarOnGitHub: vi.fn(),
+      onOpenReleases: vi.fn(),
       onTakeTour: vi.fn(),
       onCheckForUpdates: vi.fn(),
     },
@@ -316,7 +318,7 @@ describe("view, theme, zoom and help commands", () => {
   it("keeps theme, zoom and help available with no document while view toggles wait for one", () => {
     const ctx = context({ hasActiveDocument: false });
 
-    for (const id of ["view.theme.dark", "view.color-scheme.sepia", "view.zoom-in", "help.docs", "help.report-issue", "help.tour", "app.palette"]) {
+    for (const id of ["view.theme.dark", "view.color-scheme.sepia", "view.zoom-in", "help.docs", "help.report-issue", "help.star", "help.releases", "help.tour", "app.palette"]) {
       expect(byId(id, ctx)?.enabled).toBe(true);
     }
     for (const id of ["view.status-bar", "view.word-wrap", "view.line-numbers"]) {
@@ -329,6 +331,18 @@ describe("view, theme, zoom and help commands", () => {
 
     expect(byId("app.palette", ctx)).toMatchObject({ label: "Command Palette", shortcut: "Ctrl+K", group: "Help" });
     expect(buildPaletteCommands(ctx).map((command) => command.id)).not.toContain("app.palette");
+  });
+
+  it("offers the GitHub links as help commands that run their handlers", () => {
+    const ctx = context();
+
+    expect(byId("help.star", ctx)).toMatchObject({ label: "Star on GitHub", group: "Help" });
+    expect(byId("help.releases", ctx)).toMatchObject({ label: "View Releases", group: "Help" });
+    byId("help.star", ctx)?.run();
+    byId("help.releases", ctx)?.run();
+
+    expect(ctx.handlers.onStarOnGitHub).toHaveBeenCalledTimes(1);
+    expect(ctx.handlers.onOpenReleases).toHaveBeenCalledTimes(1);
   });
 
   it("runs the help handlers", () => {

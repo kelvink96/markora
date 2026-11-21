@@ -118,6 +118,8 @@ export const MENU_LAYOUT: MenuDefinition[] = [
       separator,
       command("help.docs"),
       command("help.report-issue"),
+      command("help.star"),
+      command("help.releases"),
       separator,
       command("help.about"),
     ],

@@ -46,6 +46,10 @@ interface SettingsPageProps {
   onChangeUpdates?: () => void;
   /** Desktop only: shows the "reopen last session" option. */
   canRestoreSession?: boolean;
+  /** Desktop only: opens the native folder picker for the default save folder. */
+  onPickFolder?: () => Promise<string | null>;
+  /** Desktop only: whether a stored folder still exists. */
+  folderExists?: (path: string) => Promise<boolean>;
 }
 
 function isTextField(target: EventTarget | null) {
@@ -54,7 +58,15 @@ function isTextField(target: EventTarget | null) {
 }
 
 /** Settings whose control is a group or composite, so there is no single element for a label to point at. */
-const UNLABELABLE_SETTINGS = new Set(["theme", "colorScheme", "fontSize", "lineSpacing", "lineWidth", "template"]);
+const UNLABELABLE_SETTINGS = new Set([
+  "theme",
+  "colorScheme",
+  "fontSize",
+  "lineSpacing",
+  "lineWidth",
+  "template",
+  "saveFolder",
+]);
 
 const sectionElementId = (section: SettingSection) => `settings-section-${section}`;
 
@@ -71,6 +83,8 @@ export function SettingsPage({
   onResetAll,
   onChangeUpdates,
   canRestoreSession = false,
+  onPickFolder,
+  folderExists,
 }: SettingsPageProps) {
   const { activeSection, previewThemeMode, query, setActiveSection, setQuery } = useSettingsPageState({
     settings,
@@ -147,7 +161,7 @@ export function SettingsPage({
         {isTemplate ? (
           <TemplateDialog template={templateDraft} onSave={onSaveTemplate} />
         ) : (
-          renderControl(definition.id, { settings, previewThemeMode, update })
+          renderControl(definition.id, { settings, previewThemeMode, update, onPickFolder, folderExists })
         )}
       </SettingRow>
     );

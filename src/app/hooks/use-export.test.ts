@@ -3,6 +3,8 @@ import { act, renderHook } from "@testing-library/react";
 import { useExport } from "./use-export";
 import { useDocumentStore } from "../../store/document";
 import type { FileAdapter } from "../../platform/files/types";
+import { createDefaultSettings } from "../../features/settings/settings-schema";
+import { useSettingsStore } from "../../features/settings/settings-store";
 
 const { toastSuccess, toastError, printDocumentMock, renderMock } = vi.hoisted(() => ({
   toastSuccess: vi.fn(),
@@ -48,6 +50,7 @@ describe("useExport", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     renderMock.mockResolvedValue("<h1>Notes</h1>");
     openDocument("/docs/Notes.md", "# Notes");
+    useSettingsStore.getState().hydrate(createDefaultSettings());
   });
 
   describe("HTML", () => {
@@ -64,6 +67,21 @@ describe("useExport", () => {
       expect(html).toContain("<h1>Notes</h1>");
       expect(html).toContain("<title>Notes</title>");
       expect(toastSuccess).toHaveBeenCalledWith("Exported to /out/Notes.html");
+    });
+
+    it("starts the HTML save dialog in the default save folder", async () => {
+      const settings = createDefaultSettings();
+      useSettingsStore.getState().hydrate({ ...settings, files: { ...settings.files, defaultSaveFolder: "/exports" } });
+      const files = adapter();
+      const { result } = renderHook(() => useExport(files));
+
+      await act(() => result.current.exportHtml());
+
+      expect(files.pickSavePath).toHaveBeenCalledWith("Notes.html", {
+        filterName: "HTML",
+        extensions: ["html"],
+        folder: "/exports",
+      });
     });
 
     it("writes nothing when the save dialog is cancelled", async () => {

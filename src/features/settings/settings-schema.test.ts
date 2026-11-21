@@ -55,6 +55,23 @@ describe("settings-schema", () => {
   });
 });
 
+describe("default save folder", () => {
+  it("is empty by default, which means the system default", () => {
+    expect(createDefaultSettings().files.defaultSaveFolder).toBe("");
+  });
+
+  it("keeps a stored folder, trimmed", () => {
+    const stored = { files: { defaultSaveFolder: "  /notes  " } };
+
+    expect(normalizeSettings(stored).files.defaultSaveFolder).toBe("/notes");
+  });
+
+  it("falls back to empty for a missing or non-text value", () => {
+    expect(normalizeSettings({ files: { autosave: true } }).files.defaultSaveFolder).toBe("");
+    expect(normalizeSettings({ files: { defaultSaveFolder: 42 } }).files.defaultSaveFolder).toBe("");
+  });
+});
+
 describe("normalizeSettings", () => {
   it("returns the defaults for missing or non-object input", () => {
     expect(normalizeSettings(undefined)).toEqual(defaultSettings);

@@ -146,6 +146,23 @@ describe("SettingsPage", () => {
     expect(screen.getByRole("status")).toHaveTextContent("No settings match");
   });
 
+  it("lets desktop users choose a default save folder, and hides the row on web", async () => {
+    const onChangeFiles = vi.fn();
+    const settings = createDefaultSettings();
+    renderPage({ canRestoreSession: true, onChangeFiles, onPickFolder: async () => "/picked" });
+
+    await userEvent.click(screen.getByRole("button", { name: "Choose…" }));
+
+    expect(onChangeFiles).toHaveBeenCalledWith({ ...settings.files, defaultSaveFolder: "/picked" });
+  });
+
+  it("does not offer the default save folder on web", () => {
+    renderPage();
+
+    expect(screen.queryByRole("button", { name: "Choose…" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Default save folder")).not.toBeInTheDocument();
+  });
+
   it("offers the restore option on desktop", async () => {
     renderPage({ canRestoreSession: true });
 

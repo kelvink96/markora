@@ -5,6 +5,7 @@ import { buildHtmlDocument, renderExportBody } from "../../features/export/html-
 import { printDocument } from "../../features/export/print-document";
 import type { FileAdapter } from "../../platform/files/types";
 import { getMarkdownAdapter } from "../../platform/markdown";
+import { useSettingsStore } from "../../features/settings/settings-store";
 import { useDocumentStore } from "../../store/document";
 
 /**
@@ -41,7 +42,8 @@ export function useExport(fileAdapter: FileAdapter) {
         return;
       }
 
-      const path = await fileAdapter.pickSavePath(fileName, { filterName: "HTML", extensions: ["html"] });
+      const folder = useSettingsStore.getState().settings.files.defaultSaveFolder || undefined;
+      const path = await fileAdapter.pickSavePath(fileName, { filterName: "HTML", extensions: ["html"], folder });
       if (!path) return; // the user cancelled the dialog
       await fileAdapter.writeFile(path, html);
       toast.success(`Exported to ${path}`);

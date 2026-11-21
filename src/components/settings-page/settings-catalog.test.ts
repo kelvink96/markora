@@ -57,6 +57,24 @@ describe("SETTINGS_CATALOG", () => {
     expect(reset.appearance.editorFontSize).toBe(20);
   });
 
+  it("offers the default save folder on desktop only, and finds it by search", () => {
+    expect(filterSettings(SETTINGS_CATALOG, "save folder", desktop).map((d) => d.id)).toEqual(["saveFolder"]);
+    expect(filterSettings(SETTINGS_CATALOG, "", web).map((d) => d.id)).not.toContain("saveFolder");
+  });
+
+  it("detects a chosen save folder and resets it to the system default", () => {
+    const def = find("saveFolder");
+    const defaults = createDefaultSettings();
+    expect(def.isChanged(defaults)).toBe(false);
+
+    const chosen = { ...defaults, files: { ...defaults.files, defaultSaveFolder: "/notes", autosave: true } };
+    expect(def.isChanged(chosen)).toBe(true);
+
+    const reset = def.reset(chosen);
+    expect(reset.files.defaultSaveFolder).toBe("");
+    expect(reset.files.autosave).toBe(true);
+  });
+
   it("never reports the template as changed", () => {
     const defaults = createDefaultSettings();
     const edited = { ...defaults, authoring: { newDocumentTemplate: "x" } };

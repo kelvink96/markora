@@ -55,6 +55,8 @@ pub fn run() {
             commands::markdown::parse_markdown,
             commands::file::pick_open_path,
             commands::file::pick_save_path,
+            commands::file::pick_folder,
+            commands::file::folder_exists,
             commands::file::read_file,
             commands::file::write_file,
             commands::launch::take_pending_open_paths,

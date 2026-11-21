@@ -142,6 +142,14 @@ export const SETTINGS_CATALOG: SettingDefinition[] = [
     description: "Saves a moment after you stop typing. Untitled documents are skipped until you save them once.",
     keywords: ["autosave", "auto save", "save"],
   }),
+  field("files", "defaultSaveFolder", {
+    id: "saveFolder",
+    section: "files",
+    label: "Default save folder",
+    description: "Where Save As starts for new documents. Files you have already saved are not affected.",
+    keywords: ["folder", "directory", "location", "path", "documents", "save as", "export"],
+    desktopOnly: true,
+  }),
   field("files", "restorePreviousSession", {
     id: "restoreSession",
     section: "files",

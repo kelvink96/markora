@@ -362,6 +362,8 @@ export default function App() {
         version={packageJson.version}
         onClose={() => setActiveScreen("workspace")}
         canRestoreSession={!isWeb}
+        onPickFolder={fileAdapter.pickFolder}
+        folderExists={fileAdapter.folderExists}
         onChangeAppearance={(appearance) => {
           updateAppearance(appearance);
           void persistCurrentSettings();

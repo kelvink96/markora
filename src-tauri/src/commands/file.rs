@@ -143,11 +143,40 @@ pub async fn pick_open_path(
     remember(&app, &allowed, picked)
 }
 
+/// A folder the save dialog can start in: a non-blank path to a folder that exists right now.
+/// Anything else (unset, deleted, moved, or a file) returns `None`, so the system default applies.
+fn existing_folder(folder: Option<&str>) -> Option<PathBuf> {
+    let folder = folder?.trim();
+    if folder.is_empty() {
+        return None;
+    }
+    let path = PathBuf::from(folder);
+    path.is_dir().then_some(path)
+}
+
 /// The file type a save dialog offers when the caller doesn't ask for another.
 const DEFAULT_SAVE_FILTER: (&str, &str) = ("Markdown", "md");
 
+// Shows the native folder picker. The folder is only returned to the settings page to be stored as
+// the default save folder; it is not added to the allowlist, so it grants no read or write access.
+#[tauri::command]
+pub async fn pick_folder(app: AppHandle) -> Result<Option<String>, String> {
+    let picked = app.dialog().file().blocking_pick_folder();
+    match picked {
+        Some(folder) => Ok(Some(folder.into_path().map_err(|e| e.to_string())?.to_string_lossy().into_owned())),
+        None => Ok(None),
+    }
+}
+
+// Whether a stored folder still exists, so Settings can warn when the default save folder is gone.
+#[tauri::command]
+pub fn folder_exists(path: String) -> bool {
+    existing_folder(Some(&path)).is_some()
+}
+
 // Shows the native save dialog and remembers the chosen file so it can be written.
 // `extensions` / `filter_name` pick another file type (for example HTML for an export).
+// `folder` is where the dialog starts; it is ignored unless it still exists.
 #[tauri::command]
 pub async fn pick_save_path(
     app: AppHandle,
@@ -155,6 +184,7 @@ pub async fn pick_save_path(
     default_path: Option<String>,
     extensions: Option<Vec<String>>,
     filter_name: Option<String>,
+    folder: Option<String>,
 ) -> Result<Option<String>, String> {
     let extensions = extensions.unwrap_or_else(|| vec![DEFAULT_SAVE_FILTER.1.to_string()]);
     let extension_refs: Vec<&str> = extensions.iter().map(String::as_str).collect();
@@ -162,6 +192,9 @@ pub async fn pick_save_path(
     let mut dialog = app.dialog().file().add_filter(filter_name, &extension_refs);
     if let Some(name) = default_path {
         dialog = dialog.set_file_name(name);
+    }
+    if let Some(folder) = existing_folder(folder.as_deref()) {
+        dialog = dialog.set_directory(folder);
     }
 
     remember(&app, &allowed, dialog.blocking_save_file())
@@ -390,6 +423,29 @@ mod tests {
         assert!(allowed
             .ensure_allowed(&dir.join(format!("note-{}.md", MAX_REMEMBERED_PATHS + 4)))
             .is_ok());
+        fs::remove_dir_all(dir).ok();
+    }
+
+    #[test]
+    fn test_existing_folder_accepts_a_real_folder() {
+        let dir = unique_dir("save-folder");
+        let folder = dir.to_string_lossy().into_owned();
+
+        assert_eq!(existing_folder(Some(&folder)), Some(dir.clone()));
+        fs::remove_dir_all(dir).ok();
+    }
+
+    #[test]
+    fn test_existing_folder_ignores_unset_empty_missing_and_non_folder_paths() {
+        let dir = unique_dir("save-folder-bad");
+        let file = dir.join("note.md");
+        fs::write(&file, "x").unwrap();
+
+        assert_eq!(existing_folder(None), None);
+        assert_eq!(existing_folder(Some("")), None);
+        assert_eq!(existing_folder(Some("   ")), None);
+        assert_eq!(existing_folder(Some(&dir.join("gone").to_string_lossy())), None);
+        assert_eq!(existing_folder(Some(&file.to_string_lossy())), None);
         fs::remove_dir_all(dir).ok();
     }
 }

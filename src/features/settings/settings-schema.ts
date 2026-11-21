@@ -30,6 +30,8 @@ export interface FileSettings {
   autosave: boolean;
   restorePreviousSession: boolean;
   confirmOnUnsavedClose: boolean;
+  /** Where Save As starts for new documents (desktop). Empty means the system default. */
+  defaultSaveFolder: string;
 }
 
 export interface AuthoringDefaults {
@@ -101,6 +103,7 @@ export const defaultSettings: MarkoraSettings = {
     autosave: false,
     restorePreviousSession: false,
     confirmOnUnsavedClose: true,
+    defaultSaveFolder: "",
   },
   authoring: {
     newDocumentTemplate: defaultNewDocumentTemplate,
@@ -193,6 +196,9 @@ export function normalizeSettings(raw: unknown): MarkoraSettings {
     defaults.preview.contentWidth,
   );
 
+  const files = mergeKnown(defaults.files, source.files);
+  files.defaultSaveFolder = files.defaultSaveFolder.trim();
+
   const onboarding = mergeKnown(defaults.onboarding, source.onboarding);
   onboarding.tourVersion = Math.floor(
     clamp(onboarding.tourVersion, 0, Number.MAX_SAFE_INTEGER, defaults.onboarding.tourVersion),
@@ -202,7 +208,7 @@ export function normalizeSettings(raw: unknown): MarkoraSettings {
     appearance,
     editor: mergeKnown(defaults.editor, source.editor),
     preview,
-    files: mergeKnown(defaults.files, source.files),
+    files,
     authoring: mergeKnown(defaults.authoring, source.authoring),
     onboarding,
     updates: mergeKnown(defaults.updates, source.updates),

@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { SchemePreview } from "../scheme-preview";
+import { SaveFolderControl } from "./save-folder-control";
 import { SwatchGroup } from "./swatches";
 
 const LINE_SPACINGS = [
@@ -109,10 +110,17 @@ export interface ControlContext {
   previewThemeMode: "light" | "dark";
   /** Applies a full new settings object; the page routes each changed group to its handler. */
   update: (next: MarkoraSettings) => void;
+  /** Desktop only: opens the native folder picker for the default save folder. */
+  onPickFolder?: () => Promise<string | null>;
+  /** Desktop only: whether a stored folder still exists. */
+  folderExists?: (path: string) => Promise<boolean>;
 }
 
 /** The input for one catalog setting, keyed by its id. Returns null for ids without a plain control. */
-export function renderControl(id: string, { settings, previewThemeMode, update }: ControlContext): ReactNode {
+export function renderControl(
+  id: string,
+  { settings, previewThemeMode, update, onPickFolder, folderExists }: ControlContext,
+): ReactNode {
   const { appearance, editor, preview, files } = settings;
   const setAppearance = (patch: Partial<typeof appearance>) =>
     update({ ...settings, appearance: { ...appearance, ...patch } });
@@ -285,6 +293,15 @@ export function renderControl(id: string, { settings, previewThemeMode, update }
           onCheckedChange={(autosave) => setFiles({ autosave })}
         />
       );
+    case "saveFolder":
+      return onPickFolder ? (
+        <SaveFolderControl
+          folder={files.defaultSaveFolder}
+          onChange={(defaultSaveFolder) => setFiles({ defaultSaveFolder })}
+          onPickFolder={onPickFolder}
+          folderExists={folderExists}
+        />
+      ) : null;
     case "restoreSession":
       return (
         <Switch

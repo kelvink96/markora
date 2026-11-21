@@ -13,7 +13,16 @@ export const desktopFileAdapter: FileAdapter = {
       defaultPath,
       extensions: options?.extensions,
       filterName: options?.filterName,
+      folder: options?.folder,
     });
+  },
+  async pickFolder() {
+    const { invoke } = await import("@tauri-apps/api/core");
+    return invoke<string | null>("pick_folder");
+  },
+  async folderExists(path) {
+    const { invoke } = await import("@tauri-apps/api/core");
+    return invoke<boolean>("folder_exists", { path });
   },
   async readFile(path) {
     const { invoke } = await import("@tauri-apps/api/core");

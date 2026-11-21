@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { useFileOperations } from "./use-file-operations";
 import { useDocumentStore } from "../../store/document";
 import type { FileAdapter } from "../../platform/files/types";
+import { createDefaultSettings } from "../../features/settings/settings-schema";
+import { useSettingsStore } from "../../features/settings/settings-store";
 
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
@@ -37,7 +39,13 @@ function seedDocument(filePath: string | null, content: string, handle?: FileSys
 describe("useFileOperations", () => {
   beforeEach(() => {
     vi.spyOn(console, "error").mockImplementation(() => {});
+    useSettingsStore.getState().hydrate(createDefaultSettings());
   });
+
+  function setDefaultSaveFolder(defaultSaveFolder: string) {
+    const settings = createDefaultSettings();
+    useSettingsStore.getState().hydrate({ ...settings, files: { ...settings.files, defaultSaveFolder } });
+  }
 
   describe("save feedback", () => {
     beforeEach(() => {
@@ -104,10 +112,32 @@ describe("useFileOperations", () => {
 
     await act(() => result.current.handleSave());
 
-    expect(adapter.pickSavePath).toHaveBeenCalledWith("untitled.md");
+    expect(adapter.pickSavePath).toHaveBeenCalledWith("untitled.md", { folder: undefined });
     expect(adapter.writeFile).toHaveBeenCalledWith("/notes/new.md", "# New");
     expect(useDocumentStore.getState().filePath).toBe("/notes/new.md");
     expect(useDocumentStore.getState().isDirty).toBe(false);
+  });
+
+  it("starts the save dialog of an untitled document in the default save folder", async () => {
+    setDefaultSaveFolder("/notes");
+    const adapter = createAdapter();
+    seedDocument(null, "# New");
+    const { result } = renderHook(() => useFileOperations(adapter));
+
+    await act(() => result.current.handleSaveAs());
+
+    expect(adapter.pickSavePath).toHaveBeenCalledWith("untitled.md", { folder: "/notes" });
+  });
+
+  it("does not steer Save As for a document that already has a file", async () => {
+    setDefaultSaveFolder("/notes");
+    const adapter = createAdapter();
+    seedDocument("/elsewhere/a.md", "# A");
+    const { result } = renderHook(() => useFileOperations(adapter));
+
+    await act(() => result.current.handleSaveAs());
+
+    expect(adapter.pickSavePath).toHaveBeenCalledWith("untitled.md", { folder: undefined });
   });
 
   it("leaves the document dirty when the save dialog is cancelled", async () => {

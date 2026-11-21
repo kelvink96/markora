@@ -79,6 +79,10 @@ pub struct FileSettings {
     pub autosave: bool,
     pub restore_previous_session: bool,
     pub confirm_on_unsaved_close: bool,
+    /// Where Save As starts for new documents. Empty means the system default. Absent in files
+    /// saved before this setting existed.
+    #[serde(default)]
+    pub default_save_folder: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -160,6 +164,7 @@ pub fn default_settings() -> MarkoraSettings {
             autosave: false,
             restore_previous_session: false,
             confirm_on_unsaved_close: true,
+            default_save_folder: String::new(),
         },
         authoring: AuthoringDefaults {
             new_document_template: "# Welcome to Markora\n\nStart writing your markdown here...\n"
@@ -556,9 +561,27 @@ mod tests {
 
         let settings = load_settings_from_dir(&temp_dir).unwrap();
 
+        // The save folder was added later too: an old file has none, which means the system default.
+        assert_eq!(settings.files.default_save_folder, "");
         // A file saved before colour schemes existed has no choice recorded, so it gets the default.
         assert_eq!(settings.appearance.color_scheme, ColorScheme::Frost);
 
         fs::remove_dir_all(temp_dir).ok();
+    }
+
+    #[test]
+    fn default_save_folder_is_optional_and_round_trips() {
+        let old: FileSettings = serde_json::from_str(
+            r#"{"autosave":false,"restorePreviousSession":false,"confirmOnUnsavedClose":true}"#,
+        )
+        .unwrap();
+        assert_eq!(old.default_save_folder, "");
+
+        let chosen: FileSettings = serde_json::from_str(
+            r#"{"autosave":false,"restorePreviousSession":false,"confirmOnUnsavedClose":true,"defaultSaveFolder":"/notes/save-here"}"#,
+        )
+        .unwrap();
+        assert_eq!(chosen.default_save_folder, "/notes/save-here");
+        assert!(serde_json::to_string(&chosen).unwrap().contains("\"defaultSaveFolder\""));
     }
 }

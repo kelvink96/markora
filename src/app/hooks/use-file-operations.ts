@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { getDocumentExportName } from "../../features/document/document-names";
 import type { FileAdapter } from "../../platform/files/types";
+import { useSettingsStore } from "../../features/settings/settings-store";
 import { useDocumentStore } from "../../store/document";
 
 /**
@@ -80,7 +81,7 @@ export function useFileOperations(fileAdapter: FileAdapter) {
   }, [fileAdapter, handleImportFiles, openDocument]);
 
   const handleSaveAs = useCallback(async () => {
-    const { activeDocumentId, content } = useDocumentStore.getState();
+    const { activeDocumentId, content, filePath } = useDocumentStore.getState();
     if (!activeDocumentId) return;
 
     try {
@@ -90,7 +91,11 @@ export function useFileOperations(fileAdapter: FileAdapter) {
         return;
       }
 
-      const savePath = await fileAdapter.pickSavePath("untitled.md");
+      // Only a new document starts in the default save folder; one that already has a file is left to the OS.
+      const defaultFolder = useSettingsStore.getState().settings.files.defaultSaveFolder;
+      const savePath = await fileAdapter.pickSavePath("untitled.md", {
+        folder: filePath ? undefined : defaultFolder || undefined,
+      });
       if (savePath) {
         await fileAdapter.writeFile(savePath, content);
         setFilePath(savePath);

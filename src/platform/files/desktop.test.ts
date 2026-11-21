@@ -40,6 +40,28 @@ describe("desktopFileAdapter", () => {
     expect(invokeMock).toHaveBeenCalledWith("pick_save_path", { defaultPath: "untitled.md" });
   });
 
+  it("starts the save dialog in the default save folder", async () => {
+    invokeMock.mockResolvedValue("/notes/new.md");
+
+    await desktopFileAdapter.pickSavePath("untitled.md", { folder: "/notes" });
+
+    expect(invokeMock).toHaveBeenCalledWith("pick_save_path", { defaultPath: "untitled.md", folder: "/notes" });
+  });
+
+  it("picks a folder through Rust, which does not allowlist it", async () => {
+    invokeMock.mockResolvedValue("/notes");
+
+    await expect(desktopFileAdapter.pickFolder?.()).resolves.toBe("/notes");
+    expect(invokeMock).toHaveBeenCalledWith("pick_folder");
+  });
+
+  it("asks Rust whether a stored folder still exists", async () => {
+    invokeMock.mockResolvedValue(false);
+
+    await expect(desktopFileAdapter.folderExists?.("/gone")).resolves.toBe(false);
+    expect(invokeMock).toHaveBeenCalledWith("folder_exists", { path: "/gone" });
+  });
+
   it("collects the files the app was launched with from Rust", async () => {
     invokeMock.mockResolvedValue(["/notes/today.md"]);
 

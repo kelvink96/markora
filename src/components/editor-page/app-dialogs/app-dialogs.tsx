@@ -24,6 +24,7 @@ import { ExternalLink } from "../../external-link";
 import { ShortcutKeys } from "../../shortcut-keys";
 import { getModifierLabel } from "../../../features/shortcuts/modifier-label";
 import type { PendingCloseRequest } from "../../../app/hooks";
+import { PRIVACY_POLICY_URL, TERMS_URL } from "../../../features/legal/legal-urls";
 
 interface AppDialogsProps {
   version: string;
@@ -145,7 +146,10 @@ export function AppDialogs({
             <p className="text-muted-foreground">
               Markora keeps writing and reading in dedicated modes for a focused markdown workflow.
             </p>
-            <ExternalLink href="https://kelvink96.github.io/markora/privacy">Privacy Policy</ExternalLink>
+            <div className="flex gap-4">
+              <ExternalLink href={PRIVACY_POLICY_URL}>Privacy Policy</ExternalLink>
+              <ExternalLink href={TERMS_URL}>Terms of Use</ExternalLink>
+            </div>
           </div>
           <DialogFooter>
             <DialogClose asChild>

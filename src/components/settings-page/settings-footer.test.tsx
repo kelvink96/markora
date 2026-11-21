@@ -8,7 +8,7 @@ vi.mock("../../platform/links", () => ({ getLinkAdapter: () => ({ openExternal }
 
 describe("SettingsFooter", () => {
   it("shows the version and a privacy policy link that opens outside the app", async () => {
-    render(<SettingsFooter version="1.2.3" privacyPolicyUrl="https://example.com/privacy" onResetAll={() => {}} />);
+    render(<SettingsFooter version="1.2.3" privacyPolicyUrl="https://example.com/privacy" termsUrl="https://example.com/terms" onResetAll={() => {}} />);
 
     expect(screen.getByText("Version 1.2.3")).toBeInTheDocument();
     const link = screen.getByRole("link", { name: /privacy policy/i });
@@ -17,9 +17,18 @@ describe("SettingsFooter", () => {
     expect(openExternal).toHaveBeenCalledWith("https://example.com/privacy");
   });
 
+  it("links to the terms of use, opening outside the app", async () => {
+    render(<SettingsFooter version="1.2.3" privacyPolicyUrl="https://example.com/privacy" termsUrl="https://example.com/terms" onResetAll={() => {}} />);
+
+    const link = screen.getByRole("link", { name: /terms/i });
+    expect(link).toHaveAttribute("href", "https://example.com/terms");
+    await userEvent.click(link);
+    expect(openExternal).toHaveBeenCalledWith("https://example.com/terms");
+  });
+
   it("resets everything only after confirming", async () => {
     const onResetAll = vi.fn();
-    render(<SettingsFooter version="1.0.0" privacyPolicyUrl="https://example.com" onResetAll={onResetAll} />);
+    render(<SettingsFooter version="1.0.0" privacyPolicyUrl="https://example.com" termsUrl="https://example.com/terms" onResetAll={onResetAll} />);
 
     await userEvent.click(screen.getByRole("button", { name: "Reset all settings" }));
     expect(onResetAll).not.toHaveBeenCalled();

@@ -25,8 +25,8 @@ import { UpdatesCard } from "./updates-card";
 import { SettingsSidebar } from "./settings-sidebar";
 import { TemplateDialog } from "./template-dialog";
 import { useSettingsPageState } from "./use-settings-page-state";
+import { PRIVACY_POLICY_URL, TERMS_URL } from "../../features/legal/legal-urls";
 
-const PRIVACY_POLICY_URL = "https://kelvink96.github.io/markora/privacy";
 
 interface SettingsPageProps {
   settings: MarkoraSettings;
@@ -218,7 +218,7 @@ export function SettingsPage({
                     onChangeUpdates={onChangeUpdates}
                   />
                 ) : null}
-                <SettingsFooter version={version} privacyPolicyUrl={PRIVACY_POLICY_URL} onResetAll={onResetAll} />
+                <SettingsFooter version={version} privacyPolicyUrl={PRIVACY_POLICY_URL} termsUrl={TERMS_URL} onResetAll={onResetAll} />
               </>
             )}
           </div>

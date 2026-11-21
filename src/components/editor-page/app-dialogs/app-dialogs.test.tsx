@@ -133,6 +133,14 @@ describe("AppDialogs", () => {
     expect(openExternal).toHaveBeenCalledWith("https://kelvink96.github.io/markora/privacy");
   });
 
+  it("links to the terms of use in About", async () => {
+    renderDialogs({ aboutOpen: true });
+
+    const dialog = screen.getByRole("dialog", { name: "About Markora" });
+    await userEvent.click(within(dialog).getByRole("link", { name: "Terms of Use" }));
+    expect(openExternal).toHaveBeenCalledWith("https://kelvink96.github.io/markora/terms");
+  });
+
   it("points release notes at the releases page", () => {
     renderDialogs({ releaseNotesOpen: true });
 

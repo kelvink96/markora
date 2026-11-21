@@ -223,3 +223,7 @@ The CLI needs two follow-ups in this project:
 - Web workspace state is persisted to IndexedDB and rehydrated on next load.
 - In-app updates (check, download, restart) are desktop only. Releases are built and published by `.github/workflows/release.yml` on `v*` tags.
 - See [docs/markora-web-capabilities.md](docs/markora-web-capabilities.md) for the full web capability reference.
+
+## License
+
+[MIT](LICENSE) © 2026 Kelvin Kiprop. See the [privacy policy](https://kelvink96.github.io/markora/privacy.html) and [terms of use](https://kelvink96.github.io/markora/terms.html).
